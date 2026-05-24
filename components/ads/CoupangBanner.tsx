@@ -1,60 +1,34 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+const BANNER_HTML = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;overflow:hidden;background:transparent;">
+<script src="https://ads-partners.coupang.com/g.js"></script>
+<script>
+  new PartnersCoupang.G({
+    id: 991611,
+    template: "carousel",
+    trackingCode: "AF7721557",
+    width: "680",
+    height: "140",
+    tsource: ""
+  });
+</script>
+</body>
+</html>`;
 
-declare global {
-  interface Window {
-    PartnersCoupang?: {
-      G: new (config: {
-        id: number;
-        template: string;
-        trackingCode: string;
-        width: string;
-        height: string;
-        tsource: string;
-      }) => void;
-    };
-  }
-}
-
-/** 쿠팡 파트너스 다이나믹 배너 (고객 관심 기반 추천) */
+/** 쿠팡 파트너스 다이나믹 배너 — iframe 격리로 위치 정확히 고정 */
 export function CoupangBanner() {
-  const initialized = useRef(false);
-
-  useEffect(() => {
-    if (initialized.current) return;
-
-    function initBanner() {
-      if (!window.PartnersCoupang) return;
-      initialized.current = true;
-      new window.PartnersCoupang.G({
-        id: 991611,
-        template: "carousel",
-        trackingCode: "AF7721557",
-        width: "680",
-        height: "140",
-        tsource: "",
-      });
-    }
-
-    // g.js가 이미 로드된 경우
-    if (window.PartnersCoupang) {
-      initBanner();
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.src = "https://ads-partners.coupang.com/g.js";
-    script.async = true;
-    script.onload = initBanner;
-    document.head.appendChild(script);
-  }, []);
-
   return (
-    <div
-      className="w-full overflow-hidden rounded-lg"
-      style={{ minHeight: 140 }}
+    <iframe
+      srcDoc={BANNER_HTML}
+      width="100%"
+      height="140"
+      style={{ border: "none", display: "block", maxWidth: 680 }}
+      title="쿠팡 파트너스 광고"
       aria-label="쿠팡 파트너스 광고"
+      scrolling="no"
     />
   );
 }
