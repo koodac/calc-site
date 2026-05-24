@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     follow: true,
   },
   verification: {
-    google: "7Gv8RcMjU1WalrINUIh7Q8vLSj6MepUUroIvB3GTFkM",
+    google: "emF0Bv4MbCgpISUxvOYHVuRknybxOkREg7YYpWvnAZA",
     other: {
       "naver-site-verification": ["34cd3d683e39c85a20b2f9f1902eeb144785547a"],
     },
