@@ -9,8 +9,12 @@ import { ToolEngagementSection } from "@/components/layout/ToolEngagementSection
 import { ToolHeroBanner } from "@/components/layout/ToolHeroBanner";
 import { ToolMobileBottomNav } from "@/components/layout/ToolMobileBottomNav";
 import { ToolSidebarAdRail } from "@/components/layout/ToolSidebarAdRail";
+import { ToolTagsSection } from "@/components/layout/ToolTagsSection";
 import { resolveCalculatorKind } from "@/lib/calculatorKind";
 import { getAllSlugs, getToolBySlug } from "@/lib/tools";
+import { getToolKeywords } from "@/lib/toolKeywords";
+
+const BASE_URL = "https://calc-site-eight.vercel.app";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -27,10 +31,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "도구를 찾을 수 없습니다" };
   }
   const title = `${tool.title} — 계산기 & 툴`;
-  const url = `/tools/${slug}`;
+  const url = `${BASE_URL}/tools/${slug}`;
+  const keywords = getToolKeywords(slug);
   return {
     title,
     description: tool.description,
+    keywords,
     openGraph: {
       type: "website",
       locale: "ko_KR",
@@ -53,9 +59,37 @@ export default async function ToolPage({ params }: PageProps) {
   if (!tool) notFound();
 
   const kind = resolveCalculatorKind(tool);
+  const keywords = getToolKeywords(slug);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: tool.title,
+    description: tool.description,
+    url: `${BASE_URL}/tools/${slug}`,
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Web",
+    inLanguage: "ko-KR",
+    isAccessibleForFree: true,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "KRW",
+    },
+    keywords: keywords.join(", "),
+    provider: {
+      "@type": "Organization",
+      name: "계산기 & 툴",
+      url: BASE_URL,
+    },
+  };
 
   return (
     <div className="flex min-h-full flex-col bg-neutral-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="border-b border-neutral-200/80 bg-neutral-50">
         <div className="mx-auto w-full max-w-6xl px-4 pt-5 sm:px-6 sm:pt-6 lg:px-8">
           <SiteAppHeader />
@@ -74,6 +108,7 @@ export default async function ToolPage({ params }: PageProps) {
 
           <ToolEngagementSection tool={tool} />
           <ToolGuideFooter slug={slug} />
+          <ToolTagsSection slug={slug} title={tool.title} />
           <RelatedToolsSection current={tool} />
         </article>
 
