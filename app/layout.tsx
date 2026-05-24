@@ -53,6 +53,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={`${notoSansKr.variable} h-full antialiased`}>
+      <head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5752557189528627"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body
         className={`${notoSansKr.className} min-h-full flex flex-col bg-neutral-50 font-sans text-neutral-900`}
       >
