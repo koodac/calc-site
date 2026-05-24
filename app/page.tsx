@@ -1,7 +1,7 @@
 import { CatalogSection } from "@/components/CatalogSection";
 import { SiteFooter } from "@/components/SiteFooter";
 
-const BASE_URL = "https://calc-site-eight.vercel.app";
+const BASE_URL = "https://www.calcmoa.com";
 
 const websiteJsonLd = {
   "@context": "https://schema.org",

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { TOOLS } from "@/lib/tools";
 
-const BASE_URL = "https://calc-site-eight.vercel.app";
+const BASE_URL = "https://www.calcmoa.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const toolPages: MetadataRoute.Sitemap = TOOLS.map((tool) => ({

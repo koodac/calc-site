@@ -14,7 +14,7 @@ import { resolveCalculatorKind } from "@/lib/calculatorKind";
 import { getAllSlugs, getToolBySlug } from "@/lib/tools";
 import { getToolKeywords } from "@/lib/toolKeywords";
 
-const BASE_URL = "https://calc-site-eight.vercel.app";
+const BASE_URL = "https://www.calcmoa.com";
 
 type PageProps = {
   params: Promise<{ slug: string }>;

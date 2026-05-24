@@ -9,7 +9,7 @@ const notoSansKr = Noto_Sans_KR({
   variable: "--font-sans",
 });
 
-const BASE_URL = "https://calc-site-eight.vercel.app";
+const BASE_URL = "https://www.calcmoa.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
