@@ -1,13 +1,20 @@
 import type { ReactNode } from "react";
+import { CoupangBanner } from "@/components/ads/CoupangBanner";
 
 export function AdSlot({ label = "광고 영역" }: { label?: string }) {
+  if (process.env.NODE_ENV === "development") {
+    return (
+      <aside
+        aria-label="광고 슬롯"
+        className="my-6 flex min-h-[72px] items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-white/60 px-4 py-6 text-center text-xs text-neutral-400 sm:min-h-[90px] sm:text-sm"
+      >
+        {label}
+      </aside>
+    );
+  }
   return (
-    <aside
-      aria-label="광고 슬롯"
-      className="my-6 flex min-h-[72px] items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-white/60 px-4 py-6 text-center text-xs text-neutral-400 sm:min-h-[90px] sm:text-sm"
-    >
-      {/* 개발 환경에서만 슬롯 라벨 표시 — production 에서는 빈 슬롯 */}
-      {process.env.NODE_ENV === "development" ? label : null}
+    <aside aria-label="광고 슬롯" className="my-4">
+      <CoupangBanner />
     </aside>
   );
 }

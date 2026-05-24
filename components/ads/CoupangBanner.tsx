@@ -25,7 +25,7 @@ export function CoupangBanner() {
       srcDoc={BANNER_HTML}
       width="100%"
       height="140"
-      style={{ border: "none", display: "block", maxWidth: 680 }}
+      style={{ border: "none", display: "block", maxWidth: 680, margin: "0 auto" }}
       title="쿠팡 파트너스 광고"
       aria-label="쿠팡 파트너스 광고"
       scrolling="no"
