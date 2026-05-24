@@ -1,6 +1,24 @@
 import type { NextConfig } from "next";
 
+const securityHeaders = [
+  { key: "X-DNS-Prefetch-Control", value: "on" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "X-XSS-Protection", value: "1; mode=block" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+];
+
 const nextConfig: NextConfig = {
+  /** X-Powered-By 헤더 제거 (보안·성능) */
+  poweredByHeader: false,
+
+  /** gzip/brotli 압축 활성화 */
+  compress: true,
+
+  /** React 엄격 모드 */
+  reactStrictMode: true,
+
   /**
    * 모바일(같은 Wi-Fi)에서 `http://192.168.0.3:3000`로 접속 시
    * 개발 리소스(HMR/클라이언트 번들) 차단을 막기 위한 허용 목록.
@@ -13,15 +31,52 @@ const nextConfig: NextConfig = {
     "127.0.0.1:3000",
   ],
 
-  /** Cursor/IDE 내장 미리보기가 옛 HTML·JS를 잡지 않도록 (개발 전용) */
   async headers() {
-    if (process.env.NODE_ENV !== "development") return [];
+    if (process.env.NODE_ENV === "development") {
+      return [
+        {
+          source: "/:path*",
+          headers: [
+            { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, max-age=0" },
+          ],
+        },
+      ];
+    }
+
     return [
+      // 모든 페이지 — 보안 헤더
       {
         source: "/:path*",
-        headers: [{ key: "Cache-Control", value: "no-store, no-cache, must-revalidate, max-age=0" }],
+        headers: securityHeaders,
+      },
+      // 정적 파일 — 1년 캐시 (Next.js가 파일명에 해시 포함)
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      // 폰트 캐시
+      {
+        source: "/fonts/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      // 이미지 캐시
+      {
+        source: "/_next/image/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" },
+        ],
       },
     ];
+  },
+
+  /** 이미지 최적화 설정 */
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
   },
 };
 
