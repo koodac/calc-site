@@ -26,9 +26,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!tool) {
     return { title: "도구를 찾을 수 없습니다" };
   }
+  const title = `${tool.title} — 계산기 & 툴`;
+  const url = `/tools/${slug}`;
   return {
-    title: `${tool.title} — 계산기 & 툴`,
+    title,
     description: tool.description,
+    openGraph: {
+      type: "website",
+      locale: "ko_KR",
+      url,
+      title,
+      description: tool.description,
+      siteName: "계산기 & 툴",
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description: tool.description,
+    },
   };
 }
 
