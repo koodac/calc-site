@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, useEffect, useRef, type ReactNode } from "react";
+import { QRCodeSVG } from "qrcode.react";
+import { estimateSimplifiedIncomeTax } from "@/lib/payroll/incomeTaxSimplified2026";
 import type { CalculatorKind } from "@/lib/calculatorKind";
 import type { ToolItem } from "@/lib/tools";
 import { SalaryCalculator } from "@/components/calculators/SalaryCalculator";
@@ -277,6 +279,38 @@ export function renderCalculatorBody(kind: CalculatorKind, tool: ToolItem) {
       return <BacWidmarkForm />;
     case "fractionDecimal":
       return <FractionDecimalForm />;
+    case "ppmConcentration":
+      return <PpmForm />;
+    case "perimeter":
+      return <PerimeterForm />;
+    case "densityCalc":
+      return <DensityForm />;
+    case "polynomialFactor":
+      return <PolynomialFactorForm />;
+    case "gaussianElimination":
+      return <GaussianForm />;
+    case "incomeTaxMonthly":
+      return <IncomeTaxMonthlyForm />;
+    case "bonusTax":
+      return <BonusTaxForm />;
+    case "unemploymentBenefit":
+      return <UnemploymentForm />;
+    case "parentalLeavePay":
+      return <ParentalLeaveForm />;
+    case "subscriptionScore":
+      return <SubscriptionScoreForm />;
+    case "qrCodeGen":
+      return <QrCodeForm />;
+    case "lunarCalendar":
+      return <LunarCalendarForm />;
+    case "onlineTimer":
+      return <OnlineTimerForm />;
+    case "mortgageCompare":
+      return <MortgageCompareForm />;
+    case "prepaymentCalc":
+      return <PrepaymentForm />;
+    case "jeonwolse":
+      return <JeonwolseForm />;
     default:
       return (
         <Box>
@@ -2020,6 +2054,1113 @@ function CurlingEndSumForm() {
         ))}
       </div>
       <ResultPanel title="득점 합계" highlight={`${total}점`} />
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// PPM 농도
+// ─────────────────────────────────────────
+function PpmForm() {
+  const [mode, setMode] = useState<"ppm" | "mass" | "vol">("ppm");
+  const [solute, setSolute] = useState(5);
+  const [solution, setSolution] = useState(1000);
+  const [ppmVal, setPpmVal] = useState(5000);
+
+  const result = useMemo(() => {
+    switch (mode) {
+      case "ppm": return solution > 0 ? (solute / solution) * 1_000_000 : 0;
+      case "mass": return (ppmVal * solution) / 1_000_000;
+      case "vol": return ppmVal > 0 ? (solute / ppmVal) * 1_000_000 : 0;
+    }
+  }, [mode, solute, solution, ppmVal]);
+
+  return (
+    <Box>
+      <div className="flex flex-wrap gap-2 text-sm">
+        {(["ppm", "mass", "vol"] as const).map((m) => (
+          <button key={m} type="button"
+            className={`rounded-full border px-3 py-1 ${mode === m ? "bg-neutral-900 text-white" : ""}`}
+            onClick={() => setMode(m)}>
+            {m === "ppm" ? "농도(ppm) 구하기" : m === "mass" ? "용질 질량 구하기" : "용액 부피 구하기"}
+          </button>
+        ))}
+      </div>
+      <div className="grid gap-6 sm:grid-cols-2">
+        {mode !== "mass" && (
+          <Labeled label="용질 질량 (mg 또는 g)">
+            <input type="number" className={INPUT_CLASS} value={solute} onChange={(e) => setSolute(num(e.target.value))} />
+          </Labeled>
+        )}
+        {mode !== "vol" && (
+          <Labeled label="용액 질량/부피 (mL 또는 g)">
+            <input type="number" className={INPUT_CLASS} value={solution} onChange={(e) => setSolution(num(e.target.value))} />
+          </Labeled>
+        )}
+        {mode !== "ppm" && (
+          <Labeled label="농도 (ppm)">
+            <input type="number" className={INPUT_CLASS} value={ppmVal} onChange={(e) => setPpmVal(num(e.target.value))} />
+          </Labeled>
+        )}
+      </div>
+      <ResultPanel
+        title="계산 결과"
+        subtitle="ppm = mg/L = mg/kg (물 기준). 단위를 맞춰 입력하세요."
+        highlight={
+          mode === "ppm" ? `${result.toFixed(4)} ppm` :
+          mode === "mass" ? `${result.toFixed(6)} g (용질)` :
+          `${result.toFixed(4)} mL (용액)`
+        }
+      />
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// 둘레 계산기
+// ─────────────────────────────────────────
+function PerimeterForm() {
+  const [shape, setShape] = useState<"circle" | "square" | "rect" | "triangle">("circle");
+  const [r, setR] = useState(5);
+  const [a, setA] = useState(4);
+  const [w, setW] = useState(6);
+  const [h, setH] = useState(4);
+  const [s1, setS1] = useState(3);
+  const [s2, setS2] = useState(4);
+  const [s3, setS3] = useState(5);
+
+  const result = useMemo(() => {
+    switch (shape) {
+      case "circle": return { p: 2 * Math.PI * r, area: Math.PI * r * r };
+      case "square": return { p: 4 * a, area: a * a };
+      case "rect": return { p: 2 * (w + h), area: w * h };
+      case "triangle": return { p: s1 + s2 + s3, area: null };
+    }
+  }, [shape, r, a, w, h, s1, s2, s3]);
+
+  const shapes = [["circle", "원"], ["square", "정사각형"], ["rect", "직사각형"], ["triangle", "삼각형"]] as const;
+
+  return (
+    <Box>
+      <div className="flex flex-wrap gap-2 text-sm">
+        {shapes.map(([v, label]) => (
+          <button key={v} type="button"
+            className={`rounded-full border px-3 py-1 ${shape === v ? "bg-neutral-900 text-white" : ""}`}
+            onClick={() => setShape(v)}>{label}</button>
+        ))}
+      </div>
+      <div className="grid gap-6 sm:grid-cols-2">
+        {shape === "circle" && <Labeled label="반지름 r"><input type="number" className={INPUT_CLASS} value={r} onChange={(e) => setR(num(e.target.value))} /></Labeled>}
+        {shape === "square" && <Labeled label="한 변의 길이 a"><input type="number" className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} /></Labeled>}
+        {shape === "rect" && (<>
+          <Labeled label="가로 w"><input type="number" className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} /></Labeled>
+          <Labeled label="세로 h"><input type="number" className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} /></Labeled>
+        </>)}
+        {shape === "triangle" && (<>
+          <Labeled label="변 a"><input type="number" className={INPUT_CLASS} value={s1} onChange={(e) => setS1(num(e.target.value))} /></Labeled>
+          <Labeled label="변 b"><input type="number" className={INPUT_CLASS} value={s2} onChange={(e) => setS2(num(e.target.value))} /></Labeled>
+          <div className="sm:col-span-2"><Labeled label="변 c"><input type="number" className={INPUT_CLASS} value={s3} onChange={(e) => setS3(num(e.target.value))} /></Labeled></div>
+        </>)}
+      </div>
+      <ResultPanel title="계산 결과">
+        <ResultRows rows={[
+          { label: "둘레", value: `${result.p.toFixed(6)}` },
+          ...(result.area != null ? [{ label: "넓이", value: `${result.area.toFixed(6)}` }] : []),
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// 밀도 계산기
+// ─────────────────────────────────────────
+function DensityForm() {
+  const [mode, setMode] = useState<"d" | "m" | "v">("d");
+  const [mass, setMass] = useState(500);
+  const [volume, setVolume] = useState(250);
+  const [density, setDensity] = useState(2);
+
+  const result = useMemo(() => {
+    switch (mode) {
+      case "d": return volume > 0 ? mass / volume : 0;
+      case "m": return density * volume;
+      case "v": return density > 0 ? mass / density : 0;
+    }
+  }, [mode, mass, volume, density]);
+
+  const label = mode === "d" ? "밀도 (g/cm³)" : mode === "m" ? "질량 (g)" : "부피 (cm³)";
+
+  return (
+    <Box>
+      <div className="flex flex-wrap gap-2 text-sm">
+        {([["d", "밀도(ρ)"], ["m", "질량(m)"], ["v", "부피(V)"]] as const).map(([v, l]) => (
+          <button key={v} type="button"
+            className={`rounded-full border px-3 py-1 ${mode === v ? "bg-neutral-900 text-white" : ""}`}
+            onClick={() => setMode(v)}>{l} 구하기</button>
+        ))}
+      </div>
+      <div className="grid gap-6 sm:grid-cols-2">
+        {mode !== "m" && <Labeled label="질량 m (g)"><input type="number" className={INPUT_CLASS} value={mass} onChange={(e) => setMass(num(e.target.value))} /></Labeled>}
+        {mode !== "v" && <Labeled label="부피 V (cm³)"><input type="number" className={INPUT_CLASS} value={volume} onChange={(e) => setVolume(num(e.target.value))} /></Labeled>}
+        {mode !== "d" && <Labeled label="밀도 ρ (g/cm³)"><input type="number" className={INPUT_CLASS} value={density} onChange={(e) => setDensity(num(e.target.value))} /></Labeled>}
+      </div>
+      <ResultPanel title="계산 결과" subtitle="ρ = m / V" highlight={`${label}: ${result.toFixed(6)}`} />
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// 다항식 인수분해 (이차방정식 ax²+bx+c=0)
+// ─────────────────────────────────────────
+function PolynomialFactorForm() {
+  const [a, setA] = useState(1);
+  const [b, setB] = useState(-5);
+  const [c, setC] = useState(6);
+
+  type PolyResult = { type: "all" } | { type: "none" } | { type: "linear"; x: number } | { type: "complex"; disc: number } | { type: "double"; x: number; disc: number } | { type: "two"; x1: number; x2: number; disc: number };
+  const res = useMemo((): PolyResult => {
+    if (a === 0) {
+      if (b === 0) return c === 0 ? { type: "all" } : { type: "none" };
+      return { type: "linear", x: -c / b };
+    }
+    const disc = b * b - 4 * a * c;
+    if (disc < 0) return { type: "complex", disc };
+    if (disc === 0) {
+      const x = -b / (2 * a);
+      return { type: "double", x, disc };
+    }
+    const x1 = (-b + Math.sqrt(disc)) / (2 * a);
+    const x2 = (-b - Math.sqrt(disc)) / (2 * a);
+    return { type: "two", x1, x2, disc };
+  }, [a, b, c]);
+
+  function fmtCoeff(v: number, x: string, first = false): string {
+    if (v === 0) return "";
+    const s = v < 0 ? "-" : first ? "" : "+";
+    const abs = Math.abs(v);
+    return `${s}${abs === 1 && x ? "" : abs}${x}`;
+  }
+
+  const expr = `${fmtCoeff(a, "x²", true) || "0"}${fmtCoeff(b, "x")}${fmtCoeff(c, "")} = 0`;
+
+  return (
+    <Box>
+      <p className="text-sm text-neutral-500">이차방정식 ax² + bx + c = 0 형태</p>
+      <div className="grid gap-6 sm:grid-cols-3">
+        <Labeled label="a (x² 계수)"><input type="number" className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} /></Labeled>
+        <Labeled label="b (x 계수)"><input type="number" className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} /></Labeled>
+        <Labeled label="c (상수)"><input type="number" className={INPUT_CLASS} value={c} onChange={(e) => setC(num(e.target.value))} /></Labeled>
+      </div>
+      <ResultPanel title="계산 결과" subtitle={`식: ${expr}`}>
+        {res.type === "all" && <p className="mt-4 text-sm">모든 실수가 해입니다.</p>}
+        {res.type === "none" && <p className="mt-4 text-sm text-red-600">해가 없습니다.</p>}
+        {res.type === "linear" && <ResultRows rows={[{ label: "해", value: `x = ${res.x.toFixed(6)}` }]} />}
+        {res.type === "complex" && (
+          <ResultRows rows={[
+            { label: "판별식 D", value: `${(b*b - 4*a*c).toFixed(4)} (< 0)` },
+            { label: "실수 해", value: "없음 (복소수 해)" },
+            { label: "복소수 해", value: `x = (${-b} ± √${Math.abs(b*b-4*a*c)}i) / ${2*a}` },
+          ]} />
+        )}
+        {(res.type === "double") && (
+          <ResultRows rows={[
+            { label: "판별식 D", value: `${res.disc}` },
+            { label: "중근", value: `x = ${res.x.toFixed(6)}` },
+            { label: "인수분해", value: `${a}(x - ${res.x.toFixed(4)})²` },
+          ]} />
+        )}
+        {res.type === "two" && (
+          <ResultRows rows={[
+            { label: "판별식 D", value: `${res.disc.toFixed(4)}` },
+            { label: "x₁", value: `${res.x1.toFixed(8)}` },
+            { label: "x₂", value: `${res.x2.toFixed(8)}` },
+            { label: "인수분해", value: `${a}(x - ${res.x1.toFixed(4)})(x - ${res.x2.toFixed(4)})` },
+          ]} />
+        )}
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// 가우스 소거법 (연립방정식)
+// ─────────────────────────────────────────
+function GaussianForm() {
+  const [dim, setDim] = useState<2 | 3>(2);
+  const [mat2, setMat2] = useState([[1, 2, 5], [3, 4, 6]]);
+  const [mat3, setMat3] = useState([[2, 1, -1, 8], [-3, -1, 2, -11], [-2, 1, 2, -3]]);
+
+  function gaussSolve(rows: number[][]): string[] | null {
+    const n = rows.length;
+    const m = rows.map((r) => [...r]);
+    for (let col = 0; col < n; col++) {
+      let pivotRow = -1;
+      let pivotVal = 0;
+      for (let row = col; row < n; row++) {
+        if (Math.abs(m[row][col]) > pivotVal) { pivotVal = Math.abs(m[row][col]); pivotRow = row; }
+      }
+      if (pivotRow === -1 || pivotVal < 1e-12) return null;
+      [m[col], m[pivotRow]] = [m[pivotRow], m[col]];
+      const f = m[col][col];
+      for (let j = col; j <= n; j++) m[col][j] /= f;
+      for (let row = 0; row < n; row++) {
+        if (row === col) continue;
+        const factor = m[row][col];
+        for (let j = col; j <= n; j++) m[row][j] -= factor * m[col][j];
+      }
+    }
+    return m.map((row) => row[n].toFixed(6));
+  }
+
+  const vars2 = ["x", "y"];
+  const vars3 = ["x", "y", "z"];
+  const sol2 = useMemo(() => gaussSolve(mat2), [mat2]);
+  const sol3 = useMemo(() => gaussSolve(mat3), [mat3]);
+  const mat = dim === 2 ? mat2 : mat3;
+  const setMat = dim === 2 ? setMat2 : setMat3;
+  const vars = dim === 2 ? vars2 : vars3;
+  const sol = dim === 2 ? sol2 : sol3;
+
+  function setCell(row: number, col: number, val: number) {
+    const next = mat.map((r) => [...r]);
+    next[row][col] = val;
+    setMat(next as any);
+  }
+
+  return (
+    <Box>
+      <div className="flex gap-2 text-sm">
+        {([2, 3] as const).map((d) => (
+          <button key={d} type="button"
+            className={`rounded-full border px-3 py-1 ${dim === d ? "bg-neutral-900 text-white" : ""}`}
+            onClick={() => setDim(d)}>{d}×{d} 연립방정식</button>
+        ))}
+      </div>
+      <p className="text-xs text-neutral-500">각 행은 방정식 계수와 우변 상수입니다. 예: [a, b, c] → ax + by = c</p>
+      <div className="space-y-3">
+        {mat.map((row, ri) => (
+          <div key={ri} className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-neutral-500 w-6">{ri + 1}식</span>
+            {row.map((val, ci) => (
+              <div key={ci} className="flex items-center gap-1">
+                <input
+                  type="number"
+                  className={`${INPUT_CLASS} w-20`}
+                  value={val}
+                  onChange={(e) => setCell(ri, ci, num(e.target.value))}
+                />
+                {ci < vars.length ? <span className="text-sm text-neutral-600">{vars[ci]}</span> : null}
+                {ci < vars.length - 1 ? <span className="text-sm text-neutral-400">+</span> : ci === vars.length - 1 ? <span className="text-sm text-neutral-400">=</span> : null}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      <ResultPanel title="해">
+        {sol ? (
+          <ResultRows rows={vars.map((v, i) => ({ label: v, value: sol[i] }))} />
+        ) : (
+          <p className="mt-4 text-sm text-red-600">해 없음 또는 무수히 많은 해 (행렬식 = 0)</p>
+        )}
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// 근로소득세(갑근세) — 간이세액표 기반
+// ─────────────────────────────────────────
+function IncomeTaxMonthlyForm() {
+  const [monthly, setMonthly] = useState(4_000_000);
+  const [deps, setDeps] = useState(1);
+  const [children, setChildren] = useState(0);
+  const [nonTax, setNonTax] = useState(200_000);
+
+  const taxable = Math.max(0, monthly - nonTax);
+  const income = estimateSimplifiedIncomeTax({
+    monthlyTaxableWage: taxable,
+    dependentsIncludingSelf: deps,
+    childrenUnder20: children,
+  });
+  const local = Math.floor((income * 0.1) / 10) * 10;
+
+  return (
+    <Box>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)] lg:gap-6">
+        <section className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5">
+          <h2 className="text-base font-semibold text-neutral-900">입력</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Labeled label="월 급여 (원)"><input type="number" className={INPUT_CLASS} value={monthly} onChange={(e) => setMonthly(num(e.target.value))} /></Labeled>
+            <Labeled label="비과세액 (원, 식대 등)"><input type="number" className={INPUT_CLASS} value={nonTax} onChange={(e) => setNonTax(num(e.target.value))} /></Labeled>
+            <Labeled label="공제 대상 부양가족 수 (본인 포함)">
+              <input type="number" min={1} max={11} className={INPUT_CLASS} value={deps} onChange={(e) => setDeps(Math.min(11, Math.max(1, Math.floor(num(e.target.value)))))} />
+            </Labeled>
+            <Labeled label="20세 이하 자녀 수">
+              <input type="number" min={0} max={10} className={INPUT_CLASS} value={children} onChange={(e) => setChildren(Math.min(10, Math.max(0, Math.floor(num(e.target.value)))))} />
+            </Labeled>
+          </div>
+        </section>
+        <ResultPanel title="원천징수 세액 (월)" subtitle="2026년 간이세액표 기준. 비과세 월 200,000원(식대) 기본 설정.">
+          <ResultRows rows={[
+            { label: "과세표준 월급여", value: `${won(taxable)}원` },
+            { label: "근로소득세", value: `${won(income)}원` },
+            { label: "지방소득세(10%)", value: `${won(local)}원` },
+            { label: "합계", value: `${won(income + local)}원` },
+          ]} />
+        </ResultPanel>
+      </div>
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// 성과급(상여) 세금 계산기
+// ─────────────────────────────────────────
+function BonusTaxForm() {
+  const [bonus, setBonus] = useState(3_000_000);
+  const [monthly, setMonthly] = useState(4_000_000);
+  const [deps, setDeps] = useState(1);
+  const [children, setChildren] = useState(0);
+
+  const taxWithSalary = estimateSimplifiedIncomeTax({
+    monthlyTaxableWage: monthly + Math.round(bonus / 12),
+    dependentsIncludingSelf: deps,
+    childrenUnder20: children,
+  });
+  const taxSalaryOnly = estimateSimplifiedIncomeTax({
+    monthlyTaxableWage: monthly,
+    dependentsIncludingSelf: deps,
+    childrenUnder20: children,
+  });
+  const bonusTax = Math.max(0, taxWithSalary - taxSalaryOnly) * 12;
+  const localTax = Math.floor((bonusTax * 0.1) / 10) * 10;
+
+  return (
+    <Box>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)] lg:gap-6">
+        <section className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5">
+          <h2 className="text-base font-semibold text-neutral-900">입력</h2>
+          <p className="mt-1 text-xs text-neutral-500">국세청 간이세액표 방법: (월급 + 상여÷12)에서 월급 세액을 뺀 후 12배</p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Labeled label="성과급·상여 총액 (원)"><input type="number" className={INPUT_CLASS} value={bonus} onChange={(e) => setBonus(num(e.target.value))} /></Labeled>
+            <Labeled label="과세 월 급여 (원)"><input type="number" className={INPUT_CLASS} value={monthly} onChange={(e) => setMonthly(num(e.target.value))} /></Labeled>
+            <Labeled label="부양가족 수 (본인 포함)">
+              <input type="number" min={1} max={11} className={INPUT_CLASS} value={deps} onChange={(e) => setDeps(Math.min(11, Math.max(1, Math.floor(num(e.target.value)))))} />
+            </Labeled>
+            <Labeled label="20세 이하 자녀 수">
+              <input type="number" min={0} max={10} className={INPUT_CLASS} value={children} onChange={(e) => setChildren(Math.min(10, Math.max(0, Math.floor(num(e.target.value)))))} />
+            </Labeled>
+          </div>
+        </section>
+        <ResultPanel title="성과급 원천징수 (추정)" subtitle="실제 세액은 연말정산으로 정산됩니다.">
+          <ResultRows rows={[
+            { label: "성과급 소득세", value: `${won(bonusTax)}원` },
+            { label: "지방소득세", value: `${won(localTax)}원` },
+            { label: "합계 공제", value: `${won(bonusTax + localTax)}원` },
+            { label: "세후 성과급", value: `${won(bonus - bonusTax - localTax)}원` },
+          ]} />
+        </ResultPanel>
+      </div>
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// 실업급여 계산기
+// ─────────────────────────────────────────
+const UNEMP_DURATION: Array<[number, number[]]> = [
+  [50, [120, 150, 180, 210, 240]],
+  [60, [120, 180, 210, 240, 270]],
+  [999, [120, 180, 210, 240, 270]],
+];
+const UNEMP_WY = [1, 3, 5, 10, 10]; // under 1y, 1-3y, 3-5y, 5-10y, 10y+
+
+function getUnempDays(age: number, workYears: number): number {
+  const wyIdx = workYears < 1 ? 0 : workYears < 3 ? 1 : workYears < 5 ? 2 : workYears < 10 ? 3 : 4;
+  for (const [ageLimit, days] of UNEMP_DURATION) {
+    if (age < ageLimit) return days[wyIdx];
+  }
+  return UNEMP_DURATION[UNEMP_DURATION.length - 1][1][wyIdx];
+}
+
+function UnemploymentForm() {
+  const [dailyWage, setDailyWage] = useState(100_000);
+  const [age, setAge] = useState(35);
+  const [workYears, setWorkYears] = useState(3);
+
+  const MIN_DAILY = Math.round(10_320 * 8 * 0.8); // 최저임금 × 8h × 80%
+  const MAX_DAILY = 66_000;
+  const rawDaily = Math.round(dailyWage * 0.6);
+  const benefitDaily = Math.min(MAX_DAILY, Math.max(MIN_DAILY, rawDaily));
+  const days = getUnempDays(age, workYears);
+  const total = benefitDaily * days;
+
+  return (
+    <Box>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)] lg:gap-6">
+        <section className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5">
+          <h2 className="text-base font-semibold">입력</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Labeled label="1일 평균임금 (원)"><input type="number" className={INPUT_CLASS} value={dailyWage} onChange={(e) => setDailyWage(num(e.target.value))} /></Labeled>
+            <Labeled label="이직 당시 나이"><input type="number" min={18} max={80} className={INPUT_CLASS} value={age} onChange={(e) => setAge(num(e.target.value))} /></Labeled>
+            <Labeled label="피보험 단위기간(고용보험 가입 년수)">
+              <input type="number" min={0} max={30} step={0.5} className={INPUT_CLASS} value={workYears} onChange={(e) => setWorkYears(num(e.target.value))} />
+            </Labeled>
+          </div>
+        </section>
+        <ResultPanel title="실업급여 추정" subtitle="2026년 기준. 소정급여일수는 나이·가입기간으로 결정.">
+          <ResultRows rows={[
+            { label: "1일 구직급여 (60%)", value: `${won(rawDaily)}원` },
+            { label: "하한(최저임금 80% × 8h)", value: `${won(MIN_DAILY)}원` },
+            { label: "상한", value: `${won(MAX_DAILY)}원` },
+            { label: "지급 1일액", value: `${won(benefitDaily)}원` },
+            { label: "소정급여일수", value: `${days}일` },
+            { label: "예상 총액", value: `${won(total)}원` },
+          ]} />
+        </ResultPanel>
+      </div>
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// 육아휴직 급여 계산기 (6+6 포함)
+// ─────────────────────────────────────────
+function ParentalLeaveForm() {
+  const [mode, setMode] = useState<"std" | "66">("std");
+  const [wage, setWage] = useState(3_000_000);
+  const [parentOrder, setParentOrder] = useState<1 | 2>(1);
+
+  const STD_RATE = 0.8;
+  const STD_CAP = 1_500_000;
+  const STD_FLOOR = 700_000;
+
+  const CAPS_66 = [200, 250, 300, 350, 400, 450].map((v) => v * 10_000);
+
+  const results = useMemo(() => {
+    if (mode === "std") {
+      const monthly = Math.min(STD_CAP, Math.max(STD_FLOOR, Math.round(wage * STD_RATE)));
+      return Array.from({ length: 12 }, (_, i) => ({ month: i + 1, pay: monthly }));
+    }
+    // 6+6: 최초 6개월 100% (상한 200~450만), 이후 80% 상한 150만
+    return Array.from({ length: 12 }, (_, i) => {
+      if (i < 6) {
+        const cap = CAPS_66[i];
+        const pay = Math.min(cap, wage);
+        return { month: i + 1, pay };
+      }
+      return { month: i + 1, pay: Math.min(STD_CAP, Math.max(STD_FLOOR, Math.round(wage * STD_RATE))) };
+    });
+  }, [mode, wage, parentOrder]);
+
+  const total = results.reduce((s, r) => s + r.pay, 0);
+
+  return (
+    <Box>
+      <div className="flex flex-wrap gap-2 text-sm mb-2">
+        {([["std", "일반 육아휴직"], ["66", "6+6 부모육아휴직"]] as const).map(([v, l]) => (
+          <button key={v} type="button"
+            className={`rounded-full border px-3 py-1 ${mode === v ? "bg-neutral-900 text-white" : ""}`}
+            onClick={() => setMode(v)}>{l}</button>
+        ))}
+      </div>
+      {mode === "66" && (
+        <div className="flex gap-2 text-sm">
+          {([1, 2] as const).map((o) => (
+            <button key={o} type="button"
+              className={`rounded-full border px-3 py-1 ${parentOrder === o ? "bg-neutral-900 text-white" : ""}`}
+              onClick={() => setParentOrder(o)}>{o}번째 사용 부모</button>
+          ))}
+        </div>
+      )}
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)] lg:gap-6">
+        <section className="rounded-xl border border-neutral-200 bg-white p-4">
+          <Labeled label="통상임금 (월)"><input type="number" className={INPUT_CLASS} value={wage} onChange={(e) => setWage(num(e.target.value))} /></Labeled>
+          <p className="mt-2 text-xs text-neutral-500">
+            {mode === "std"
+              ? "일반: 통상임금 80%, 상한 150만원, 하한 70만원"
+              : "6+6: 최초 6개월 100%(상한 200→450만원), 이후 80%(상한 150만원)"}
+          </p>
+          <div className="mt-4 space-y-2">
+            {results.map((r) => (
+              <div key={r.month} className="flex justify-between text-sm">
+                <span className="text-neutral-600">{r.month}개월째</span>
+                <span className="font-medium">{won(r.pay)}원</span>
+              </div>
+            ))}
+          </div>
+        </section>
+        <ResultPanel title="12개월 합계 (추정)">
+          <ResultRows rows={[{ label: "12개월 총급여", value: `${won(total)}원` }]} />
+        </ResultPanel>
+      </div>
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// 청약 가점 계산기
+// ─────────────────────────────────────────
+function SubscriptionScoreForm() {
+  const [noHomeYears, setNoHomeYears] = useState(5);
+  const [dependants, setDependants] = useState(2);
+  const [accountYears, setAccountYears] = useState(5);
+
+  const noHomeScore = useMemo(() => {
+    const y = Math.max(0, Math.floor(noHomeYears));
+    if (y === 0) return 2;
+    return Math.min(32, 2 + y * 2);
+  }, [noHomeYears]);
+
+  const depScore = useMemo(() => {
+    const d = Math.min(6, Math.max(0, Math.floor(dependants)));
+    return [5, 10, 15, 20, 25, 30, 35][d];
+  }, [dependants]);
+
+  const accScore = useMemo(() => {
+    const y = Math.max(0, accountYears);
+    if (y < 0.5) return 0;
+    if (y >= 15) return 17;
+    if (y >= 14) return 15;
+    if (y >= 13) return 14;
+    if (y >= 12) return 13;
+    if (y >= 11) return 12;
+    if (y >= 10) return 11;
+    if (y >= 9) return 10;
+    if (y >= 8) return 9;
+    if (y >= 7) return 8;
+    if (y >= 6) return 7;
+    if (y >= 5) return 6;
+    if (y >= 4) return 5;
+    if (y >= 3) return 4;
+    if (y >= 2) return 3;
+    if (y >= 1) return 2;
+    return 1;
+  }, [accountYears]);
+
+  const total = noHomeScore + depScore + accScore;
+
+  return (
+    <Box>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)] lg:gap-6">
+        <section className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5">
+          <h2 className="text-base font-semibold">입력</h2>
+          <div className="mt-4 grid gap-4">
+            <Labeled label="무주택 기간 (년, 0=주택 소유)">
+              <input type="number" min={0} max={15} className={INPUT_CLASS} value={noHomeYears} onChange={(e) => setNoHomeYears(num(e.target.value))} />
+            </Labeled>
+            <Labeled label="부양가족 수 (0~6명 이상)">
+              <input type="number" min={0} max={6} className={INPUT_CLASS} value={dependants} onChange={(e) => setDependants(num(e.target.value))} />
+            </Labeled>
+            <Labeled label="청약통장 가입기간 (년)">
+              <input type="number" min={0} max={20} step={0.5} className={INPUT_CLASS} value={accountYears} onChange={(e) => setAccountYears(num(e.target.value))} />
+            </Labeled>
+          </div>
+        </section>
+        <ResultPanel title="청약 가점 (참고)" subtitle="최고 84점. 청약홈에서 반드시 공식 확인하세요.">
+          <ResultRows rows={[
+            { label: `무주택 기간 (최대 32점)`, value: `${noHomeScore}점` },
+            { label: `부양가족 수 (최대 35점)`, value: `${depScore}점` },
+            { label: `청약통장 가입기간 (최대 17점)`, value: `${accScore}점` },
+            { label: "합계", value: `${total}점 / 84점` },
+          ]} />
+        </ResultPanel>
+      </div>
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// QR 코드 생성기
+// ─────────────────────────────────────────
+function QrCodeForm() {
+  const [text, setText] = useState("https://calcmoa.com");
+  const [size, setSize] = useState(200);
+  const [level, setLevel] = useState<"L" | "M" | "Q" | "H">("M");
+  const [copied, setCopied] = useState(false);
+
+  function copyAsSvg() {
+    const svgEl = document.querySelector("#qr-svg-output svg");
+    if (!svgEl) return;
+    const xml = new XMLSerializer().serializeToString(svgEl);
+    navigator.clipboard.writeText(xml).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
+  }
+
+  return (
+    <Box>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,280px)] lg:gap-6">
+        <section className="rounded-xl border border-neutral-200 bg-white p-4">
+          <h2 className="text-base font-semibold">내용 입력</h2>
+          <div className="mt-4 space-y-4">
+            <Labeled label="텍스트 또는 URL">
+              <textarea className={`${TEXTAREA_CLASS} font-mono text-sm`} rows={4} value={text} onChange={(e) => setText(e.target.value)} />
+            </Labeled>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Labeled label={`크기: ${size}px`}>
+                <input type="range" min={100} max={400} step={10} className="w-full" value={size} onChange={(e) => setSize(Number(e.target.value))} />
+              </Labeled>
+              <Labeled label="오류 정정 수준">
+                <div className="flex gap-2 flex-wrap">
+                  {(["L", "M", "Q", "H"] as const).map((l) => (
+                    <button key={l} type="button"
+                      className={`rounded-full border px-3 py-1 text-xs ${level === l ? "bg-neutral-900 text-white" : ""}`}
+                      onClick={() => setLevel(l)}>{l}</button>
+                  ))}
+                </div>
+              </Labeled>
+            </div>
+          </div>
+        </section>
+        <section className="flex flex-col items-center gap-4 rounded-xl border border-neutral-200 bg-white p-4">
+          <div id="qr-svg-output" className="rounded-lg overflow-hidden bg-white">
+            {text.trim() ? (
+              <QRCodeSVG value={text.trim()} size={size} level={level} includeMargin />
+            ) : (
+              <div className="flex items-center justify-center bg-neutral-100 text-sm text-neutral-500" style={{ width: size, height: size }}>내용을 입력하세요</div>
+            )}
+          </div>
+          <button type="button"
+            className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white"
+            onClick={copyAsSvg}>
+            {copied ? "복사됨!" : "SVG 복사"}
+          </button>
+        </section>
+      </div>
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// 양력 → 음력 변환기 (근사 알고리즘)
+// ─────────────────────────────────────────
+// 음력 신년 양력 날짜 + 윤달 정보 (2000-2040)
+// [year, lunarNewYearMD, leapAfterMonth, monthLengths...]
+// leapAfterMonth=0 → 윤달 없음
+type LunarYearData = { lny: [number, number]; leapAfter: number; months: number[] };
+const LUNAR_DATA: Record<number, LunarYearData> = {
+  2000: { lny: [2, 5], leapAfter: 0, months: [30, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30] },
+  2001: { lny: [1, 24], leapAfter: 5, months: [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30] },
+  2002: { lny: [2, 12], leapAfter: 0, months: [29, 30, 29, 30, 29, 30, 29, 30, 30, 29, 30, 29] },
+  2003: { lny: [2, 1], leapAfter: 0, months: [30, 29, 30, 29, 30, 29, 30, 29, 30, 30, 29, 30] },
+  2004: { lny: [1, 22], leapAfter: 2, months: [29, 30, 29, 29, 30, 29, 30, 29, 30, 30, 29, 30, 30] },
+  2005: { lny: [2, 9], leapAfter: 0, months: [29, 30, 29, 30, 29, 30, 29, 29, 30, 30, 29, 30] },
+  2006: { lny: [1, 29], leapAfter: 7, months: [30, 29, 30, 29, 30, 29, 30, 29, 29, 30, 29, 30, 30] },
+  2007: { lny: [2, 18], leapAfter: 0, months: [29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30] },
+  2008: { lny: [2, 7], leapAfter: 0, months: [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29] },
+  2009: { lny: [1, 26], leapAfter: 5, months: [30, 30, 29, 30, 29, 29, 30, 29, 30, 29, 30, 29, 30] },
+  2010: { lny: [2, 14], leapAfter: 0, months: [29, 30, 30, 29, 30, 29, 30, 29, 29, 30, 29, 30] },
+  2011: { lny: [2, 3], leapAfter: 0, months: [30, 29, 30, 30, 29, 30, 29, 30, 29, 30, 29, 29] },
+  2012: { lny: [1, 23], leapAfter: 4, months: [30, 30, 29, 30, 29, 30, 30, 29, 30, 29, 30, 29, 29] },
+  2013: { lny: [2, 10], leapAfter: 0, months: [30, 30, 29, 30, 29, 30, 29, 30, 30, 29, 30, 29] },
+  2014: { lny: [1, 31], leapAfter: 9, months: [29, 30, 30, 29, 30, 29, 30, 29, 30, 29, 30, 30, 29] },
+  2015: { lny: [2, 19], leapAfter: 0, months: [29, 30, 29, 30, 30, 29, 30, 29, 30, 29, 29, 30] },
+  2016: { lny: [2, 8], leapAfter: 0, months: [30, 29, 30, 29, 30, 30, 29, 30, 29, 30, 29, 29] },
+  2017: { lny: [1, 28], leapAfter: 6, months: [30, 29, 30, 30, 29, 30, 29, 30, 30, 29, 30, 29, 29] },
+  2018: { lny: [2, 16], leapAfter: 0, months: [30, 29, 30, 29, 30, 30, 29, 30, 29, 30, 29, 30] },
+  2019: { lny: [2, 5], leapAfter: 0, months: [29, 30, 29, 30, 29, 30, 30, 29, 30, 29, 30, 29] },
+  2020: { lny: [1, 25], leapAfter: 4, months: [30, 29, 30, 30, 29, 30, 29, 30, 30, 29, 30, 29, 30] },
+  2021: { lny: [2, 12], leapAfter: 0, months: [29, 30, 29, 29, 30, 30, 29, 30, 30, 29, 30, 29] },
+  2022: { lny: [2, 1], leapAfter: 0, months: [30, 29, 30, 29, 30, 29, 30, 30, 29, 30, 29, 30] },
+  2023: { lny: [1, 22], leapAfter: 2, months: [29, 30, 29, 30, 29, 30, 30, 29, 30, 29, 30, 29, 30] },
+  2024: { lny: [2, 10], leapAfter: 0, months: [30, 29, 30, 29, 30, 29, 30, 29, 30, 30, 29, 30] },
+  2025: { lny: [1, 29], leapAfter: 6, months: [29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 29] },
+  2026: { lny: [2, 17], leapAfter: 0, months: [30, 30, 29, 30, 29, 30, 29, 29, 30, 29, 30, 30] },
+  2027: { lny: [2, 6], leapAfter: 0, months: [29, 30, 30, 29, 30, 29, 30, 29, 30, 29, 29, 30] },
+  2028: { lny: [1, 26], leapAfter: 5, months: [30, 29, 30, 30, 29, 30, 29, 30, 29, 30, 29, 29, 30] },
+  2029: { lny: [2, 13], leapAfter: 0, months: [30, 29, 30, 29, 30, 30, 29, 30, 29, 30, 29, 30] },
+  2030: { lny: [2, 3], leapAfter: 0, months: [29, 30, 29, 30, 29, 30, 30, 29, 30, 30, 29, 29] },
+  2031: { lny: [1, 23], leapAfter: 3, months: [30, 29, 30, 29, 30, 30, 29, 30, 29, 30, 30, 29, 29] },
+  2032: { lny: [2, 11], leapAfter: 0, months: [30, 29, 30, 30, 29, 30, 29, 30, 29, 29, 30, 30] },
+  2033: { lny: [1, 31], leapAfter: 11, months: [29, 30, 29, 30, 30, 29, 30, 29, 30, 29, 30, 29, 30] },
+  2034: { lny: [2, 19], leapAfter: 0, months: [29, 30, 29, 30, 29, 30, 30, 29, 30, 29, 30, 29] },
+  2035: { lny: [2, 8], leapAfter: 0, months: [30, 29, 30, 29, 30, 29, 30, 30, 29, 30, 29, 30] },
+  2036: { lny: [1, 28], leapAfter: 6, months: [29, 30, 29, 30, 29, 30, 29, 30, 30, 29, 30, 30, 29] },
+  2037: { lny: [2, 15], leapAfter: 0, months: [30, 29, 30, 29, 30, 29, 29, 30, 30, 29, 30, 30] },
+  2038: { lny: [2, 4], leapAfter: 0, months: [29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 30, 29] },
+  2039: { lny: [1, 24], leapAfter: 5, months: [30, 29, 30, 29, 30, 29, 30, 29, 30, 29, 30, 30, 29] },
+  2040: { lny: [2, 12], leapAfter: 0, months: [30, 29, 30, 29, 30, 30, 29, 30, 29, 30, 29, 30] },
+};
+
+function gregorianToLunar(year: number, month: number, day: number): { lunarYear: number; lunarMonth: number; lunarDay: number; isLeap: boolean } | null {
+  const gDate = new Date(year, month - 1, day);
+  const msDay = 86400000;
+  for (let y = year; y >= year - 1; y--) {
+    const data = LUNAR_DATA[y];
+    if (!data) continue;
+    const [lm, ld] = data.lny;
+    const lnyDate = new Date(y, lm - 1, ld);
+    if (gDate < lnyDate) continue;
+    let cursor = new Date(lnyDate);
+    let lunarMonth = 0;
+    let isLeap = false;
+    const allMonths: { month: number; isLeap: boolean; days: number }[] = [];
+    for (let mi = 0; mi < data.months.length; mi++) {
+      const actualMonth = isLeap ? lunarMonth : lunarMonth + 1;
+      if (!isLeap) lunarMonth++;
+      allMonths.push({ month: actualMonth, isLeap, days: data.months[mi] });
+      if (data.leapAfter > 0 && actualMonth === data.leapAfter && !isLeap) {
+        isLeap = true;
+        mi--;
+        lunarMonth--;
+      } else {
+        isLeap = false;
+      }
+    }
+    lunarMonth = 0;
+    isLeap = false;
+    let monthIdx = 0;
+    for (const m of allMonths) {
+      const nextCursor = new Date(cursor.getTime() + m.days * msDay);
+      if (gDate >= cursor && gDate < nextCursor) {
+        const lunarDay = Math.floor((gDate.getTime() - cursor.getTime()) / msDay) + 1;
+        return { lunarYear: y, lunarMonth: m.month, lunarDay, isLeap: m.isLeap };
+      }
+      cursor = nextCursor;
+      monthIdx++;
+    }
+  }
+  return null;
+}
+
+function LunarCalendarForm() {
+  const today = new Date().toISOString().slice(0, 10);
+  const [date, setDate] = useState(today);
+
+  const result = useMemo(() => {
+    const d = new Date(date + "T12:00:00");
+    if (Number.isNaN(d.getTime())) return null;
+    return gregorianToLunar(d.getFullYear(), d.getMonth() + 1, d.getDate());
+  }, [date]);
+
+  const GANZHI_YEAR = ["甲子", "乙丑", "丙寅", "丁卯", "戊辰", "己巳", "庚午", "辛未", "壬申", "癸酉", "甲戌", "乙亥", "丙子", "丁丑", "戊寅", "己卯", "庚辰", "辛巳", "壬午", "癸未", "甲申", "乙酉", "丙戌", "丁亥", "戊子", "己丑", "庚寅", "辛卯", "壬辰", "癸巳", "甲午", "乙未", "丙申", "丁酉", "戊戌", "己亥", "庚子", "辛丑", "壬寅", "癸卯", "甲辰", "乙巳", "丙午", "丁未", "戊申", "己酉", "庚戌", "辛亥", "壬子", "癸丑", "甲寅", "乙卯", "丙辰", "丁巳", "戊午", "己未", "庚申", "辛酉", "壬戌", "癸亥"];
+  const KOREAN_YEAR = ["갑자", "을축", "병인", "정묘", "무진", "기사", "경오", "신미", "임신", "계유", "갑술", "을해", "병자", "정축", "무인", "기묘", "경진", "신사", "임오", "계미", "갑신", "을유", "병술", "정해", "무자", "기축", "경인", "신묘", "임진", "계사", "갑오", "을미", "병신", "정유", "무술", "기해", "경자", "신축", "임인", "계묘", "갑진", "을사", "병오", "정미", "무신", "기유", "경술", "신해", "임자", "계축", "갑인", "을묘", "병진", "정사", "무오", "기미", "경신", "신유", "임술", "계해"];
+  const ZODIAC = ["쥐", "소", "호랑이", "토끼", "용", "뱀", "말", "양", "원숭이", "닭", "개", "돼지"];
+  const MONTHS_KO = ["", "정월", "이월", "삼월", "사월", "오월", "유월", "칠월", "팔월", "구월", "시월", "동월", "섣달"];
+
+  return (
+    <Box>
+      <Labeled label="양력 날짜">
+        <input type="date" className={INPUT_CLASS} value={date} onChange={(e) => setDate(e.target.value)} />
+      </Labeled>
+      {result ? (
+        <ResultPanel title="음력 변환 (2000~2040년 참고용)">
+          {(() => {
+            const ganIdx = ((result.lunarYear - 4) % 60 + 60) % 60;
+            const zodiacIdx = ((result.lunarYear - 4) % 12 + 12) % 12;
+            return (
+              <ResultRows rows={[
+                { label: "음력 날짜", value: `${result.lunarYear}년 ${result.isLeap ? "윤" : ""}${result.lunarMonth}월 ${result.lunarDay}일` },
+                { label: "음력 월 이름", value: `${result.isLeap ? "윤" : ""}${MONTHS_KO[result.lunarMonth] ?? `${result.lunarMonth}월`}` },
+                { label: "간지", value: `${GANZHI_YEAR[ganIdx]} (${KOREAN_YEAR[ganIdx]})` },
+                { label: "띠", value: `${ZODIAC[zodiacIdx]}띠` },
+              ]} />
+            );
+          })()}
+        </ResultPanel>
+      ) : (
+        <ResultPanel title="음력 변환">
+          <p className="mt-4 text-sm text-neutral-500">지원 범위: 2000~2040년. 범위를 벗어난 날짜입니다.</p>
+        </ResultPanel>
+      )}
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// 온라인 타이머 (카운트다운 + 스톱워치)
+// ─────────────────────────────────────────
+function OnlineTimerForm() {
+  const [tab, setTab] = useState<"countdown" | "stopwatch">("countdown");
+  const [minutes, setMinutes] = useState(5);
+  const [seconds, setSeconds] = useState(0);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [running, setRunning] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, []);
+
+  function startCountdown() {
+    const total = (minutes * 60 + seconds) * 1000;
+    if (total <= 0) return;
+    setRemaining(total);
+    setRunning(true);
+    const end = Date.now() + total;
+    intervalRef.current = setInterval(() => {
+      const left = end - Date.now();
+      if (left <= 0) {
+        clearInterval(intervalRef.current!);
+        setRemaining(0);
+        setRunning(false);
+      } else {
+        setRemaining(left);
+      }
+    }, 100);
+  }
+
+  function startStopwatch() {
+    setRunning(true);
+    const start = Date.now() - elapsed;
+    intervalRef.current = setInterval(() => setElapsed(Date.now() - start), 100);
+  }
+
+  function stop() {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setRunning(false);
+  }
+
+  function reset() {
+    stop();
+    setRemaining(null);
+    setElapsed(0);
+  }
+
+  function fmtMs(ms: number) {
+    const totalSec = Math.ceil(ms / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    const centis = Math.floor((ms % 1000) / 10);
+    return h > 0
+      ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+      : `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${String(centis).padStart(2, "0")}`;
+  }
+
+  const displayMs = tab === "countdown" ? (remaining ?? (minutes * 60 + seconds) * 1000) : elapsed;
+
+  return (
+    <Box>
+      <div className="flex gap-2 text-sm">
+        {(["countdown", "stopwatch"] as const).map((t) => (
+          <button key={t} type="button"
+            className={`rounded-full border px-3 py-1 ${tab === t ? "bg-neutral-900 text-white" : ""}`}
+            onClick={() => { reset(); setTab(t); }}>
+            {t === "countdown" ? "카운트다운" : "스톱워치"}
+          </button>
+        ))}
+      </div>
+      {tab === "countdown" && remaining === null && (
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Labeled label="분"><input type="number" min={0} max={99} className={INPUT_CLASS} value={minutes} onChange={(e) => setMinutes(Math.max(0, Math.floor(num(e.target.value))))} /></Labeled>
+          <Labeled label="초"><input type="number" min={0} max={59} className={INPUT_CLASS} value={seconds} onChange={(e) => setSeconds(Math.max(0, Math.min(59, Math.floor(num(e.target.value)))))} /></Labeled>
+        </div>
+      )}
+      <div className="flex flex-col items-center gap-6 rounded-xl border border-neutral-200 bg-white p-6">
+        <div className={`font-mono text-5xl font-bold tracking-widest ${tab === "countdown" && remaining === 0 ? "text-red-600 animate-pulse" : "text-neutral-900"}`}>
+          {fmtMs(displayMs)}
+        </div>
+        {tab === "countdown" && remaining === 0 && (
+          <p className="text-sm font-medium text-red-600">시간 종료!</p>
+        )}
+        <div className="flex gap-3">
+          {!running ? (
+            <button type="button" className="rounded-xl bg-neutral-900 px-5 py-2 text-sm font-medium text-white"
+              onClick={tab === "countdown" ? startCountdown : startStopwatch}>
+              시작
+            </button>
+          ) : (
+            <button type="button" className="rounded-xl bg-neutral-900 px-5 py-2 text-sm font-medium text-white" onClick={stop}>일시정지</button>
+          )}
+          <button type="button" className="rounded-xl border px-5 py-2 text-sm font-medium" onClick={reset}>초기화</button>
+        </div>
+      </div>
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// 원리금균등 vs 원금균등 비교
+// ─────────────────────────────────────────
+function MortgageCompareForm() {
+  const [principal, setPrincipal] = useState(200_000_000);
+  const [annualRate, setAnnualRate] = useState(4.5);
+  const [months, setMonths] = useState(360);
+
+  const r = annualRate / 100 / 12;
+
+  const equalTotal = useMemo(() => {
+    if (r === 0) { const pay = principal / months; return { pay, totalInterest: 0 }; }
+    const pay = (principal * r) / (1 - Math.pow(1 + r, -months));
+    return { pay, totalInterest: pay * months - principal };
+  }, [principal, r, months]);
+
+  const equalPrincipal = useMemo(() => {
+    const monthlyPrincipal = principal / months;
+    let totalInterest = 0;
+    let firstPay = 0;
+    let lastPay = 0;
+    for (let i = 0; i < months; i++) {
+      const interest = (principal - monthlyPrincipal * i) * r;
+      totalInterest += interest;
+      if (i === 0) firstPay = monthlyPrincipal + interest;
+      if (i === months - 1) lastPay = monthlyPrincipal + interest;
+    }
+    return { firstPay, lastPay, totalInterest };
+  }, [principal, r, months]);
+
+  const interestDiff = equalTotal.totalInterest - equalPrincipal.totalInterest;
+
+  return (
+    <Box>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:gap-6">
+        <section className="rounded-xl border border-neutral-200 bg-white p-4">
+          <h2 className="text-base font-semibold">대출 조건</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Labeled label="대출원금 (원)"><input type="number" className={INPUT_CLASS} value={principal} onChange={(e) => setPrincipal(num(e.target.value))} /></Labeled>
+            <Labeled label="연이율 (%)"><input type="number" step="0.1" className={INPUT_CLASS} value={annualRate} onChange={(e) => setAnnualRate(num(e.target.value))} /></Labeled>
+            <div className="sm:col-span-2"><Labeled label="상환 개월 수"><input type="number" className={INPUT_CLASS} value={months} onChange={(e) => setMonths(Math.max(1, Math.floor(num(e.target.value))))} /></Labeled></div>
+          </div>
+        </section>
+        <ResultPanel title="상환 방식 비교" subtitle="원금균등이 총이자는 적지만 초기 월납입이 더 큽니다.">
+          <div className="mt-4 space-y-4">
+            <div>
+              <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">원리금균등 상환</p>
+              <ResultRows rows={[
+                { label: "매월 납입액", value: `${won(equalTotal.pay)}원` },
+                { label: "총이자", value: `${won(equalTotal.totalInterest)}원` },
+              ]} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">원금균등 상환</p>
+              <ResultRows rows={[
+                { label: "첫 달 납입액", value: `${won(equalPrincipal.firstPay)}원` },
+                { label: "마지막 달 납입액", value: `${won(equalPrincipal.lastPay)}원` },
+                { label: "총이자", value: `${won(equalPrincipal.totalInterest)}원` },
+              ]} />
+            </div>
+            <div className="rounded-lg bg-blue-50 p-3">
+              <p className="text-sm font-medium text-blue-900">원금균등이 이자 <strong>{won(interestDiff)}원</strong> 절약</p>
+            </div>
+          </div>
+        </ResultPanel>
+      </div>
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// 중도상환 시뮬레이터
+// ─────────────────────────────────────────
+function PrepaymentForm() {
+  const [principal, setPrincipal] = useState(200_000_000);
+  const [annualRate, setAnnualRate] = useState(4.5);
+  const [totalMonths, setTotalMonths] = useState(360);
+  const [prepayMonth, setPrepayMonth] = useState(60);
+  const [prepayAmount, setPrepayAmount] = useState(20_000_000);
+
+  const r = annualRate / 100 / 12;
+
+  const base = useMemo(() => {
+    if (r === 0) return { monthlyPay: principal / totalMonths, totalInterest: 0 };
+    const pay = (principal * r) / (1 - Math.pow(1 + r, -totalMonths));
+    return { monthlyPay: pay, totalInterest: pay * totalMonths - principal };
+  }, [principal, r, totalMonths]);
+
+  const withPrepay = useMemo(() => {
+    if (r === 0) return null;
+    const pay = base.monthlyPay;
+    let balance = principal;
+    let totalInterestPaid = 0;
+    for (let i = 1; i <= prepayMonth && balance > 0; i++) {
+      const interest = balance * r;
+      const princ = pay - interest;
+      totalInterestPaid += interest;
+      balance = Math.max(0, balance - princ);
+    }
+    balance = Math.max(0, balance - prepayAmount);
+    if (balance <= 0) return { interestAfter: 0, totalInterest: totalInterestPaid, remaining: 0 };
+    const remainingMonths = Math.ceil(Math.log(pay / (pay - balance * r)) / Math.log(1 + r));
+    let interestAfter = 0;
+    let bal2 = balance;
+    for (let i = 0; i < remainingMonths && bal2 > 0; i++) {
+      const interest = bal2 * r;
+      interestAfter += interest;
+      bal2 = Math.max(0, bal2 - (pay - interest));
+    }
+    return {
+      totalInterest: totalInterestPaid + interestAfter,
+      remainingMonths,
+      balanceAtPrepay: balance + prepayAmount,
+    };
+  }, [principal, r, totalMonths, prepayMonth, prepayAmount, base]);
+
+  const saved = withPrepay ? base.totalInterest - withPrepay.totalInterest : 0;
+
+  return (
+    <Box>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)] lg:gap-6">
+        <section className="rounded-xl border border-neutral-200 bg-white p-4">
+          <h2 className="text-base font-semibold">대출 조건</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Labeled label="대출원금 (원)"><input type="number" className={INPUT_CLASS} value={principal} onChange={(e) => setPrincipal(num(e.target.value))} /></Labeled>
+            <Labeled label="연이율 (%)"><input type="number" step="0.1" className={INPUT_CLASS} value={annualRate} onChange={(e) => setAnnualRate(num(e.target.value))} /></Labeled>
+            <Labeled label="총 상환 기간 (개월)"><input type="number" className={INPUT_CLASS} value={totalMonths} onChange={(e) => setTotalMonths(Math.max(1, Math.floor(num(e.target.value))))} /></Labeled>
+            <Labeled label="중도상환 시점 (n개월 후)"><input type="number" min={1} className={INPUT_CLASS} value={prepayMonth} onChange={(e) => setPrepayMonth(Math.max(1, Math.floor(num(e.target.value))))} /></Labeled>
+            <div className="sm:col-span-2"><Labeled label="중도상환 금액 (원)"><input type="number" className={INPUT_CLASS} value={prepayAmount} onChange={(e) => setPrepayAmount(num(e.target.value))} /></Labeled></div>
+          </div>
+        </section>
+        <ResultPanel title="중도상환 효과" subtitle="중도상환 수수료는 포함하지 않습니다.">
+          <ResultRows rows={[
+            { label: "월 납입액 (원리금균등)", value: `${won(base.monthlyPay)}원` },
+            { label: "중도상환 없이 총이자", value: `${won(base.totalInterest)}원` },
+            ...(withPrepay ? [
+              { label: "중도상환 후 총이자", value: `${won(withPrepay.totalInterest)}원` },
+              { label: "이자 절약액", value: `${won(saved)}원` },
+              { label: "상환 후 잔여 기간", value: `약 ${withPrepay.remainingMonths}개월` },
+            ] : []),
+          ]} />
+        </ResultPanel>
+      </div>
+    </Box>
+  );
+}
+
+// ─────────────────────────────────────────
+// 전월세 전환율 계산기
+// ─────────────────────────────────────────
+function JeonwolseForm() {
+  const [mode, setMode] = useState<"toMonthly" | "toJeonse">("toMonthly");
+  const [jeonse, setJeonse] = useState(300_000_000);
+  const [deposit, setDeposit] = useState(50_000_000);
+  const [monthly, setMonthly] = useState(800_000);
+  const [rate, setRate] = useState(5.5);
+
+  const toMonthly = Math.round(((jeonse - deposit) * (rate / 100)) / 12);
+  const toJeonse = deposit + Math.round((monthly * 12) / (rate / 100));
+
+  return (
+    <Box>
+      <div className="flex flex-wrap gap-2 text-sm mb-2">
+        {([["toMonthly", "전세 → 월세"], ["toJeonse", "월세 → 전세"]] as const).map(([v, l]) => (
+          <button key={v} type="button"
+            className={`rounded-full border px-3 py-1 ${mode === v ? "bg-neutral-900 text-white" : ""}`}
+            onClick={() => setMode(v)}>{l}</button>
+        ))}
+      </div>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)] lg:gap-6">
+        <section className="rounded-xl border border-neutral-200 bg-white p-4">
+          <div className="space-y-4">
+            {mode === "toMonthly" ? (<>
+              <Labeled label="전세 보증금 (원)"><input type="number" className={INPUT_CLASS} value={jeonse} onChange={(e) => setJeonse(num(e.target.value))} /></Labeled>
+              <Labeled label="월세 보증금 (원)"><input type="number" className={INPUT_CLASS} value={deposit} onChange={(e) => setDeposit(num(e.target.value))} /></Labeled>
+            </>) : (<>
+              <Labeled label="월세 보증금 (원)"><input type="number" className={INPUT_CLASS} value={deposit} onChange={(e) => setDeposit(num(e.target.value))} /></Labeled>
+              <Labeled label="월세 (원/월)"><input type="number" className={INPUT_CLASS} value={monthly} onChange={(e) => setMonthly(num(e.target.value))} /></Labeled>
+            </>)}
+            <Labeled label="전월세 전환율 (%, 법정 기준금리+2%)">
+              <input type="number" step="0.1" className={INPUT_CLASS} value={rate} onChange={(e) => setRate(num(e.target.value))} />
+            </Labeled>
+          </div>
+        </section>
+        <ResultPanel
+          title={mode === "toMonthly" ? "월세 전환 결과" : "전세 전환 결과"}
+          subtitle="월세전환율 = (월세×12) / (전세금-보증금). 2026년 기준금리에 따라 전환율이 달라집니다."
+          highlight={mode === "toMonthly" ? `월세 약 ${won(toMonthly)}원/월` : `전세보증금 약 ${won(toJeonse)}원`}
+        />
+      </div>
     </Box>
   );
 }

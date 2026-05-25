@@ -65,8 +65,7 @@ export function ToolEngagementSection({ tool }: Props) {
       </div>
 
       <section className="mt-2" aria-label="계산기 하단 광고">
-        <AdSlot label="하단 배너 — 구글 애드센스 (광고 단위·스크립트 연동 예정)" />
-        <AdSlot label="하단 배너 — 쿠팡 파트너스 (스크립트·배너 연동 예정)" />
+        <AdSlot />
         <CoupangAdDisclaimer />
       </section>
 

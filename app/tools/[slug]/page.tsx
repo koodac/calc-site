@@ -37,6 +37,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description: tool.description,
     keywords,
+    alternates: { canonical: url },
+    robots: { index: true, follow: true },
     openGraph: {
       type: "website",
       locale: "ko_KR",
@@ -46,7 +48,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       siteName: "계산기 & 툴",
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title,
       description: tool.description,
     },

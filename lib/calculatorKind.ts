@@ -109,7 +109,23 @@ export type CalculatorKind =
   | "vdotEstimate"
   | "airForceWeightedScore"
   | "marineClassEstimate"
-  | "dischargeDateEstimate";
+  | "dischargeDateEstimate"
+  | "ppmConcentration"
+  | "perimeter"
+  | "densityCalc"
+  | "polynomialFactor"
+  | "gaussianElimination"
+  | "incomeTaxMonthly"
+  | "bonusTax"
+  | "unemploymentBenefit"
+  | "parentalLeavePay"
+  | "subscriptionScore"
+  | "qrCodeGen"
+  | "lunarCalendar"
+  | "onlineTimer"
+  | "mortgageCompare"
+  | "prepaymentCalc"
+  | "jeonwolse";
 
 export function resolveCalculatorKind(tool: ToolItem): CalculatorKind {
   const { slug, title: T } = tool;
@@ -237,6 +253,10 @@ export function resolveCalculatorKind(tool: ToolItem): CalculatorKind {
   if (T.includes("해병대 기수")) return "marineClassEstimate";
   if (T.includes("전역일")) return "dischargeDateEstimate";
   if (T.includes("군 적금")) return "compoundSavings";
+
+  if (T.includes("원리금균등 vs")) return "mortgageCompare";
+  if (T.includes("중도상환 시뮬")) return "prepaymentCalc";
+  if (T.includes("전월세 전환율")) return "jeonwolse";
 
   return "referenceStub";
 }
