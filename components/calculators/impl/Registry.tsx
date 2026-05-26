@@ -475,18 +475,33 @@ function SeverancePayForm() {
 function BmiForm() {
   const [w, setW] = useState(70);
   const [h, setH] = useState(170);
-  const bmi = w / (h / 100) ** 2;
+  const bmi = h > 0 ? w / (h / 100) ** 2 : 0;
+  const cat = bmi < 18.5 ? "저체중" : bmi < 23 ? "정상" : bmi < 25 ? "과체중" : bmi < 30 ? "비만 1단계" : "비만 2단계";
+  const hm = h / 100;
+  const stdMin = (18.5 * hm * hm).toFixed(1);
+  const stdMax = (22.9 * hm * hm).toFixed(1);
+  const ideal = (22 * hm * hm).toFixed(1);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="체중(kg)">
-          <input type="number" className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="키(cm)">
-          <input type="number" className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
-        </Labeled>
+        <Labeled label="체중 (kg)"><input type="number" className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} /></Labeled>
+        <Labeled label="키 (cm)"><input type="number" className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} /></Labeled>
       </div>
-      <ResultPanel title="계산 결과" highlight={`BMI ${bmi.toFixed(2)}`} />
+      <ResultPanel title="BMI 측정 결과" highlight={`BMI ${bmi.toFixed(1)}`} subtitle={`판정: ${cat}`}>
+        <ResultRows rows={[
+          { label: "BMI 수치", value: bmi.toFixed(2) },
+          { label: "판정", value: cat },
+          { label: "정상 체중 범위", value: `${stdMin} ~ ${stdMax} kg` },
+          { label: "표준 체중 (BMI 22)", value: `${ideal} kg` },
+          { label: "표준 대비 차이", value: `${(w - Number(ideal)) >= 0 ? "+" : ""}${(w - Number(ideal)).toFixed(1)} kg` },
+        ]} />
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead><tr className="bg-neutral-100">{["저체중","정상","과체중","비만 1단계","비만 2단계"].map(l => <th key={l} className="border border-neutral-200 px-2 py-1.5 font-medium">{l}</th>)}</tr></thead>
+            <tbody><tr>{["< 18.5","18.5~22.9","23~24.9","25~29.9","≥ 30"].map(v => <td key={v} className="border border-neutral-200 px-2 py-1.5 text-center text-neutral-700">{v}</td>)}</tr></tbody>
+          </table>
+        </div>
+      </ResultPanel>
     </Box>
   );
 }
@@ -494,265 +509,614 @@ function BmiForm() {
 function BmrForm() {
   const [male, setMale] = useState(true);
   const [age, setAge] = useState(30);
-  const [w, setW] = useState(70);
-  const [h, setH] = useState(175);
-  const bmr = useMemo(() => {
-    if (male) return 10 * w + 6.25 * h - 5 * age + 5;
-    return 10 * w + 6.25 * h - 5 * age - 161;
-  }, [male, age, w, h]);
+  const [weight, setWeight] = useState(70);
+  const [height, setHeight] = useState(175);
+  const [act, setAct] = useState(1.55);
+
+  const ACTIVITY_LEVELS = [
+    { label: "비활동적", desc: "거의 운동 안 함", mult: 1.2 },
+    { label: "가벼운 활동", desc: "주 1–3회 운동", mult: 1.375 },
+    { label: "보통 활동", desc: "주 3–5회 운동", mult: 1.55 },
+    { label: "적극적 활동", desc: "주 6–7회 운동", mult: 1.725 },
+    { label: "매우 활동적", desc: "고강도 운동 또는 육체노동", mult: 1.9 },
+  ];
+
+  const { bmr, tdee, carb, protein, fat } = useMemo(() => {
+    const bmr = male
+      ? 10 * weight + 6.25 * height - 5 * age + 5
+      : 10 * weight + 6.25 * height - 5 * age - 161;
+    const tdee = bmr * act;
+    return { bmr, tdee, carb: (tdee * 0.5) / 4, protein: (tdee * 0.25) / 4, fat: (tdee * 0.25) / 9 };
+  }, [male, age, weight, height, act]);
+
   return (
     <Box>
       <div className="flex gap-2">
-        <button type="button" className={`rounded-full px-4 py-2 text-sm ${male ? "bg-neutral-900 text-white" : "border"}`} onClick={() => setMale(true)}>남</button>
-        <button type="button" className={`rounded-full px-4 py-2 text-sm ${!male ? "bg-neutral-900 text-white" : "border"}`} onClick={() => setMale(false)}>여</button>
+        {[true, false].map((m) => (
+          <button key={String(m)} type="button" onClick={() => setMale(m)}
+            className={`rounded-full px-4 py-2 text-sm ${male === m ? "bg-neutral-900 text-white" : "border border-neutral-300"}`}>
+            {m ? "남" : "여"}
+          </button>
+        ))}
       </div>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="나이">
-          <input type="number" className={INPUT_CLASS} value={age} onChange={(e) => setAge(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="체중(kg)">
-          <input type="number" className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="키(cm)">
-          <input type="number" className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
-        </Labeled>
+        <Labeled label="나이"><input type="number" className={INPUT_CLASS} value={age} onChange={(e) => setAge(Math.max(1, num(e.target.value)))} /></Labeled>
+        <Labeled label="체중(kg)"><input type="number" className={INPUT_CLASS} value={weight} onChange={(e) => setWeight(num(e.target.value))} /></Labeled>
+        <Labeled label="키(cm)"><input type="number" className={INPUT_CLASS} value={height} onChange={(e) => setHeight(num(e.target.value))} /></Labeled>
       </div>
-      <ResultPanel
-        title="계산 결과"
-        subtitle="Mifflin–St Jeor 공식 기준 추정입니다."
-        highlight={`약 ${Math.round(bmr)} kcal/일`}
-      />
+      <div>
+        <p className="mb-2 text-sm font-medium text-neutral-800">활동 수준</p>
+        <div className="flex flex-wrap gap-2">
+          {ACTIVITY_LEVELS.map((lv) => (
+            <button key={lv.mult} type="button" onClick={() => setAct(lv.mult)}
+              className={`rounded-lg border px-3 py-2 text-xs transition-colors ${act === lv.mult ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 hover:border-neutral-400"}`}>
+              {lv.label}<span className="ml-1 opacity-70">×{lv.mult}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <ResultPanel title="TDEE (일일 총 에너지 소비량)" highlight={`${Math.round(tdee).toLocaleString("ko-KR")} kcal/일`} subtitle={`기초대사량(BMR): ${Math.round(bmr).toLocaleString("ko-KR")} kcal/일`}>
+        <ResultRows rows={[
+          { label: "탄수화물 (50% / 4 kcal/g)", value: `${Math.round(carb)} g` },
+          { label: "단백질 (25% / 4 kcal/g)", value: `${Math.round(protein)} g` },
+          { label: "지방 (25% / 9 kcal/g)", value: `${Math.round(fat)} g` },
+        ]} />
+      </ResultPanel>
+      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
+        <table className="min-w-full text-sm">
+          <thead className="bg-neutral-50 text-xs font-semibold text-neutral-600">
+            <tr>
+              <th className="px-4 py-3 text-left">활동 수준</th>
+              <th className="px-4 py-3 text-left">설명</th>
+              <th className="px-4 py-3 text-right">계수</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-neutral-100">
+            {ACTIVITY_LEVELS.map((lv) => (
+              <tr key={lv.mult} className={act === lv.mult ? "bg-neutral-50 font-medium" : ""}>
+                <td className="px-4 py-3">{lv.label}</td>
+                <td className="px-4 py-3 text-neutral-600">{lv.desc}</td>
+                <td className="px-4 py-3 text-right">×{lv.mult}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </Box>
   );
 }
 
+type PercentMode = "change" | "aOfB" | "bOfA";
+
 function PercentForm() {
-  const [a, setA] = useState(100);
-  const [b, setB] = useState(130);
-  const pct = a === 0 ? 0 : ((b - a) / a) * 100;
+  const [mode, setMode] = useState<PercentMode>("change");
+  const [a, setA] = useState(200);
+  const [b, setB] = useState(250);
+  const [pct, setPct] = useState(15);
+
+  const MODES: { key: PercentMode; label: string }[] = [
+    { key: "change", label: "증감률" },
+    { key: "aOfB", label: "A의 B%" },
+    { key: "bOfA", label: "B는 A의 몇%" },
+  ];
+
+  const result = useMemo(() => {
+    if (mode === "change") {
+      if (a === 0) return { primary: "기준값이 0입니다", secondary: null };
+      const rate = ((b - a) / Math.abs(a)) * 100;
+      const diff = b - a;
+      return { primary: `${rate >= 0 ? "+" : ""}${rate.toFixed(2)}%`, secondary: `변화량: ${diff >= 0 ? "+" : ""}${diff.toLocaleString("ko-KR")}` };
+    }
+    if (mode === "aOfB") {
+      const val = a * (pct / 100);
+      return { primary: `${val.toLocaleString("ko-KR")}`, secondary: null };
+    }
+    if (a === 0) return { primary: "A가 0입니다", secondary: null };
+    const ratio = (b / a) * 100;
+    return { primary: `${ratio.toFixed(4)}%`, secondary: null };
+  }, [mode, a, b, pct]);
+
   return (
     <Box>
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="기준값">
-          <input type="number" className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="변경값">
-          <input type="number" className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} />
-        </Labeled>
+      <div className="flex gap-2 border-b border-neutral-200 pb-3">
+        {MODES.map((m) => (
+          <button key={m.key} type="button" onClick={() => setMode(m.key)}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${mode === m.key ? "border-b-2 border-neutral-900 text-neutral-900" : "text-neutral-500 hover:text-neutral-700"}`}>
+            {m.label}
+          </button>
+        ))}
       </div>
-      <ResultPanel title="계산 결과" highlight={`증감률 ${pct.toFixed(2)}%`} />
+      <div className="grid gap-6 sm:grid-cols-2">
+        {mode === "change" && (<>
+          <Labeled label="기준값"><input type="number" className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} /></Labeled>
+          <Labeled label="변경값"><input type="number" className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} /></Labeled>
+        </>)}
+        {mode === "aOfB" && (<>
+          <Labeled label="A (기준값)"><input type="number" className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} /></Labeled>
+          <Labeled label="B (%)"><input type="number" className={INPUT_CLASS} value={pct} onChange={(e) => setPct(num(e.target.value))} /></Labeled>
+        </>)}
+        {mode === "bOfA" && (<>
+          <Labeled label="A (전체값)"><input type="number" className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} /></Labeled>
+          <Labeled label="B (부분값)"><input type="number" className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} /></Labeled>
+        </>)}
+      </div>
+      <ResultPanel
+        title={mode === "change" ? "증감률" : mode === "aOfB" ? `A의 ${pct}%` : "B는 A의 몇%?"}
+        highlight={result.primary}
+        subtitle={result.secondary ?? undefined}
+      />
     </Box>
   );
 }
 
 function SalaryRaiseForm() {
   const [before, setBefore] = useState(48_000_000);
-  const [after, setAfter] = useState(51_000_000);
-  const pct = before === 0 ? 0 : ((after - before) / before) * 100;
+  const [after, setAfter] = useState(52_000_000);
+  const { pct, diff } = useMemo(() => {
+    const diff = after - before;
+    const pct = before === 0 ? 0 : (diff / before) * 100;
+    return { pct, diff };
+  }, [before, after]);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="기존 연봉(원)">
-          <input type="number" className={INPUT_CLASS} value={before} onChange={(e) => setBefore(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="인상 후 연봉(원)">
-          <input type="number" className={INPUT_CLASS} value={after} onChange={(e) => setAfter(num(e.target.value))} />
-        </Labeled>
+        <Labeled label="기존 연봉(원)"><input type="number" className={INPUT_CLASS} value={before} onChange={(e) => setBefore(num(e.target.value))} /></Labeled>
+        <Labeled label="인상 후 연봉(원)"><input type="number" className={INPUT_CLASS} value={after} onChange={(e) => setAfter(num(e.target.value))} /></Labeled>
       </div>
-      <ResultPanel title="계산 결과" highlight={`인상률 ${pct.toFixed(2)}%`} />
+      <ResultPanel title="연봉 인상 분석" highlight={`${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%`} subtitle="인상률">
+        <ResultRows rows={[
+          { label: "연봉 인상액", value: `${won(diff)}원` },
+          { label: "월급 인상액", value: `${won(diff / 12)}원` },
+          { label: "인상 후 월급", value: `${won(after / 12)}원` },
+        ]} />
+      </ResultPanel>
     </Box>
   );
 }
 
+type VatMode = "supplyToTotal" | "totalToSupply";
+
 function VatForm() {
-  const [supply, setSupply] = useState(1_000_000);
-  const vat = Math.round(supply * 0.1);
+  const [mode, setMode] = useState<VatMode>("supplyToTotal");
+  const [value, setValue] = useState(1_000_000);
+  const { supply, vat, total } = useMemo(() => {
+    if (mode === "supplyToTotal") {
+      const supply = value;
+      const vat = Math.round(value * 0.1);
+      return { supply, vat, total: supply + vat };
+    } else {
+      const supply = Math.round(value / 1.1);
+      const vat = value - supply;
+      return { supply, vat, total: value };
+    }
+  }, [mode, value]);
   return (
     <Box>
-      <Labeled label="공급가액(원)">
-        <input type="number" className={INPUT_CLASS} value={supply} onChange={(e) => setSupply(num(e.target.value))} />
+      <div className="flex gap-2">
+        {(["supplyToTotal", "totalToSupply"] as VatMode[]).map((m) => (
+          <button key={m} type="button" onClick={() => setMode(m)}
+            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${mode === m ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 hover:border-neutral-400"}`}>
+            {m === "supplyToTotal" ? "공급가액 → 합계" : "합계 → 공급가액"}
+          </button>
+        ))}
+      </div>
+      <Labeled label={mode === "supplyToTotal" ? "공급가액(원)" : "합계금액(원)"}>
+        <input type="number" className={INPUT_CLASS} value={value} onChange={(e) => setValue(num(e.target.value))} />
       </Labeled>
-      <ResultPanel title="부가세 · 합계">
-        <ResultRows
-          rows={[
-            { label: "부가세(10%)", value: `${won(vat)}원` },
-            { label: "합계금액", value: `${won(supply + vat)}원` },
-          ]}
-        />
+      <ResultPanel title="부가가치세(10%) 계산" highlight={mode === "supplyToTotal" ? `합계 ${won(total)}원` : `공급가액 ${won(supply)}원`}>
+        <ResultRows rows={[
+          { label: "공급가액", value: `${won(supply)}원` },
+          { label: "부가세(10%)", value: `${won(vat)}원` },
+          { label: "합계금액", value: `${won(total)}원` },
+        ]} />
       </ResultPanel>
     </Box>
   );
 }
 
 function DiscountForm() {
-  const [price, setPrice] = useState(100000);
-  const [rate, setRate] = useState(10);
-  const sale = Math.round(price * (1 - rate / 100));
+  const [price, setPrice] = useState(100_000);
+  const [rate1, setRate1] = useState(10);
+  const [rate2, setRate2] = useState(0);
+  const PRESETS = [5, 10, 15, 20, 30];
+  const { finalPrice, discountAmt, totalRate } = useMemo(() => {
+    const r1 = Math.max(0, Math.min(100, rate1));
+    const r2 = Math.max(0, Math.min(100, rate2));
+    const totalRate = (1 - (1 - r1 / 100) * (1 - r2 / 100)) * 100;
+    const finalPrice = price * (1 - r1 / 100) * (1 - r2 / 100);
+    return { finalPrice, discountAmt: price - finalPrice, totalRate };
+  }, [price, rate1, rate2]);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="정가">
-          <input type="number" className={INPUT_CLASS} value={price} onChange={(e) => setPrice(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="할인율(%)">
-          <input type="number" className={INPUT_CLASS} value={rate} onChange={(e) => setRate(num(e.target.value))} />
-        </Labeled>
+        <Labeled label="정가(원)"><input type="number" className={INPUT_CLASS} value={price} onChange={(e) => setPrice(num(e.target.value))} /></Labeled>
+        <Labeled label="1차 할인율(%)"><input type="number" step="0.1" min={0} max={100} className={INPUT_CLASS} value={rate1} onChange={(e) => setRate1(num(e.target.value))} /></Labeled>
+        <div className="sm:col-span-2">
+          <Labeled label="2차 추가 할인율(%)"><input type="number" step="0.1" min={0} max={100} className={INPUT_CLASS} value={rate2} onChange={(e) => setRate2(num(e.target.value))} /></Labeled>
+        </div>
       </div>
-      <ResultPanel title="계산 결과" highlight={`판매가 ${won(sale)}원`} />
+      <div>
+        <p className="mb-2 text-xs text-neutral-500">빠른 할인율 선택 (1차 적용, 2차 초기화)</p>
+        <div className="flex flex-wrap gap-2">
+          {PRESETS.map((p) => (
+            <button key={p} type="button" onClick={() => { setRate1(p); setRate2(0); }}
+              className={`rounded-full border px-3 py-1 text-sm transition-colors ${rate1 === p && rate2 === 0 ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 hover:border-neutral-400"}`}>
+              {p}%
+            </button>
+          ))}
+        </div>
+      </div>
+      <ResultPanel title="할인 계산 결과" highlight={`${won(finalPrice)}원`} subtitle="최종 판매가">
+        <ResultRows rows={[
+          { label: "할인 금액", value: `${won(discountAmt)}원` },
+          { label: "최종 할인율", value: `${totalRate.toFixed(2)}%` },
+        ]} />
+      </ResultPanel>
     </Box>
   );
 }
 
+type CurrencyMode = "krwToFx" | "fxToKrw";
+type CurrencyKey = "usd" | "eur" | "jpy" | "cny" | "gbp";
+
 function CurrencyForm() {
-  const [krw, setKrw] = useState(100000);
-  const [rate, setRate] = useState(1400);
-  const usd = krw / rate;
+  const [mode, setMode] = useState<CurrencyMode>("krwToFx");
+  const [amount, setAmount] = useState(1_000_000);
+  const [selectedCcy, setSelectedCcy] = useState<CurrencyKey>("usd");
+  const [rates, setRates] = useState<Record<CurrencyKey, number>>({ usd: 1380, eur: 1510, jpy: 940, cny: 190, gbp: 1750 });
+
+  const currencies: { key: CurrencyKey; label: string; unit: string }[] = [
+    { key: "usd", label: "USD (미국 달러)", unit: "USD" },
+    { key: "eur", label: "EUR (유로)", unit: "EUR" },
+    { key: "jpy", label: "JPY/100 (일본 엔)", unit: "JPY" },
+    { key: "cny", label: "CNY (위안)", unit: "CNY" },
+    { key: "gbp", label: "GBP (영국 파운드)", unit: "GBP" },
+  ];
+
+  const fxResults = useMemo(() =>
+    currencies.map(({ key, unit }) => {
+      const rate = rates[key];
+      const converted = rate > 0 ? amount / rate : 0;
+      return { label: `${unit} (환율 ${won(rate)}원)`, value: `${converted.toFixed(key === "jpy" ? 0 : 2)} ${unit}` };
+    }), [amount, rates]);
+
+  const krwResult = useMemo(() => { const rate = rates[selectedCcy]; return rate > 0 ? amount * rate : 0; }, [amount, rates, selectedCcy]);
+
   return (
     <Box>
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="원화(원)">
-          <input type="number" className={INPUT_CLASS} value={krw} onChange={(e) => setKrw(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="환율(원/USD)">
-          <input type="number" className={INPUT_CLASS} value={rate} onChange={(e) => setRate(num(e.target.value))} />
-        </Labeled>
+      <div className="flex gap-2">
+        {(["krwToFx", "fxToKrw"] as CurrencyMode[]).map((m) => (
+          <button key={m} type="button" onClick={() => setMode(m)}
+            className={`rounded-full px-4 py-2 text-sm font-medium ${mode === m ? "bg-neutral-900 text-white" : "border border-neutral-200 text-neutral-700 hover:bg-neutral-50"}`}>
+            {m === "krwToFx" ? "원→외화" : "외화→원"}
+          </button>
+        ))}
       </div>
-      <ResultPanel title="계산 결과" highlight={`대략 USD ${usd.toFixed(2)}`} />
+      <Labeled label={mode === "krwToFx" ? "원화 금액(원)" : "외화 금액"}>
+        <input type="number" className={INPUT_CLASS} value={amount} onChange={(e) => setAmount(num(e.target.value))} />
+      </Labeled>
+      {mode === "fxToKrw" && (
+        <div className="flex flex-wrap gap-2">
+          {currencies.map(({ key, unit }) => (
+            <button key={key} type="button" onClick={() => setSelectedCcy(key)}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium ${selectedCcy === key ? "bg-neutral-900 text-white" : "border border-neutral-200 text-neutral-700 hover:bg-neutral-50"}`}>
+              {unit}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="rounded-xl border border-neutral-200 bg-white p-4">
+        <p className="mb-3 text-sm font-semibold text-neutral-800">환율 설정 (원/외화 단위)</p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {currencies.map(({ key, label }) => (
+            <Labeled key={key} label={label}>
+              <input type="number" className={INPUT_CLASS} value={rates[key]}
+                onChange={(e) => setRates((prev) => ({ ...prev, [key]: num(e.target.value) }))} />
+            </Labeled>
+          ))}
+        </div>
+      </div>
+      {mode === "krwToFx" ? (
+        <ResultPanel title="환전 결과" subtitle={`${won(amount)}원 기준`}>
+          <ResultRows rows={fxResults} />
+        </ResultPanel>
+      ) : (
+        <ResultPanel title="원화 환산" highlight={`약 ${won(krwResult)}원`}
+          subtitle={`${amount} ${currencies.find((c) => c.key === selectedCcy)?.unit ?? ""} × ${won(rates[selectedCcy])}원`} />
+      )}
     </Box>
   );
 }
 
 function CagrForm() {
-  const [s, setS] = useState(100);
-  const [e, setE] = useState(150);
-  const [y, setY] = useState(3);
-  const cagr = s <= 0 || e <= 0 || y <= 0 ? 0 : (Math.pow(e / s, 1 / y) - 1) * 100;
+  const [startVal, setStartVal] = useState(10_000_000);
+  const [endVal, setEndVal] = useState(15_000_000);
+  const [years, setYears] = useState(5);
+  const cagr = useMemo(() => startVal <= 0 || endVal <= 0 || years <= 0 ? 0 : (Math.pow(endVal / startVal, 1 / years) - 1) * 100, [startVal, endVal, years]);
+  const tableRows = useMemo(() => {
+    const n = Math.min(years, 10);
+    return Array.from({ length: n + 1 }, (_, i) => ({ year: i, value: startVal * Math.pow(1 + cagr / 100, i) }));
+  }, [startVal, cagr, years]);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="초기값">
-          <input type="number" className={INPUT_CLASS} value={s} onChange={(e) => setS(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="최종값">
-          <input type="number" className={INPUT_CLASS} value={e} onChange={(e) => setE(num(e.target.value))} />
-        </Labeled>
+        <Labeled label="초기값(원)"><input type="number" className={INPUT_CLASS} value={startVal} onChange={(e) => setStartVal(num(e.target.value))} /></Labeled>
+        <Labeled label="최종값(원)"><input type="number" className={INPUT_CLASS} value={endVal} onChange={(e) => setEndVal(num(e.target.value))} /></Labeled>
         <div className="sm:col-span-2">
-          <Labeled label="기간(년)">
-            <input type="number" className={INPUT_CLASS} value={y} onChange={(e) => setY(num(e.target.value))} />
+          <Labeled label="기간(년)" hint="연도별 표는 최대 10년까지 표시됩니다">
+            <input type="number" className={INPUT_CLASS} value={years} min={1} onChange={(e) => setYears(Math.max(1, Math.floor(num(e.target.value))))} />
           </Labeled>
         </div>
       </div>
-      <ResultPanel title="계산 결과" highlight={`CAGR ${cagr.toFixed(2)}%`} />
+      <ResultPanel title="CAGR 계산 결과" highlight={`CAGR ${cagr.toFixed(2)}%`} subtitle={`${won(startVal)}원 → ${won(endVal)}원 (${years}년)`} />
+      <div className="rounded-xl border border-neutral-200 bg-white p-4">
+        <p className="mb-3 text-sm font-semibold text-neutral-800">연도별 추정액{years > 10 ? " (최대 10년 표시)" : ""}</p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="bg-neutral-100 text-xs text-neutral-600">
+              <th className="border border-neutral-200 px-3 py-2 text-left font-medium">연도</th>
+              <th className="border border-neutral-200 px-3 py-2 text-right font-medium">추정 금액(원)</th>
+              <th className="border border-neutral-200 px-3 py-2 text-right font-medium">누적 증감(원)</th>
+            </tr></thead>
+            <tbody>
+              {tableRows.map(({ year, value }) => (
+                <tr key={year} className={year === 0 || year === Math.min(years, 10) ? "bg-neutral-50 font-medium" : ""}>
+                  <td className="border border-neutral-200 px-3 py-2">{year}년차</td>
+                  <td className="border border-neutral-200 px-3 py-2 text-right font-mono">{won(value)}</td>
+                  <td className="border border-neutral-200 px-3 py-2 text-right font-mono text-neutral-500">{year === 0 ? "—" : `+${won(value - startVal)}`}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </Box>
   );
 }
 
 function RoiForm() {
-  const [inv, setInv] = useState(1000000);
-  const [gain, setGain] = useState(150000);
-  const roi = inv === 0 ? 0 : (gain / inv) * 100;
+  const [cost, setCost] = useState(10_000_000);
+  const [returns, setReturns] = useState(13_500_000);
+  const [period, setPeriod] = useState(1);
+  const results = useMemo(() => {
+    const netProfit = returns - cost;
+    const roi = cost === 0 ? 0 : (netProfit / cost) * 100;
+    const annualizedRoi = cost <= 0 || returns <= 0 || period <= 0 ? 0 : (Math.pow(returns / cost, 1 / period) - 1) * 100;
+    const totalReturn = cost === 0 ? 0 : (returns / cost) * 100;
+    return { netProfit, roi, annualizedRoi, totalReturn };
+  }, [cost, returns, period]);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="투입">
-          <input type="number" className={INPUT_CLASS} value={inv} onChange={(e) => setInv(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="이익(또는 회수–투입)">
-          <input type="number" className={INPUT_CLASS} value={gain} onChange={(e) => setGain(num(e.target.value))} />
-        </Labeled>
+        <Labeled label="투입 비용(원)"><input type="number" className={INPUT_CLASS} value={cost} onChange={(e) => setCost(num(e.target.value))} /></Labeled>
+        <Labeled label="최종 회수액(원)"><input type="number" className={INPUT_CLASS} value={returns} onChange={(e) => setReturns(num(e.target.value))} /></Labeled>
+        <div className="sm:col-span-2">
+          <Labeled label="기간(년)" hint="연환산 ROI(CAGR 방식) 계산에 사용됩니다">
+            <input type="number" className={INPUT_CLASS} value={period} min={0.1} step={0.5} onChange={(e) => setPeriod(Math.max(0.1, num(e.target.value)))} />
+          </Labeled>
+        </div>
       </div>
-      <ResultPanel title="계산 결과" highlight={`ROI ${roi.toFixed(2)}%`} />
+      <ResultPanel title="ROI 분석" highlight={`ROI ${results.roi.toFixed(2)}%`} subtitle={results.netProfit >= 0 ? `순이익 ${won(results.netProfit)}원` : `순손실 ${won(-results.netProfit)}원`}>
+        <ResultRows rows={[
+          { label: "순이익 (회수 − 투입)", value: `${results.netProfit >= 0 ? "" : "−"}${won(Math.abs(results.netProfit))}원` },
+          { label: "ROI", value: `${results.roi.toFixed(2)}%` },
+          { label: `연환산 ROI (CAGR식, ${period}년)`, value: `${results.annualizedRoi.toFixed(2)}%` },
+          { label: "총 수익률 (회수/투입×100)", value: `${results.totalReturn.toFixed(2)}%` },
+        ]} />
+      </ResultPanel>
     </Box>
   );
 }
 
 function RoasForm() {
-  const [rev, setRev] = useState(10_000_000);
-  const [ad, setAd] = useState(2_000_000);
-  const roas = ad === 0 ? 0 : rev / ad;
+  const [revenue, setRevenue] = useState(10_000_000);
+  const [adCost, setAdCost] = useState(2_000_000);
+  const [marginRate, setMarginRate] = useState(30);
+  const results = useMemo(() => {
+    const roas = adCost === 0 ? 0 : revenue / adCost;
+    const marginProfit = revenue * (marginRate / 100) - adCost;
+    const bepRoas = marginRate === 0 ? 0 : 1 / (marginRate / 100);
+    const adCostRate = revenue === 0 ? 0 : (adCost / revenue) * 100;
+    return { roas, marginProfit, bepRoas, adCostRate };
+  }, [revenue, adCost, marginRate]);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="매출(원)">
-          <input type="number" className={INPUT_CLASS} value={rev} onChange={(e) => setRev(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="광고비(원)">
-          <input type="number" className={INPUT_CLASS} value={ad} onChange={(e) => setAd(num(e.target.value))} />
-        </Labeled>
+        <Labeled label="매출(원)"><input type="number" className={INPUT_CLASS} value={revenue} onChange={(e) => setRevenue(num(e.target.value))} /></Labeled>
+        <Labeled label="광고비(원)"><input type="number" className={INPUT_CLASS} value={adCost} onChange={(e) => setAdCost(num(e.target.value))} /></Labeled>
+        <div className="sm:col-span-2">
+          <Labeled label="마진율(%)" hint="매출 대비 총이익 비율 (예: 30 → 30%)">
+            <input type="number" className={INPUT_CLASS} value={marginRate} min={0} max={100} onChange={(e) => setMarginRate(Math.max(0, Math.min(100, num(e.target.value))))} />
+          </Labeled>
+        </div>
       </div>
-      <ResultPanel title="계산 결과" highlight={`ROAS ${roas.toFixed(2)}배`} />
+      <ResultPanel title="ROAS 분석" highlight={`ROAS ${results.roas.toFixed(2)}배`}
+        subtitle={results.bepRoas > 0 ? (results.roas >= results.bepRoas ? `손익분기 ROAS(${results.bepRoas.toFixed(2)}배) 이상 — 흑자` : `손익분기 ROAS(${results.bepRoas.toFixed(2)}배) 미달 — 적자`) : undefined}>
+        <ResultRows rows={[
+          { label: "ROAS (매출/광고비)", value: `${results.roas.toFixed(2)}배` },
+          { label: "광고비 대비 마진", value: `${results.marginProfit >= 0 ? "" : "−"}${won(Math.abs(results.marginProfit))}원` },
+          { label: `손익분기 ROAS (1÷${marginRate}%)`, value: `${results.bepRoas.toFixed(2)}배` },
+          { label: "광고비 비율 (광고비/매출)", value: `${results.adCostRate.toFixed(2)}%` },
+        ]} />
+      </ResultPanel>
     </Box>
   );
 }
 
 function MortgageForm() {
-  const [p, setP] = useState(200_000_000);
-  const [annual, setAnnual] = useState(4.5);
+  const [principal, setPrincipal] = useState(300_000_000);
+  const [annualRate, setAnnualRate] = useState(4.5);
   const [months, setMonths] = useState(360);
-  const r = annual / 100 / 12;
-  const pay = r === 0 ? p / months : (p * r) / (1 - Math.pow(1 + r, -months));
+  const [expanded, setExpanded] = useState(false);
+  const { monthlyPayment, totalPayment, totalInterest, schedule } = useMemo(() => {
+    const r = annualRate / 100 / 12;
+    const n = Math.max(1, Math.floor(months));
+    const mp = r === 0 ? principal / n : (principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+    let balance = principal;
+    const sched: { month: number; principalPaid: number; interest: number; remaining: number }[] = [];
+    for (let i = 1; i <= n; i++) {
+      const interest = balance * r;
+      const principalPaid = mp - interest;
+      balance = Math.max(0, balance - principalPaid);
+      sched.push({ month: i, principalPaid, interest, remaining: balance });
+    }
+    const totalPay = mp * n;
+    return { monthlyPayment: mp, totalPayment: totalPay, totalInterest: totalPay - principal, schedule: sched };
+  }, [principal, annualRate, months]);
+  const displayRows = expanded ? schedule : schedule.slice(0, 12);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="대출원금(원)">
-          <input type="number" className={INPUT_CLASS} value={p} onChange={(e) => setP(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="연이율(%)">
-          <input type="number" className={INPUT_CLASS} value={annual} onChange={(e) => setAnnual(num(e.target.value))} />
-        </Labeled>
+        <Labeled label="대출원금(원)"><input type="number" className={INPUT_CLASS} value={principal} onChange={(e) => setPrincipal(num(e.target.value))} /></Labeled>
+        <Labeled label="연이율(%)"><input type="number" className={INPUT_CLASS} value={annualRate} step={0.1} onChange={(e) => setAnnualRate(num(e.target.value))} /></Labeled>
         <div className="sm:col-span-2">
-          <Labeled label="개월 수">
-            <input type="number" className={INPUT_CLASS} value={months} onChange={(e) => setMonths(Math.max(1, Math.floor(num(e.target.value))))} />
+          <Labeled label="상환 개월 수" hint="예: 360개월 = 30년, 180개월 = 15년">
+            <input type="number" className={INPUT_CLASS} value={months} min={1} onChange={(e) => setMonths(Math.max(1, Math.floor(num(e.target.value))))} />
           </Labeled>
         </div>
       </div>
-      <ResultPanel title="월 상환액" subtitle="원리금 균등 상환 기준" highlight={`약 ${won(pay)}원`} />
+      <ResultPanel title="월 상환액" subtitle="원리금 균등 상환 기준" highlight={`약 ${won(monthlyPayment)}원`}>
+        <ResultRows rows={[
+          { label: "총 상환액", value: `${won(totalPayment)}원` },
+          { label: "총 이자", value: `${won(totalInterest)}원` },
+          { label: "이자 비율", value: `${totalPayment > 0 ? ((totalInterest / totalPayment) * 100).toFixed(1) : 0}%` },
+        ]} />
+      </ResultPanel>
+      {schedule.length > 0 && (
+        <div className="rounded-xl border border-neutral-200 bg-white p-4">
+          <p className="mb-3 text-sm font-semibold text-neutral-800">상환 스케줄 (월별){schedule.length > 12 && !expanded ? " — 첫 12개월" : ""}</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead><tr className="bg-neutral-100 text-neutral-600">
+                <th className="border border-neutral-200 px-2 py-2 text-center font-medium">월</th>
+                <th className="border border-neutral-200 px-2 py-2 text-right font-medium">원금(원)</th>
+                <th className="border border-neutral-200 px-2 py-2 text-right font-medium">이자(원)</th>
+                <th className="border border-neutral-200 px-2 py-2 text-right font-medium">잔여원금(원)</th>
+              </tr></thead>
+              <tbody>
+                {displayRows.map(({ month, principalPaid, interest, remaining }) => (
+                  <tr key={month} className={month % 12 === 0 ? "bg-neutral-50 font-medium" : ""}>
+                    <td className="border border-neutral-200 px-2 py-1.5 text-center">{month}</td>
+                    <td className="border border-neutral-200 px-2 py-1.5 text-right font-mono">{won(principalPaid)}</td>
+                    <td className="border border-neutral-200 px-2 py-1.5 text-right font-mono text-neutral-500">{won(interest)}</td>
+                    <td className="border border-neutral-200 px-2 py-1.5 text-right font-mono">{won(remaining)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {schedule.length > 12 && (
+            <button type="button" onClick={() => setExpanded((v) => !v)}
+              className="mt-3 w-full rounded-lg border border-neutral-200 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
+              {expanded ? `접기 (${schedule.length}개월 전체 숨김)` : `전체 보기 (${schedule.length}개월)`}
+            </button>
+          )}
+        </div>
+      )}
     </Box>
   );
 }
 
 function SavingsForm() {
-  const [pmt, setPmt] = useState(500000);
+  const [pmt, setPmt] = useState(500_000);
   const [annual, setAnnual] = useState(4);
   const [months, setMonths] = useState(36);
-  const r = annual / 100 / 12;
-  let fv = 0;
-  for (let i = 0; i < months; i++) fv = (fv + pmt) * (1 + r);
+  const result = useMemo(() => {
+    const r = annual / 100 / 12;
+    let fv = 0;
+    const yearRows: { year: number; cumPmt: number; balance: number }[] = [];
+    for (let i = 1; i <= months; i++) {
+      fv = (fv + pmt) * (1 + r);
+      const isYearEnd = i % 12 === 0;
+      const isLast = i === months;
+      const yr = Math.ceil(i / 12);
+      if ((isYearEnd || isLast) && yr <= 10 && (!yearRows.length || yearRows[yearRows.length - 1]!.year !== yr)) {
+        yearRows.push({ year: yr, cumPmt: pmt * i, balance: fv });
+      }
+    }
+    const totalPmt = pmt * months;
+    const grossInterest = fv - totalPmt;
+    const taxAmount = grossInterest * 0.154;
+    return { fv, totalPmt, grossInterest, taxAmount, afterTax: fv - taxAmount, yearRows };
+  }, [pmt, annual, months]);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="월 납입(원)">
-          <input type="number" className={INPUT_CLASS} value={pmt} onChange={(e) => setPmt(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="연이율(%)">
-          <input type="number" className={INPUT_CLASS} value={annual} onChange={(e) => setAnnual(num(e.target.value))} />
-        </Labeled>
+        <Labeled label="월 납입(원)"><input type="number" className={INPUT_CLASS} value={pmt} onChange={(e) => setPmt(Math.max(0, num(e.target.value)))} /></Labeled>
+        <Labeled label="연이율(%)"><input type="number" className={INPUT_CLASS} value={annual} onChange={(e) => setAnnual(num(e.target.value))} /></Labeled>
         <div className="sm:col-span-2">
-          <Labeled label="개월">
-            <input type="number" className={INPUT_CLASS} value={months} onChange={(e) => setMonths(Math.max(1, Math.floor(num(e.target.value))))} />
-          </Labeled>
+          <Labeled label="개월 수"><input type="number" className={INPUT_CLASS} value={months} onChange={(e) => setMonths(Math.max(1, Math.min(1200, Math.floor(num(e.target.value)))))} /></Labeled>
         </div>
       </div>
-      <ResultPanel title="만기 예상액" subtitle="월말 복리 적용" highlight={`약 ${won(fv)}원`} />
+      <ResultPanel title="만기 예상액" subtitle="월말 복리 기준 · 이자소득세 15.4% 적용" highlight={`약 ${won(result.fv)}원`}>
+        <ResultRows rows={[
+          { label: "총 납입원금", value: `${won(result.totalPmt)}원` },
+          { label: "세전 이자", value: `${won(result.grossInterest)}원` },
+          { label: "이자소득세 (15.4%)", value: `${won(result.taxAmount)}원` },
+          { label: "세후 수령액", value: `${won(result.afterTax)}원` },
+        ]} />
+        {result.yearRows.length > 0 && (
+          <div className="mt-6 overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead><tr className="bg-neutral-100 text-left">
+                <th className="border border-neutral-200 px-3 py-2 font-medium">연차</th>
+                <th className="border border-neutral-200 px-3 py-2 font-medium">누적납입</th>
+                <th className="border border-neutral-200 px-3 py-2 font-medium">잔액</th>
+              </tr></thead>
+              <tbody>
+                {result.yearRows.map((row) => (
+                  <tr key={row.year} className="even:bg-neutral-50">
+                    <td className="border border-neutral-200 px-3 py-1.5 text-center">{row.year}년</td>
+                    <td className="border border-neutral-200 px-3 py-1.5 text-right">{won(row.cumPmt)}원</td>
+                    <td className="border border-neutral-200 px-3 py-1.5 text-right font-medium text-neutral-900">{won(row.balance)}원</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </ResultPanel>
     </Box>
   );
 }
 
 function MarginForm() {
-  const [cost, setCost] = useState(7000);
-  const [price, setPrice] = useState(10000);
-  const margin = price === 0 ? 0 : ((price - cost) / price) * 100;
+  const [cost, setCost] = useState(7_000);
+  const [price, setPrice] = useState(10_000);
+  const result = useMemo(() => {
+    const profit = price - cost;
+    const marginPct = price === 0 ? 0 : (profit / price) * 100;
+    const markupPct = cost === 0 ? 0 : (profit / cost) * 100;
+    const costRatePct = price === 0 ? 0 : (cost / price) * 100;
+    return { profit, marginPct, markupPct, costRatePct };
+  }, [cost, price]);
+  function applyTargetMargin(targetPct: number) {
+    if (targetPct >= 100) return;
+    setPrice(Math.round(cost / (1 - targetPct / 100)));
+  }
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="원가">
-          <input type="number" className={INPUT_CLASS} value={cost} onChange={(e) => setCost(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="판매가">
-          <input type="number" className={INPUT_CLASS} value={price} onChange={(e) => setPrice(num(e.target.value))} />
-        </Labeled>
+        <Labeled label="원가(원)"><input type="number" className={INPUT_CLASS} value={cost} onChange={(e) => setCost(Math.max(0, num(e.target.value)))} /></Labeled>
+        <Labeled label="판매가(원)"><input type="number" className={INPUT_CLASS} value={price} onChange={(e) => setPrice(Math.max(0, num(e.target.value)))} /></Labeled>
       </div>
-      <ResultPanel title="계산 결과" highlight={`마진율 ${margin.toFixed(2)}%`} />
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-neutral-500">목표 마진율:</span>
+        {[20, 30, 40, 50].map((t) => (
+          <button key={t} type="button" onClick={() => applyTargetMargin(t)}
+            className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-100">
+            {t}%
+          </button>
+        ))}
+      </div>
+      <ResultPanel title="마진 분석" highlight={`마진율 ${result.marginPct.toFixed(2)}%`}>
+        <ResultRows rows={[
+          { label: "마진율 (margin%)", value: `${result.marginPct.toFixed(2)}%` },
+          { label: "마크업률 (markup%)", value: `${result.markupPct.toFixed(2)}%` },
+          { label: "이익금액", value: `${won(result.profit)}원` },
+          { label: "원가율", value: `${result.costRatePct.toFixed(2)}%` },
+        ]} />
+      </ResultPanel>
     </Box>
   );
 }
@@ -794,54 +1158,123 @@ function RatioForm({
 function ApyForm() {
   const [nominal, setNominal] = useState(4);
   const [n, setN] = useState(12);
-  const apy = (Math.pow(1 + nominal / 100 / n, n) - 1) * 100;
+  const apy = useMemo(() => n > 0 ? (Math.pow(1 + nominal / 100 / n, n) - 1) * 100 : 0, [nominal, n]);
+  const compoundingOptions = [
+    { label: "연 (n=1)", n: 1 },
+    { label: "반기 (n=2)", n: 2 },
+    { label: "분기 (n=4)", n: 4 },
+    { label: "월 (n=12)", n: 12 },
+    { label: "주 (n=52)", n: 52 },
+    { label: "일 (n=365)", n: 365 },
+  ];
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="명목 연이율(%)">
-          <input type="number" className={INPUT_CLASS} value={nominal} onChange={(e) => setNominal(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="복리 주기(연 n회)">
-          <input type="number" className={INPUT_CLASS} value={n} onChange={(e) => setN(Math.max(1, Math.floor(num(e.target.value))))} />
-        </Labeled>
+        <Labeled label="명목 연이율(%)"><input type="number" className={INPUT_CLASS} value={nominal} onChange={(e) => setNominal(num(e.target.value))} /></Labeled>
+        <Labeled label="복리 주기(연 n회)"><input type="number" className={INPUT_CLASS} value={n} onChange={(e) => setN(Math.max(1, Math.floor(num(e.target.value))))} /></Labeled>
       </div>
-      <ResultPanel title="계산 결과" subtitle="유효 연율(APY)" highlight={`약 ${apy.toFixed(3)}%`} />
+      <ResultPanel title="유효 연율 (APY)" subtitle="실질 연 수익률 (복리 효과 반영)" highlight={`약 ${apy.toFixed(4)}%`}>
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead><tr className="bg-neutral-100 text-left">
+              <th className="border border-neutral-200 px-3 py-2 font-medium">복리 주기</th>
+              <th className="border border-neutral-200 px-3 py-2 font-medium text-right">APY</th>
+            </tr></thead>
+            <tbody>
+              {compoundingOptions.map((opt) => {
+                const rowApy = (Math.pow(1 + nominal / 100 / opt.n, opt.n) - 1) * 100;
+                const isSelected = opt.n === n;
+                return (
+                  <tr key={opt.n} className={isSelected ? "bg-neutral-900 text-white" : "even:bg-neutral-50"}>
+                    <td className="border border-neutral-200 px-3 py-1.5">{opt.label}</td>
+                    <td className={`border border-neutral-200 px-3 py-1.5 text-right font-medium ${isSelected ? "text-white" : "text-neutral-900"}`}>{rowApy.toFixed(4)}%</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </ResultPanel>
     </Box>
   );
 }
 
 function CpmForm() {
-  const [cost, setCost] = useState(500000);
-  const [imp, setImp] = useState(1000000);
-  const cpm = imp === 0 ? 0 : (cost / imp) * 1000;
+  const [adCost, setAdCost] = useState(500_000);
+  const [impressions, setImpressions] = useState(1_000_000);
+  const [clicks, setClicks] = useState(5_000);
+  const [conversions, setConversions] = useState(50);
+  const result = useMemo(() => ({
+    cpm: impressions === 0 ? 0 : (adCost / impressions) * 1000,
+    cpc: clicks === 0 ? 0 : adCost / clicks,
+    cpConv: conversions === 0 ? 0 : adCost / conversions,
+    ctr: impressions === 0 ? 0 : (clicks / impressions) * 100,
+    cvr: clicks === 0 ? 0 : (conversions / clicks) * 100,
+  }), [adCost, impressions, clicks, conversions]);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="광고비(원)">
-          <input type="number" className={INPUT_CLASS} value={cost} onChange={(e) => setCost(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="노출 수">
-          <input type="number" className={INPUT_CLASS} value={imp} onChange={(e) => setImp(num(e.target.value))} />
-        </Labeled>
+        <Labeled label="광고비(원)"><input type="number" className={INPUT_CLASS} value={adCost} onChange={(e) => setAdCost(Math.max(0, num(e.target.value)))} /></Labeled>
+        <Labeled label="노출수"><input type="number" className={INPUT_CLASS} value={impressions} onChange={(e) => setImpressions(Math.max(0, num(e.target.value)))} /></Labeled>
+        <Labeled label="클릭수"><input type="number" className={INPUT_CLASS} value={clicks} onChange={(e) => setClicks(Math.max(0, num(e.target.value)))} /></Labeled>
+        <Labeled label="전환수"><input type="number" className={INPUT_CLASS} value={conversions} onChange={(e) => setConversions(Math.max(0, num(e.target.value)))} /></Labeled>
       </div>
-      <ResultPanel title="계산 결과" highlight={`CPM ${won(cpm)}원`} />
+      <ResultPanel title="광고 지표" highlight={`CPM ${won(result.cpm)}원`}>
+        <ResultRows rows={[
+          { label: "CPM (1,000 노출당 비용)", value: `${won(result.cpm)}원` },
+          { label: "CPC (클릭당 비용)", value: `${won(result.cpc)}원` },
+          { label: "전환당 비용 (CPConv)", value: `${won(result.cpConv)}원` },
+          { label: "CTR (클릭률)", value: `${result.ctr.toFixed(3)}%` },
+          { label: "CVR (전환율)", value: `${result.cvr.toFixed(3)}%` },
+        ]} />
+      </ResultPanel>
     </Box>
   );
 }
 
 function BreakevenForm() {
   const [loss, setLoss] = useState(20);
-  const rec = loss >= 100 ? Infinity : 100 / (100 - loss) - 1;
+  const recoveryPct = useMemo(() => {
+    if (loss <= 0) return 0;
+    if (loss >= 100) return Infinity;
+    return (100 / (100 - loss) - 1) * 100;
+  }, [loss]);
+  const referenceRows = [
+    { loss: 10, recovery: 11.1 },
+    { loss: 20, recovery: 25 },
+    { loss: 30, recovery: 42.9 },
+    { loss: 40, recovery: 66.7 },
+    { loss: 50, recovery: 100 },
+    { loss: 60, recovery: 150 },
+    { loss: 70, recovery: 233 },
+    { loss: 80, recovery: 400 },
+    { loss: 90, recovery: 900 },
+  ];
+  const closestLoss = referenceRows.reduce((prev, cur) => Math.abs(cur.loss - loss) < Math.abs(prev.loss - loss) ? cur : prev).loss;
   return (
     <Box>
       <Labeled label="손실률(%)">
-        <input type="number" className={INPUT_CLASS} value={loss} onChange={(e) => setLoss(num(e.target.value))} />
+        <input type="number" className={INPUT_CLASS} value={loss} min={0} max={99.99} step={1} onChange={(e) => setLoss(Math.max(0, Math.min(99.99, num(e.target.value))))} />
       </Labeled>
-      <ResultPanel
-        title="계산 결과"
-        subtitle="본전 복구에 필요한 수익률(참고)"
-        highlight={Number.isFinite(rec) ? `약 ${(rec * 100).toFixed(2)}%` : "∞"}
-      />
+      <ResultPanel title="본전 복구 필요 수익률" subtitle="손실 후 원금을 회복하기 위해 필요한 수익률 (참고)"
+        highlight={Number.isFinite(recoveryPct) ? `약 ${recoveryPct.toFixed(2)}%` : "∞"}>
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead><tr className="bg-neutral-100 text-left">
+              <th className="border border-neutral-200 px-3 py-2 font-medium">손실률</th>
+              <th className="border border-neutral-200 px-3 py-2 font-medium text-right">필요 수익률</th>
+            </tr></thead>
+            <tbody>
+              {referenceRows.map((row) => (
+                <tr key={row.loss} className={row.loss === closestLoss ? "bg-neutral-900 text-white" : "even:bg-neutral-50"}>
+                  <td className="border border-neutral-200 px-3 py-1.5">{row.loss}%</td>
+                  <td className={`border border-neutral-200 px-3 py-1.5 text-right font-medium ${row.loss === closestLoss ? "text-white" : "text-neutral-900"}`}>{row.recovery}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </ResultPanel>
     </Box>
   );
 }
@@ -859,57 +1292,120 @@ function lcmTwo(a: number, b: number) {
 }
 
 function LcmForm() {
-  const [a, setA] = useState(12);
-  const [b, setB] = useState(18);
+  const [aStr, setAStr] = useState("12");
+  const [bStr, setBStr] = useState("18");
+  const [cStr, setCStr] = useState("0");
+  const { lcmAB, lcmABC, steps } = useMemo(() => {
+    const a = Math.abs(Math.floor(num(aStr)));
+    const b = Math.abs(Math.floor(num(bStr)));
+    const c = Math.abs(Math.floor(num(cStr)));
+    const lcmAB = lcmTwo(a, b);
+    const lcmABC = c > 0 ? lcmTwo(lcmAB, c) : null;
+    const steps: string[] = [];
+    let x = a; let y = b; let count = 0;
+    while (y > 0 && count < 8) {
+      const q = Math.floor(x / y); const r = x % y;
+      steps.push(r === 0 ? `${x} = ${q}×${y} + 0 → gcd=${y}` : `${x} = ${q}×${y} + ${r}`);
+      x = y; y = r; count++;
+    }
+    return { lcmAB, lcmABC, steps };
+  }, [aStr, bStr, cStr]);
+  const hasC = num(cStr) > 0;
   return (
     <Box>
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="a">
-          <input type="number" className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="b">
-          <input type="number" className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} />
-        </Labeled>
+      <div className="grid gap-6 sm:grid-cols-3">
+        <Labeled label="a"><input type="number" className={INPUT_CLASS} value={aStr} onChange={(e) => setAStr(e.target.value)} /></Labeled>
+        <Labeled label="b"><input type="number" className={INPUT_CLASS} value={bStr} onChange={(e) => setBStr(e.target.value)} /></Labeled>
+        <Labeled label="c (0 = 무시)"><input type="number" className={INPUT_CLASS} value={cStr} onChange={(e) => setCStr(e.target.value)} /></Labeled>
       </div>
-      <ResultPanel title="계산 결과" highlight={`LCM ${lcmTwo(a, b)}`} />
+      <ResultPanel title="최소공배수(LCM)" highlight={`LCM(a,b) = ${won(lcmAB)}`} subtitle={hasC && lcmABC !== null ? `LCM(LCM(a,b),c) = ${won(lcmABC)}` : undefined}>
+        {hasC && lcmABC !== null && <ResultRows rows={[{ label: "LCM(a, b)", value: won(lcmAB) }, { label: "LCM(LCM(a,b), c)", value: won(lcmABC) }]} />}
+        {steps.length > 0 && (
+          <div className="mt-6">
+            <p className="mb-2 text-xs font-medium text-neutral-700">유클리드 호제법 단계 — gcd({Math.abs(Math.floor(num(aStr)))}, {Math.abs(Math.floor(num(bStr)))})</p>
+            <ol className="space-y-1">{steps.map((s, i) => <li key={i} className="font-mono text-xs text-neutral-700">{s}</li>)}</ol>
+          </div>
+        )}
+      </ResultPanel>
     </Box>
   );
 }
 
 function GcdForm() {
-  const [a, setA] = useState(48);
-  const [b, setB] = useState(18);
+  const [aStr, setAStr] = useState("48");
+  const [bStr, setBStr] = useState("18");
+  const [cStr, setCStr] = useState("0");
+  const { gcdAB, gcdABC, steps } = useMemo(() => {
+    const a = Math.abs(Math.floor(num(aStr)));
+    const b = Math.abs(Math.floor(num(bStr)));
+    const c = Math.abs(Math.floor(num(cStr)));
+    const gcdAB = gcdTwo(a, b);
+    const gcdABC = c > 0 ? gcdTwo(gcdAB, c) : null;
+    const steps: string[] = [];
+    let x = a; let y = b; let count = 0;
+    while (y > 0 && count < 8) {
+      const q = Math.floor(x / y); const r = x % y;
+      steps.push(r === 0 ? `${x} = ${q}×${y} + 0 → gcd=${y}` : `${x} = ${q}×${y} + ${r}`);
+      x = y; y = r; count++;
+    }
+    return { gcdAB, gcdABC, steps };
+  }, [aStr, bStr, cStr]);
+  const hasC = num(cStr) > 0;
   return (
     <Box>
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="a">
-          <input type="number" className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="b">
-          <input type="number" className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} />
-        </Labeled>
+      <div className="grid gap-6 sm:grid-cols-3">
+        <Labeled label="a"><input type="number" className={INPUT_CLASS} value={aStr} onChange={(e) => setAStr(e.target.value)} /></Labeled>
+        <Labeled label="b"><input type="number" className={INPUT_CLASS} value={bStr} onChange={(e) => setBStr(e.target.value)} /></Labeled>
+        <Labeled label="c (0 = 무시)"><input type="number" className={INPUT_CLASS} value={cStr} onChange={(e) => setCStr(e.target.value)} /></Labeled>
       </div>
-      <ResultPanel title="계산 결과" highlight={`GCD ${gcdTwo(a, b)}`} />
+      <ResultPanel title="최대공약수(GCD)" highlight={`GCD(a,b) = ${gcdAB}`} subtitle={hasC && gcdABC !== null ? `GCD(GCD(a,b),c) = ${gcdABC}` : undefined}>
+        {hasC && gcdABC !== null && <ResultRows rows={[{ label: "GCD(a, b)", value: String(gcdAB) }, { label: "GCD(GCD(a,b), c)", value: String(gcdABC) }]} />}
+        {steps.length > 0 && (
+          <div className="mt-6">
+            <p className="mb-2 text-xs font-medium text-neutral-700">유클리드 호제법 단계 — gcd({Math.abs(Math.floor(num(aStr)))}, {Math.abs(Math.floor(num(bStr)))})</p>
+            <ol className="space-y-1">{steps.map((s, i) => <li key={i} className="font-mono text-xs text-neutral-700">{s}</li>)}</ol>
+          </div>
+        )}
+      </ResultPanel>
     </Box>
   );
 }
 
 function AvgForm() {
-  const [text, setText] = useState("1, 2, 3, 4");
-  const avg = useMemo(() => {
-    const xs = text
-      .split(/[\s,]+/)
-      .map((s) => Number(s.trim()))
-      .filter((n) => Number.isFinite(n));
-    if (!xs.length) return 0;
-    return xs.reduce((a, b) => a + b, 0) / xs.length;
+  const [text, setText] = useState("4, 8, 15, 16, 23, 42");
+  const stats = useMemo(() => {
+    const xs = text.split(/[\s,]+/).map((s) => Number(s.trim())).filter((n) => Number.isFinite(n));
+    if (!xs.length) return null;
+    const count = xs.length;
+    const sum = xs.reduce((a, b) => a + b, 0);
+    const mean = sum / count;
+    const min = Math.min(...xs);
+    const max = Math.max(...xs);
+    const sorted = [...xs].sort((a, b) => a - b);
+    const mid = Math.floor(count / 2);
+    const median = count % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
+    const stddev = Math.sqrt(xs.reduce((acc, x) => acc + (x - mean) ** 2, 0) / count);
+    return { count, sum, mean, min, max, median, stddev };
   }, [text]);
+  const fmt = (n: number) => Number.isInteger(n) ? n.toLocaleString("ko-KR") : parseFloat(n.toFixed(4)).toString();
   return (
     <Box>
-      <Labeled label="숫자(쉼표 또는 공백 구분)">
-        <textarea className={TEXTAREA_CLASS} rows={3} value={text} onChange={(e) => setText(e.target.value)} />
+      <Labeled label="숫자 목록 (쉼표 또는 공백 구분)">
+        <textarea className={TEXTAREA_CLASS} rows={4} value={text} onChange={(e) => setText(e.target.value)} />
       </Labeled>
-      <ResultPanel title="계산 결과" highlight={`평균 ${avg}`} />
+      <ResultPanel title="통계 계산 결과" highlight={stats ? `평균 ${fmt(stats.mean)}` : "—"}>
+        {stats ? (
+          <ResultRows rows={[
+            { label: "개수", value: String(stats.count) },
+            { label: "합계", value: fmt(stats.sum) },
+            { label: "평균", value: fmt(stats.mean) },
+            { label: "최솟값", value: fmt(stats.min) },
+            { label: "최댓값", value: fmt(stats.max) },
+            { label: "중앙값", value: fmt(stats.median) },
+            { label: "표준편차 (모집단)", value: fmt(stats.stddev) },
+          ]} />
+        ) : <p className="mt-4 text-sm text-neutral-500">숫자를 입력하면 결과가 표시됩니다.</p>}
+      </ResultPanel>
     </Box>
   );
 }
@@ -940,20 +1436,37 @@ function ModForm() {
 }
 
 function FibForm() {
-  const [n, setN] = useState(10);
-  const v = useMemo(() => {
-    let a = 0,
-      b = 1;
-    const t = Math.max(0, Math.min(80, Math.floor(n)));
-    for (let i = 0; i < t; i++) [a, b] = [b, a + b];
-    return a;
-  }, [n]);
+  const [nStr, setNStr] = useState("10");
+  const { seq, fn, phi } = useMemo(() => {
+    const n = Math.max(0, Math.min(50, Math.floor(num(nStr))));
+    const seq: number[] = [0, 1];
+    for (let i = 2; i <= n; i++) seq.push(seq[i - 1]! + seq[i - 2]!);
+    const trimmed = seq.slice(0, n + 1);
+    const fn = trimmed[n] ?? 0;
+    const phi = n >= 2 && trimmed[n - 1] !== 0 ? fn / trimmed[n - 1]! : null;
+    return { seq: trimmed, fn, phi };
+  }, [nStr]);
+  const n = Math.max(0, Math.min(50, Math.floor(num(nStr))));
   return (
     <Box>
-      <Labeled label="n (0부터)">
-        <input type="number" className={INPUT_CLASS} value={n} onChange={(e) => setN(num(e.target.value))} />
+      <Labeled label="n (0 ~ 50)">
+        <input type="number" min={0} max={50} className={INPUT_CLASS} value={nStr} onChange={(e) => setNStr(e.target.value)} />
       </Labeled>
-      <ResultPanel title="계산 결과" highlight={`F(n) = ${v}`} />
+      <ResultPanel title="피보나치 수열" highlight={`F(${n}) = ${won(fn)}`} subtitle={phi !== null ? `황금비 근사: F(n)/F(n-1) ≈ ${phi.toFixed(8)}` : undefined}>
+        <div className="mt-4">
+          <p className="mb-2 text-xs font-medium text-neutral-700">F(0) ~ F({n}) 전체 수열</p>
+          <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white p-3">
+            <p className="whitespace-nowrap font-mono text-xs text-neutral-800">
+              {seq.map((v, i) => (
+                <span key={i} className={i === n ? "font-bold underline decoration-dotted" : ""}>{won(v)}</span>
+              )).reduce<ReactNode[]>((acc, el, i) => {
+                if (i === 0) return [el];
+                return [...acc, <span key={`s${i}`} className="text-neutral-400">, </span>, el];
+              }, [])}
+            </p>
+          </div>
+        </div>
+      </ResultPanel>
     </Box>
   );
 }
@@ -1013,68 +1526,199 @@ function PermForm() {
 }
 
 function PyeongForm() {
-  const [pyeong, setPyeong] = useState(32);
-  const m2 = pyeong * 3.305785;
+  const RATE = 3.30579;
+  const REF_ROWS = [
+    { pyeong: 10, m2: 33.1 }, { pyeong: 20, m2: 66.1 }, { pyeong: 25, m2: 82.6 },
+    { pyeong: 30, m2: 99.2 }, { pyeong: 34, m2: 112.4 }, { pyeong: 40, m2: 132.2 }, { pyeong: 50, m2: 165.3 },
+  ];
+  const [mode, setMode] = useState<"pyeong" | "m2">("pyeong");
+  const [valStr, setValStr] = useState("32");
+  const { converted, inputPyeong } = useMemo(() => {
+    const v = num(valStr);
+    if (mode === "pyeong") return { converted: v * RATE, inputPyeong: v };
+    return { converted: v / RATE, inputPyeong: v / RATE };
+  }, [mode, valStr]);
+  const closestIdx = useMemo(() => {
+    let best = 0; let bestDiff = Infinity;
+    REF_ROWS.forEach((r, i) => { const d = Math.abs(r.pyeong - inputPyeong); if (d < bestDiff) { bestDiff = d; best = i; } });
+    return best;
+  }, [inputPyeong]);
   return (
     <Box>
-      <Labeled label="평">
-        <input type="number" className={INPUT_CLASS} value={pyeong} onChange={(e) => setPyeong(num(e.target.value))} />
+      <div className="flex gap-2">
+        <button type="button" onClick={() => { setMode("pyeong"); setValStr("32"); }}
+          className={`rounded-full px-4 py-2 text-sm font-medium ${mode === "pyeong" ? "bg-neutral-900 text-white" : "border border-neutral-300"}`}>
+          평 → ㎡
+        </button>
+        <button type="button" onClick={() => { setMode("m2"); setValStr("99.2"); }}
+          className={`rounded-full px-4 py-2 text-sm font-medium ${mode === "m2" ? "bg-neutral-900 text-white" : "border border-neutral-300"}`}>
+          ㎡ → 평
+        </button>
+      </div>
+      <Labeled label={mode === "pyeong" ? "평수 입력" : "㎡ 입력"}>
+        <input type="number" step="0.01" className={INPUT_CLASS} value={valStr} onChange={(e) => setValStr(e.target.value)} />
       </Labeled>
-      <ResultPanel title="계산 결과" highlight={`㎡ 약 ${m2.toFixed(2)}`} />
-    </Box>
-  );
-}
-
-function TempForm() {
-  const [c, setC] = useState(25);
-  const f = (c * 9) / 5 + 32;
-  const k = c + 273.15;
-  return (
-    <Box>
-      <Labeled label="섭씨(°C)">
-        <input type="number" className={INPUT_CLASS} value={c} onChange={(e) => setC(num(e.target.value))} />
-      </Labeled>
-      <ResultPanel title="변환 결과">
-        <ResultRows
-          rows={[
-            { label: "화씨(°F)", value: f.toFixed(2) },
-            { label: "켈빈(K)", value: k.toFixed(2) },
-          ]}
-        />
+      <ResultPanel title="변환 결과" highlight={mode === "pyeong" ? `${num(valStr).toFixed(1)}평 → ${converted.toFixed(2)}㎡` : `${num(valStr).toFixed(2)}㎡ → ${converted.toFixed(2)}평`} subtitle="1평 = 3.30579 ㎡">
+        <div className="mt-6 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="bg-neutral-100">
+              <th className="border border-neutral-200 px-3 py-2 text-left font-medium text-neutral-700">평</th>
+              <th className="border border-neutral-200 px-3 py-2 text-left font-medium text-neutral-700">㎡</th>
+            </tr></thead>
+            <tbody>
+              {REF_ROWS.map((r, i) => (
+                <tr key={r.pyeong} className={i === closestIdx ? "bg-neutral-900 text-white font-semibold" : i % 2 === 0 ? "bg-white" : "bg-neutral-50"}>
+                  <td className="border border-neutral-200 px-3 py-2">{r.pyeong}평</td>
+                  <td className="border border-neutral-200 px-3 py-2">{r.m2}㎡</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </ResultPanel>
     </Box>
   );
 }
 
-function InchCmForm() {
-  const [inch, setInch] = useState(10);
-  const cm = inch * 2.54;
+type TempUnit = "C" | "F" | "K";
+
+function TempForm() {
+  const [unit, setUnit] = useState<TempUnit>("C");
+  const [raw, setRaw] = useState("20");
+  const { celsius, fahrenheit, kelvin } = useMemo(() => {
+    const v = num(raw);
+    if (unit === "C") return { celsius: v, fahrenheit: v * 9 / 5 + 32, kelvin: v + 273.15 };
+    if (unit === "F") { const c = (v - 32) * 5 / 9; return { celsius: c, fahrenheit: v, kelvin: c + 273.15 }; }
+    const c = v - 273.15; return { celsius: c, fahrenheit: c * 9 / 5 + 32, kelvin: v };
+  }, [unit, raw]);
+  const REF_ROWS = [
+    { label: "-40", c: -40, f: -40, k: 233.15 },
+    { label: "빙점 0°C", c: 0, f: 32, k: 273.15 },
+    { label: "실온 20°C", c: 20, f: 68, k: 293.15 },
+    { label: "체온 37°C", c: 37, f: 98.6, k: 310.15 },
+    { label: "끓는점 100°C", c: 100, f: 212, k: 373.15 },
+  ];
+  const resultRows = unit === "C"
+    ? [{ label: "화씨(°F)", value: `${fahrenheit.toFixed(2)} °F` }, { label: "켈빈(K)", value: `${kelvin.toFixed(2)} K` }]
+    : unit === "F"
+    ? [{ label: "섭씨(°C)", value: `${celsius.toFixed(2)} °C` }, { label: "켈빈(K)", value: `${kelvin.toFixed(2)} K` }]
+    : [{ label: "섭씨(°C)", value: `${celsius.toFixed(2)} °C` }, { label: "화씨(°F)", value: `${fahrenheit.toFixed(2)} °F` }];
   return (
     <Box>
-      <Labeled label="inch">
-        <input type="number" className={INPUT_CLASS} value={inch} onChange={(e) => setInch(num(e.target.value))} />
+      <div className="flex flex-wrap gap-2">
+        {(["C", "F", "K"] as TempUnit[]).map((u) => (
+          <button key={u} type="button" onClick={() => setUnit(u)}
+            className={`rounded-full px-4 py-2 text-sm ${unit === u ? "bg-neutral-900 text-white" : "border border-neutral-300"}`}>
+            {u === "C" ? "섭씨 (°C)" : u === "F" ? "화씨 (°F)" : "켈빈 (K)"}
+          </button>
+        ))}
+      </div>
+      <Labeled label={`입력값 (${unit === "C" ? "°C" : unit === "F" ? "°F" : "K"})`}>
+        <input type="number" className={INPUT_CLASS} value={raw} onChange={(e) => setRaw(e.target.value)} />
       </Labeled>
-      <ResultPanel title="계산 결과" highlight={`cm ${cm.toFixed(3)}`} />
+      <ResultPanel title="온도 변환" highlight={unit === "C" ? `${celsius.toFixed(2)} °C` : unit === "F" ? `${fahrenheit.toFixed(2)} °F` : `${kelvin.toFixed(2)} K`}>
+        <ResultRows rows={resultRows} />
+      </ResultPanel>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead><tr className="border-b border-neutral-200 text-left text-neutral-600">
+            <th className="pb-2 pr-4 font-medium">기준 온도</th>
+            <th className="pb-2 pr-4 font-medium">°C</th>
+            <th className="pb-2 pr-4 font-medium">°F</th>
+            <th className="pb-2 font-medium">K</th>
+          </tr></thead>
+          <tbody>
+            {REF_ROWS.map((r) => (
+              <tr key={r.label} className="border-b border-neutral-100">
+                <td className="py-2 pr-4 text-neutral-600">{r.label}</td>
+                <td className="py-2 pr-4 font-medium">{r.c}</td>
+                <td className="py-2 pr-4 font-medium">{r.f}</td>
+                <td className="py-2 font-medium">{r.k}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </Box>
   );
 }
 
-function ByteForm() {
-  const [bytes, setBytes] = useState(1536);
-  const kb = bytes / 1024;
-  const mb = kb / 1024;
+type InchDir = "inch-to-cm" | "cm-to-inch";
+
+function InchCmForm() {
+  const [dir, setDir] = useState<InchDir>("inch-to-cm");
+  const [raw, setRaw] = useState("170");
+  const result = useMemo(() => {
+    const v = num(raw);
+    if (dir === "inch-to-cm") {
+      const cm = v * 2.54;
+      const ft = Math.floor(v / 12); const inches = v % 12;
+      return { primary: `${cm.toFixed(1)} cm`, secondary: `${ft}ft ${inches.toFixed(1)}in` };
+    } else {
+      const totalInches = v / 2.54;
+      const ft = Math.floor(totalInches / 12); const inches = totalInches % 12;
+      return { primary: `${totalInches.toFixed(1)} inch`, secondary: `${ft}ft ${inches.toFixed(1)}in` };
+    }
+  }, [dir, raw]);
+  const REF = [{ cm: 160, inch: 63 }, { cm: 165, inch: 65 }, { cm: 170, inch: 67 }, { cm: 175, inch: 69 }, { cm: 180, inch: 71 }, { cm: 185, inch: 73 }];
   return (
     <Box>
-      <Labeled label="바이트">
-        <input type="number" className={INPUT_CLASS} value={bytes} onChange={(e) => setBytes(num(e.target.value))} />
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={() => setDir("inch-to-cm")}
+          className={`rounded-full px-4 py-2 text-sm ${dir === "inch-to-cm" ? "bg-neutral-900 text-white" : "border border-neutral-300"}`}>inch → cm</button>
+        <button type="button" onClick={() => setDir("cm-to-inch")}
+          className={`rounded-full px-4 py-2 text-sm ${dir === "cm-to-inch" ? "bg-neutral-900 text-white" : "border border-neutral-300"}`}>cm → inch</button>
+      </div>
+      <Labeled label={dir === "inch-to-cm" ? "인치(inch)" : "센티미터(cm)"}>
+        <input type="number" className={INPUT_CLASS} value={raw} onChange={(e) => setRaw(e.target.value)} />
       </Labeled>
-      <ResultPanel title="계산 결과">
-        <ResultRows
-          rows={[
-            { label: "KiB", value: kb.toFixed(3) },
-            { label: "MiB", value: mb.toFixed(6) },
-          ]}
-        />
+      <ResultPanel title="변환 결과" highlight={result.primary}>
+        <ResultRows rows={[{ label: "feet+inches 형식", value: result.secondary }]} />
+      </ResultPanel>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead><tr className="border-b border-neutral-200 text-left text-neutral-600">
+            <th className="pb-2 pr-4 font-medium">cm</th><th className="pb-2 font-medium">inch</th>
+          </tr></thead>
+          <tbody>
+            {REF.map((r) => (
+              <tr key={r.cm} className="border-b border-neutral-100">
+                <td className="py-2 pr-4 font-medium">{r.cm} cm</td>
+                <td className="py-2 font-medium">{r.inch} in</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Box>
+  );
+}
+
+type ByteUnit = "B" | "KiB" | "MiB" | "GiB" | "TiB";
+
+function ByteForm() {
+  const UNITS: ByteUnit[] = ["B", "KiB", "MiB", "GiB", "TiB"];
+  const FACTORS: Record<ByteUnit, number> = { B: 1, KiB: 1024, MiB: 1024 ** 2, GiB: 1024 ** 3, TiB: 1024 ** 4 };
+  const [raw, setRaw] = useState("1");
+  const [unit, setUnit] = useState<ByteUnit>("GiB");
+  const bytes = useMemo(() => num(raw) * FACTORS[unit], [raw, unit]);
+  const rows = useMemo(() => UNITS.map((u) => {
+    const v = bytes / FACTORS[u];
+    const display = v >= 1e12 || (v < 0.0001 && v > 0) ? v.toExponential(3) : v % 1 === 0 ? v.toLocaleString("ko-KR") : parseFloat(v.toFixed(6)).toString();
+    return { label: u, value: display };
+  }), [bytes]);
+  return (
+    <Box>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Labeled label="값"><input type="number" className={INPUT_CLASS} value={raw} onChange={(e) => setRaw(e.target.value)} /></Labeled>
+        <Labeled label="단위">
+          <select className={INPUT_CLASS} value={unit} onChange={(e) => setUnit(e.target.value as ByteUnit)}>
+            {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+          </select>
+        </Labeled>
+      </div>
+      <ResultPanel title="바이트 단위 변환" subtitle="1 KiB = 1,024 B 기준 (이진 접두사)">
+        <ResultRows rows={rows} />
       </ResultPanel>
     </Box>
   );
@@ -1142,99 +1786,193 @@ function SdtForm() {
 }
 
 function DdayForm() {
-  const [end, setEnd] = useState(() => new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10));
-  const days = useMemo(() => {
-    const e = new Date(end + "T00:00:00");
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const diff = Math.round((e.getTime() - now.getTime()) / 86400000);
-    return diff;
-  }, [end]);
+  const today = new Date().toISOString().slice(0, 10);
+  const [start, setStart] = useState(today);
+  const [target, setTarget] = useState(() => new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10));
+  const result = useMemo(() => {
+    const s = new Date(`${start}T00:00:00`);
+    const t = new Date(`${target}T00:00:00`);
+    const diff = Math.round((t.getTime() - s.getTime()) / 86400000);
+    const absDiff = Math.abs(diff);
+    const weeks = Math.floor(absDiff / 7);
+    const DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
+    const targetDay = DAY_NAMES[t.getDay()];
+    const dday = diff > 0 ? `D-${diff}` : diff < 0 ? `D+${absDiff}` : "D-Day";
+    return { diff, absDiff, weeks, targetDay, dday };
+  }, [start, target]);
   return (
     <Box>
-      <Labeled label="목표일">
-        <input type="date" className={INPUT_CLASS} value={end} onChange={(e) => setEnd(e.target.value)} />
-      </Labeled>
-      <ResultPanel title="계산 결과" highlight={`D-${days}`} />
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Labeled label="시작일"><input type="date" className={INPUT_CLASS} value={start} onChange={(e) => setStart(e.target.value)} /></Labeled>
+        <Labeled label="목표일"><input type="date" className={INPUT_CLASS} value={target} onChange={(e) => setTarget(e.target.value)} /></Labeled>
+      </div>
+      <ResultPanel title="D-Day" highlight={result.dday}
+        subtitle={result.diff > 0 ? "목표일까지 남은 날" : result.diff < 0 ? "목표일이 지났습니다" : "오늘이 목표일입니다"}>
+        <ResultRows rows={[
+          { label: "총 일수", value: `${result.absDiff.toLocaleString("ko-KR")}일` },
+          { label: "주수", value: `${result.weeks}주` },
+          { label: "목표일 요일", value: `${result.targetDay}요일` },
+        ]} />
+      </ResultPanel>
     </Box>
   );
 }
 
 function AgeForm() {
-  const [birth, setBirth] = useState("1996-01-15");
-  const [ref, setRef] = useState(() => new Date().toISOString().slice(0, 10));
-  const age = useMemo(() => {
-    const b = new Date(birth + "T00:00:00");
-    const r = new Date(ref + "T00:00:00");
-    let y = r.getFullYear() - b.getFullYear();
-    const m = r.getMonth() - b.getMonth();
-    if (m < 0 || (m === 0 && r.getDate() < b.getDate())) y--;
-    return y;
-  }, [birth, ref]);
+  const [birth, setBirth] = useState("1995-01-01");
+  const [base, setBase] = useState(() => new Date().toISOString().slice(0, 10));
+  const result = useMemo(() => {
+    const b = new Date(`${birth}T00:00:00`);
+    const d = new Date(`${base}T00:00:00`);
+    let intlAge = d.getFullYear() - b.getFullYear();
+    const hasBirthdayPassed = d.getMonth() > b.getMonth() || (d.getMonth() === b.getMonth() && d.getDate() >= b.getDate());
+    if (!hasBirthdayPassed) intlAge -= 1;
+    const koreanAge = d.getFullYear() - b.getFullYear() + 1;
+    const livedDays = Math.floor((d.getTime() - b.getTime()) / 86400000);
+    const nextBirthday = new Date(d.getFullYear(), b.getMonth(), b.getDate());
+    if (nextBirthday <= d) nextBirthday.setFullYear(d.getFullYear() + 1);
+    const daysToNextBirthday = Math.ceil((nextBirthday.getTime() - d.getTime()) / 86400000);
+    const DAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
+    return { intlAge, koreanAge, livedDays, daysToNextBirthday, birthDayName: DAY_NAMES[b.getDay()] };
+  }, [birth, base]);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="생년월일">
-          <input type="date" className={INPUT_CLASS} value={birth} onChange={(e) => setBirth(e.target.value)} />
-        </Labeled>
-        <Labeled label="기준일">
-          <input type="date" className={INPUT_CLASS} value={ref} onChange={(e) => setRef(e.target.value)} />
-        </Labeled>
+        <Labeled label="생년월일"><input type="date" className={INPUT_CLASS} value={birth} onChange={(e) => setBirth(e.target.value)} /></Labeled>
+        <Labeled label="기준일"><input type="date" className={INPUT_CLASS} value={base} onChange={(e) => setBase(e.target.value)} /></Labeled>
       </div>
-      <ResultPanel title="계산 결과" highlight={`만 나이 ${age}세`} />
+      <ResultPanel title="나이 계산" highlight={`만 ${result.intlAge}세`}>
+        <ResultRows rows={[
+          { label: "한국 나이", value: `${result.koreanAge}세` },
+          { label: "다음 생일까지", value: `${result.daysToNextBirthday.toLocaleString("ko-KR")}일` },
+          { label: "살아온 날", value: `${result.livedDays.toLocaleString("ko-KR")}일` },
+          { label: "태어난 요일", value: `${result.birthDayName}요일` },
+        ]} />
+      </ResultPanel>
     </Box>
   );
 }
 
+type DutchMode = "total" | "items";
+type DutchItem = { id: number; name: string; amount: number };
+
 function DutchForm() {
-  const [total, setTotal] = useState(120000);
+  const [mode, setMode] = useState<DutchMode>("total");
+  const [total, setTotal] = useState(120_000);
   const [people, setPeople] = useState(4);
-  const per = people <= 0 ? 0 : total / people;
+  const [items, setItems] = useState<DutchItem[]>([
+    { id: 1, name: "음식", amount: 60_000 },
+    { id: 2, name: "술", amount: 40_000 },
+  ]);
+  const [newName, setNewName] = useState("");
+  const [newAmt, setNewAmt] = useState(0);
+  const { grandTotal, perPerson, remainder } = useMemo(() => {
+    const gt = mode === "total" ? total : items.reduce((s, i) => s + i.amount, 0);
+    const per = people <= 0 ? 0 : gt / people;
+    const floor = Math.floor(per);
+    return { grandTotal: gt, perPerson: per, remainder: gt - floor * people };
+  }, [mode, total, items, people]);
+  function addItem() {
+    if (newAmt <= 0) return;
+    setItems((prev) => [...prev, { id: Date.now(), name: newName || `항목 ${prev.length + 1}`, amount: newAmt }]);
+    setNewName(""); setNewAmt(0);
+  }
+  function removeItem(id: number) { setItems((prev) => prev.filter((i) => i.id !== id)); }
   return (
     <Box>
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="총액(원)">
-          <input type="number" className={INPUT_CLASS} value={total} onChange={(e) => setTotal(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="인원">
-          <input type="number" className={INPUT_CLASS} value={people} onChange={(e) => setPeople(Math.max(1, Math.floor(num(e.target.value))))} />
-        </Labeled>
+      <div className="flex gap-2">
+        <button type="button" onClick={() => setMode("total")} className={`rounded-full px-4 py-2 text-sm font-medium ${mode === "total" ? "bg-neutral-900 text-white" : "border border-neutral-200"}`}>전체 금액</button>
+        <button type="button" onClick={() => setMode("items")} className={`rounded-full px-4 py-2 text-sm font-medium ${mode === "items" ? "bg-neutral-900 text-white" : "border border-neutral-200"}`}>항목별 입력</button>
       </div>
-      <ResultPanel title="계산 결과" highlight={`1인당 약 ${won(per)}원`} />
+      {mode === "total" && (
+        <Labeled label="총 금액(원)"><input type="number" className={INPUT_CLASS} value={total} onChange={(e) => setTotal(num(e.target.value))} /></Labeled>
+      )}
+      {mode === "items" && (
+        <div className="space-y-2">
+          {items.map((item) => (
+            <div key={item.id} className="flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 text-sm">
+              <span className="flex-1 text-neutral-800">{item.name}</span>
+              <span className="font-medium text-neutral-900">{won(item.amount)}원</span>
+              <button type="button" onClick={() => removeItem(item.id)} className="text-neutral-400 hover:text-red-500">✕</button>
+            </div>
+          ))}
+          <div className="flex gap-2">
+            <input className={`${INPUT_CLASS} flex-1`} placeholder="항목명" value={newName} onChange={(e) => setNewName(e.target.value)} />
+            <input type="number" className={`${INPUT_CLASS} w-32`} placeholder="금액" value={newAmt || ""} onChange={(e) => setNewAmt(num(e.target.value))} />
+            <button type="button" onClick={addItem} className="rounded-lg bg-neutral-900 px-3 py-2 text-sm text-white">추가</button>
+          </div>
+        </div>
+      )}
+      <Labeled label="인원">
+        <input type="number" className={INPUT_CLASS} value={people} min={1} onChange={(e) => setPeople(Math.max(1, Math.floor(num(e.target.value))))} />
+      </Labeled>
+      <ResultPanel title="더치페이 계산" highlight={`1인당 약 ${won(perPerson)}원`}>
+        <ResultRows rows={[
+          { label: "합계", value: `${won(grandTotal)}원` },
+          { label: "1인 부담 (내림)", value: `${won(Math.floor(perPerson))}원` },
+          { label: "잔돈 (총액 - 내림×인원)", value: `${won(remainder)}원` },
+        ]} />
+      </ResultPanel>
     </Box>
   );
 }
 
 function TipForm() {
-  const [bill, setBill] = useState(80000);
+  const [bill, setBill] = useState(80_000);
   const [pct, setPct] = useState(10);
   const [n, setN] = useState(3);
-  const tip = bill * (pct / 100);
-  const total = bill + tip;
+  const TIP_PRESETS = [5, 10, 15, 18, 20];
+  const tipAmt = bill * (pct / 100);
+  const total = bill + tipAmt;
   const per = n <= 0 ? 0 : total / n;
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="식사비">
-          <input type="number" className={INPUT_CLASS} value={bill} onChange={(e) => setBill(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="팁(%)">
-          <input type="number" className={INPUT_CLASS} value={pct} onChange={(e) => setPct(num(e.target.value))} />
-        </Labeled>
+        <Labeled label="식사금액(원)"><input type="number" className={INPUT_CLASS} value={bill} onChange={(e) => setBill(num(e.target.value))} /></Labeled>
+        <Labeled label="팁(%)"><input type="number" className={INPUT_CLASS} value={pct} onChange={(e) => setPct(num(e.target.value))} /></Labeled>
         <div className="sm:col-span-2">
-          <Labeled label="인원">
-            <input type="number" className={INPUT_CLASS} value={n} onChange={(e) => setN(Math.max(1, Math.floor(num(e.target.value))))} />
-          </Labeled>
+          <Labeled label="인원"><input type="number" className={INPUT_CLASS} value={n} min={1} onChange={(e) => setN(Math.max(1, Math.floor(num(e.target.value))))} /></Labeled>
         </div>
       </div>
-      <ResultPanel title="계산 결과">
-        <ResultRows
-          rows={[
-            { label: "합계", value: `${won(total)}원` },
-            { label: "1인 부담", value: `${won(per)}원` },
-          ]}
-        />
+      <div className="flex flex-wrap gap-2">
+        {TIP_PRESETS.map((p) => (
+          <button key={p} type="button" onClick={() => setPct(p)}
+            className={`rounded-full border px-3 py-1 text-sm ${pct === p ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-200 hover:border-neutral-400"}`}>
+            {p}%
+          </button>
+        ))}
+      </div>
+      <ResultPanel title="팁 계산 결과" highlight={`합계 ${won(total)}원`}>
+        <ResultRows rows={[
+          { label: "팁 금액", value: `${won(tipAmt)}원` },
+          { label: "합계 (식사+팁)", value: `${won(total)}원` },
+          { label: "1인 부담", value: `${won(per)}원` },
+        ]} />
       </ResultPanel>
+      <div className="rounded-xl border border-neutral-200 bg-white p-4">
+        <p className="mb-3 text-sm font-semibold text-neutral-800">팁 비율 비교</p>
+        <table className="w-full text-xs">
+          <thead><tr className="bg-neutral-100">
+            <th className="border border-neutral-200 px-2 py-2 text-left font-medium">팁 비율</th>
+            <th className="border border-neutral-200 px-2 py-2 text-right font-medium">팁 금액</th>
+            <th className="border border-neutral-200 px-2 py-2 text-right font-medium">합계</th>
+            <th className="border border-neutral-200 px-2 py-2 text-right font-medium">1인 부담</th>
+          </tr></thead>
+          <tbody>
+            {TIP_PRESETS.map((p) => {
+              const t = bill * (p / 100); const tot = bill + t;
+              return (
+                <tr key={p} className={pct === p ? "bg-neutral-900 text-white" : "even:bg-neutral-50"}>
+                  <td className="border border-neutral-200 px-2 py-1.5">{p}%</td>
+                  <td className="border border-neutral-200 px-2 py-1.5 text-right">{won(t)}원</td>
+                  <td className="border border-neutral-200 px-2 py-1.5 text-right">{won(tot)}원</td>
+                  <td className="border border-neutral-200 px-2 py-1.5 text-right">{won(n > 0 ? tot / n : 0)}원</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </Box>
   );
 }
@@ -1480,41 +2218,113 @@ function HaversineForm() {
 }
 
 function FuelForm() {
-  const [l, setL] = useState(40);
-  const [price, setPrice] = useState(1700);
+  const [efficiency, setEfficiency] = useState(12);
+  const [fuelPrice, setFuelPrice] = useState(1700);
+  const [distance, setDistance] = useState(100);
+  const { litersNeeded, tripCost, costPerKm } = useMemo(() => {
+    const litersNeeded = efficiency > 0 ? distance / efficiency : 0;
+    return { litersNeeded, tripCost: litersNeeded * fuelPrice, costPerKm: efficiency > 0 ? fuelPrice / efficiency : 0 };
+  }, [efficiency, fuelPrice, distance]);
+  const PRICE_COMPARE = [1500, 1600, 1700, 1800, 1900];
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="주유량(L)">
-          <input type="number" className={INPUT_CLASS} value={l} onChange={(e) => setL(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="리터당(원)">
-          <input type="number" className={INPUT_CLASS} value={price} onChange={(e) => setPrice(num(e.target.value))} />
-        </Labeled>
+        <Labeled label="연비(km/L)"><input type="number" className={INPUT_CLASS} value={efficiency} onChange={(e) => setEfficiency(num(e.target.value))} /></Labeled>
+        <Labeled label="유가(원/L)"><input type="number" className={INPUT_CLASS} value={fuelPrice} onChange={(e) => setFuelPrice(num(e.target.value))} /></Labeled>
+        <div className="sm:col-span-2">
+          <Labeled label="이동거리(km)"><input type="number" className={INPUT_CLASS} value={distance} onChange={(e) => setDistance(num(e.target.value))} /></Labeled>
+        </div>
       </div>
-      <ResultPanel title="예상 금액" highlight={`${won(l * price)}원`} />
+      <ResultPanel title="연료비 계산" highlight={`예상 연료비 ${won(tripCost)}원`}>
+        <ResultRows rows={[
+          { label: "필요 연료", value: `${litersNeeded.toFixed(2)} L` },
+          { label: "예상 연료비", value: `${won(tripCost)}원` },
+          { label: "km당 비용", value: `${won(costPerKm)}원/km` },
+        ]} />
+      </ResultPanel>
+      <div className="rounded-xl border border-neutral-200 bg-white p-4">
+        <p className="mb-3 text-sm font-semibold text-neutral-800">유가별 {distance}km 비용 비교</p>
+        <table className="w-full text-xs">
+          <thead><tr className="bg-neutral-100">
+            <th className="border border-neutral-200 px-3 py-2 text-left font-medium">유가(원/L)</th>
+            <th className="border border-neutral-200 px-3 py-2 text-right font-medium">예상 연료비</th>
+          </tr></thead>
+          <tbody>
+            {PRICE_COMPARE.map((p) => (
+              <tr key={p} className={p === fuelPrice ? "bg-neutral-900 text-white" : "even:bg-neutral-50"}>
+                <td className="border border-neutral-200 px-3 py-1.5">{won(p)}원</td>
+                <td className="border border-neutral-200 px-3 py-1.5 text-right">{won(efficiency > 0 ? (distance / efficiency) * p : 0)}원</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </Box>
   );
 }
 
 function ElecForm() {
   const [kwh, setKwh] = useState(300);
-  const [unit, setUnit] = useState(120);
+  const result = useMemo(() => {
+    // 주택용 저압 (2024 한전 기준)
+    const TIERS = [
+      { limit: 200, rate: 88.3, base: 910 },
+      { limit: 400, rate: 182.9, base: 1600 },
+      { limit: Infinity, rate: 275.6, base: 7300 },
+    ];
+    let tierIdx = kwh <= 200 ? 0 : kwh <= 400 ? 1 : 2;
+    const baseFee = TIERS[tierIdx]!.base;
+    // 전력량 요금 (누진 구간별 합산)
+    let energyFee = 0;
+    let remaining = kwh;
+    const tierBreakdown: { label: string; kwh: number; fee: number }[] = [];
+    for (const tier of TIERS) {
+      if (remaining <= 0) break;
+      const prevLimit = tier === TIERS[0] ? 0 : tier === TIERS[1] ? 200 : 400;
+      const tierKwh = Math.min(remaining, tier.limit - prevLimit);
+      const tierFee = tierKwh * tier.rate;
+      energyFee += tierFee;
+      tierBreakdown.push({ label: tier.limit === Infinity ? "401kWh~" : `~${tier.limit}kWh`, kwh: tierKwh, fee: tierFee });
+      remaining -= tierKwh;
+    }
+    const vat = Math.round(energyFee * 0.1);
+    const fund = Math.round(energyFee * 0.037);
+    const total = baseFee + energyFee + vat + fund;
+    return { baseFee, energyFee, vat, fund, total, tierBreakdown };
+  }, [kwh]);
   return (
     <Box>
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="월 사용량(kWh)">
-          <input type="number" className={INPUT_CLASS} value={kwh} onChange={(e) => setKwh(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="단가(원/kWh, 참고값)">
-          <input type="number" className={INPUT_CLASS} value={unit} onChange={(e) => setUnit(num(e.target.value))} />
-        </Labeled>
-      </div>
-      <ResultPanel
-        title="예상 요금"
-        subtitle="2026년 요금·누진 구간은 한전 고지와 다를 수 있습니다. 단가는 직접 조정해 주세요."
-        highlight={`대략 ${won(kwh * unit)}원`}
-      />
+      <Labeled label="월 사용량(kWh)">
+        <input type="number" className={INPUT_CLASS} value={kwh} min={0} onChange={(e) => setKwh(Math.max(0, num(e.target.value)))} />
+      </Labeled>
+      <ResultPanel title="전기요금 계산" subtitle="주택용 저압 기준 (2024 한전 누진제) · 실제 고지와 다를 수 있습니다" highlight={`총 청구금액 약 ${won(result.total)}원`}>
+        <ResultRows rows={[
+          { label: "기본요금", value: `${won(result.baseFee)}원` },
+          { label: "전력량 요금", value: `${won(result.energyFee)}원` },
+          { label: "부가세 (10%)", value: `${won(result.vat)}원` },
+          { label: "전력산업기반기금 (3.7%)", value: `${won(result.fund)}원` },
+          { label: "총 청구금액", value: `${won(result.total)}원` },
+        ]} />
+        <div className="mt-6">
+          <p className="mb-2 text-xs font-medium text-neutral-700">구간별 전력량 요금 내역</p>
+          <table className="w-full text-xs">
+            <thead><tr className="bg-neutral-100">
+              <th className="border border-neutral-200 px-3 py-2 text-left font-medium">구간</th>
+              <th className="border border-neutral-200 px-3 py-2 text-right font-medium">사용량</th>
+              <th className="border border-neutral-200 px-3 py-2 text-right font-medium">요금</th>
+            </tr></thead>
+            <tbody>
+              {result.tierBreakdown.filter((t) => t.kwh > 0).map((t) => (
+                <tr key={t.label} className="even:bg-neutral-50">
+                  <td className="border border-neutral-200 px-3 py-1.5">{t.label}</td>
+                  <td className="border border-neutral-200 px-3 py-1.5 text-right">{t.kwh.toFixed(0)} kWh</td>
+                  <td className="border border-neutral-200 px-3 py-1.5 text-right">{won(t.fee)}원</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </ResultPanel>
     </Box>
   );
 }
