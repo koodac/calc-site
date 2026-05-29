@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { CoupangBanner } from "@/components/ads/CoupangBanner";
+import { GoogleAdSense } from "@/components/ads/GoogleAdSense";
+import { ADS_CONFIG } from "@/lib/adsConfig";
 
 export function AdSlot({ label = "광고 영역" }: { label?: string }) {
   if (process.env.NODE_ENV === "development") {
@@ -13,7 +15,12 @@ export function AdSlot({ label = "광고 영역" }: { label?: string }) {
     );
   }
   return (
-    <aside aria-label="광고 슬롯" className="my-4">
+    <aside aria-label="광고 슬롯" className="my-4 flex flex-col gap-3">
+      <GoogleAdSense
+        slotId={ADS_CONFIG.BANNER_BOTTOM}
+        format="horizontal"
+        style={{ minHeight: 90, width: "100%" }}
+      />
       <CoupangBanner />
     </aside>
   );
