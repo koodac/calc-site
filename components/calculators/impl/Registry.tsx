@@ -1804,43 +1804,50 @@ function ParallelRForm() {
 }
 
 function SdtForm() {
-  const [mode, setMode] = useState<"st" | "sd" | "dt">("st");
-  const [v, setV] = useState(10);
+  const [mode, setMode] = useState<"v" | "t" | "d">("v");
+  const [v, setV] = useState(60);
   const [t, setT] = useState(2);
-  const [d, setD] = useState(20);
-  const speed = d / t;
-  const time = d / v;
-  const dist = v * t;
+  const [d, setD] = useState(100);
+
+  const result =
+    mode === "v" ? (t > 0 ? d / t : 0)
+    : mode === "t" ? (v > 0 ? d / v : 0)
+    : v * t;
+
+  const labels: Record<typeof mode, string> = {
+    v: `속도 ${result.toFixed(2)} km/h`,
+    t: `시간 ${result.toFixed(2)} h`,
+    d: `거리 ${result.toFixed(2)} km`,
+  };
+
   return (
     <Box>
-      <div className="flex gap-2 text-sm">
-        <button type="button" className={`rounded-full border px-3 py-1 ${mode === "st" ? "bg-neutral-900 text-white" : ""}`} onClick={() => setMode("st")}>속도</button>
-        <button type="button" className={`rounded-full border px-3 py-1 ${mode === "sd" ? "bg-neutral-900 text-white" : ""}`} onClick={() => setMode("sd")}>시간</button>
-        <button type="button" className={`rounded-full border px-3 py-1 ${mode === "dt" ? "bg-neutral-900 text-white" : ""}`} onClick={() => setMode("dt")}>거리</button>
+      <p className="mb-3 text-sm text-neutral-500">구하려는 항목을 선택하면 나머지 두 값을 입력합니다.</p>
+      <div className="flex gap-2 text-sm mb-4">
+        {([["v", "속도 구하기"], ["t", "시간 구하기"], ["d", "거리 구하기"]] as const).map(([m, l]) => (
+          <button key={m} type="button"
+            className={`rounded-full border px-3 py-1 ${mode === m ? "bg-neutral-900 text-white" : ""}`}
+            onClick={() => setMode(m)}>{l}</button>
+        ))}
       </div>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="속도(km/h)">
-          <input type="number" className={INPUT_CLASS} value={v} onChange={(e) => setV(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="시간(h)">
-          <input type="number" className={INPUT_CLASS} value={t} onChange={(e) => setT(num(e.target.value))} />
-        </Labeled>
-        <div className="sm:col-span-2">
-          <Labeled label="거리(km)">
-            <input type="number" className={INPUT_CLASS} value={d} onChange={(e) => setD(num(e.target.value))} />
+        {mode !== "v" && (
+          <Labeled label="속도 (km/h)">
+            <input type="number" step="0.1" className={INPUT_CLASS} value={v} onChange={(e) => setV(num(e.target.value))} />
           </Labeled>
-        </div>
+        )}
+        {mode !== "t" && (
+          <Labeled label="시간 (h)">
+            <input type="number" step="0.1" className={INPUT_CLASS} value={t} onChange={(e) => setT(num(e.target.value))} />
+          </Labeled>
+        )}
+        {mode !== "d" && (
+          <Labeled label="거리 (km)">
+            <input type="number" step="0.1" className={INPUT_CLASS} value={d} onChange={(e) => setD(num(e.target.value))} />
+          </Labeled>
+        )}
       </div>
-      <ResultPanel
-        title="계산 결과"
-        highlight={
-          mode === "st"
-            ? `속도 ${speed.toFixed(3)} km/h`
-            : mode === "sd"
-              ? `시간 ${time.toFixed(3)} h`
-              : `거리 ${dist.toFixed(3)} km`
-        }
-      />
+      <ResultPanel title="계산 결과" highlight={labels[mode]} />
     </Box>
   );
 }
@@ -2478,6 +2485,10 @@ function ipToInt(ip: string) {
   return ((p[0]! << 24) >>> 0) + (p[1]! << 16) + (p[2]! << 8) + p[3]!;
 }
 
+function intToIp(n: number): string {
+  return [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join(".");
+}
+
 function SubnetForm() {
   const [ip, setIp] = useState("192.168.1.10");
   const [cidr, setCidr] = useState(24);
@@ -2485,23 +2496,44 @@ function SubnetForm() {
     const host = ipToInt(ip);
     if (host === null) return null;
     const mask = cidr === 0 ? 0 : (~0 << (32 - cidr)) >>> 0;
-    const network = host & mask;
-    const broadcast = network | (~mask >>> 0);
-    return { network, broadcast, mask };
+    const network = (host & mask) >>> 0;
+    const broadcast = (network | (~mask >>> 0)) >>> 0;
+    const hostCount = cidr >= 31 ? Math.pow(2, 32 - cidr) : Math.max(0, Math.pow(2, 32 - cidr) - 2);
+    return {
+      networkDot: intToIp(network),
+      broadcastDot: intToIp(broadcast),
+      maskDot: intToIp(mask),
+      hostCount,
+      firstHost: cidr < 31 ? intToIp(network + 1) : intToIp(network),
+      lastHost: cidr < 31 ? intToIp(broadcast - 1) : intToIp(broadcast),
+    };
   }, [ip, cidr]);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="IPv4">
-          <input className={`${INPUT_CLASS} font-mono text-sm`} value={ip} onChange={(e) => setIp(e.target.value)} />
+        <Labeled label="IPv4 주소">
+          <input className={`${INPUT_CLASS} font-mono text-sm`} value={ip} onChange={(e) => setIp(e.target.value)} placeholder="192.168.1.10" />
         </Labeled>
-        <Labeled label="/CIDR">
-          <input type="number" className={INPUT_CLASS} value={cidr} onChange={(e) => setCidr(Math.min(32, Math.max(0, Math.floor(num(e.target.value)))))} />
+        <Labeled label="프리픽스 길이 /CIDR (0–32)">
+          <input type="number" className={INPUT_CLASS} value={cidr} min={0} max={32} onChange={(e) => setCidr(Math.min(32, Math.max(0, Math.floor(num(e.target.value)))))} />
         </Labeled>
       </div>
-      <ResultPanel title="계산 결과">
-        <p className="mt-4 font-mono text-xs">{info ? `네트워크 주소 정수: ${info.network}` : "IPv4 형식 오류"}</p>
-      </ResultPanel>
+      {info ? (
+        <ResultPanel title="서브넷 계산 결과">
+          <ResultRows rows={[
+            { label: "네트워크 주소", value: info.networkDot },
+            { label: "브로드캐스트 주소", value: info.broadcastDot },
+            { label: "서브넷 마스크", value: info.maskDot },
+            { label: "사용 가능 호스트 수", value: info.hostCount.toLocaleString("ko-KR") + "개" },
+            { label: "첫 번째 호스트", value: info.firstHost },
+            { label: "마지막 호스트", value: info.lastHost },
+          ]} />
+        </ResultPanel>
+      ) : (
+        <ResultPanel title="계산 결과">
+          <p className="mt-4 text-sm text-red-500">IPv4 주소 형식이 올바르지 않습니다 (예: 192.168.1.10)</p>
+        </ResultPanel>
+      )}
     </Box>
   );
 }
@@ -2821,31 +2853,41 @@ function AirForceWeightedScoreForm() {
 
 function MarineClassEstimateForm() {
   const [d, setD] = useState("2026-03-01");
+  // 참고: 해병대 1기(1949년 창설), 2024년 기준 약 480기 수준으로 알려져 있음
+  // 연간 약 6기 편성(격월) 기준으로 추정
+  const REF_YEAR = 2024;
+  const REF_CYCLE = 480;
+  const CYCLES_PER_YEAR = 6; // 약 격월
+
   const info = useMemo(() => {
     if (!d) return null;
     const dt = new Date(`${d}T12:00:00`);
     if (Number.isNaN(dt.getTime())) return null;
-    return { dt, year: dt.getFullYear(), month: dt.getMonth() + 1, day: dt.getDate() };
+    const year = dt.getFullYear();
+    const month = dt.getMonth() + 1; // 1~12
+    if (year < 1949) return null;
+    // 해당 연도·월 기준 기수 추정
+    const yearDiff = year - REF_YEAR;
+    const cycleInYear = Math.floor((month - 1) / (12 / CYCLES_PER_YEAR)); // 0~5
+    const estimated = REF_CYCLE + yearDiff * CYCLES_PER_YEAR + cycleInYear;
+    return { year, month, day: dt.getDate(), estimated };
   }, [d]);
-  const refFrom1949 = info && info.year > 1949 ? info.year - 1949 : null;
+
   return (
     <Box>
-      <Labeled label="입대일">
+      <Labeled label="입대 예정일">
         <input type="date" className={INPUT_CLASS} value={d} onChange={(e) => setD(e.target.value)} />
       </Labeled>
-      <ResultPanel title="일정 요약" highlight={info ? `${info.year}년 ${info.month}월 ${info.day}일` : "—"}>
-        <ResultRows
-          rows={[
-            {
-              label: "연도 기준 참고번호 (입대연도 − 1949)",
-              value: refFrom1949 != null ? String(refFrom1949) : "—",
-            },
-            {
-              label: "안내",
-              value: "공식 ‘기수’ 산정은 입영·편성 통지에 따릅니다.",
-            },
-          ]}
-        />
+      <ResultPanel
+        title="기수 추정 결과"
+        highlight={info ? `약 ${info.estimated}기` : "—"}
+        subtitle="연간 6기 편성 기준 추정값으로, 실제 기수와 다를 수 있습니다."
+      >
+        <ResultRows rows={[
+          { label: "입대 연도·월", value: info ? `${info.year}년 ${info.month}월` : "—" },
+          { label: "추정 기수", value: info ? `약 ${info.estimated}기` : "—" },
+          { label: "안내", value: "공식 기수는 입영 통지서 또는 해병대 사령부 확인 필요" },
+        ]} />
       </ResultPanel>
     </Box>
   );
@@ -2892,94 +2934,255 @@ function DischargeDateEstimateForm() {
   );
 }
 
-type BFrame = { r1: number; r2: number };
+type BFrame = { r1: number; r2: number; r3: number };
+
+function getBowlingBalls(frames: BFrame[]): number[] {
+  const balls: number[] = [];
+  for (let i = 0; i < 9; i++) {
+    const f = frames[i]!;
+    balls.push(f.r1);
+    if (f.r1 < 10) balls.push(f.r2);
+  }
+  const f10 = frames[9]!;
+  balls.push(f10.r1, f10.r2);
+  if (f10.r1 >= 10 || f10.r1 + f10.r2 >= 10) balls.push(f10.r3);
+  return balls;
+}
+
+function calcBowlingScores(frames: BFrame[]): { frameScores: (number | null)[]; cumulative: (number | null)[]; total: number } {
+  const balls = getBowlingBalls(frames);
+  const frameScores: (number | null)[] = [];
+  const cumulative: (number | null)[] = [];
+  let ballIdx = 0;
+  let runningTotal = 0;
+
+  for (let i = 0; i < 9; i++) {
+    const b0 = balls[ballIdx] ?? 0;
+    const b1 = balls[ballIdx + 1] ?? 0;
+    const b2 = balls[ballIdx + 2] ?? 0;
+    if (b0 >= 10) {
+      // strike: need 2 more balls to score — show null if not available yet
+      if (balls.length > ballIdx + 2) {
+        frameScores.push(10 + b1 + b2);
+        runningTotal += 10 + b1 + b2;
+        cumulative.push(runningTotal);
+      } else {
+        frameScores.push(null);
+        cumulative.push(null);
+      }
+      ballIdx += 1;
+    } else if (b0 + b1 >= 10) {
+      // spare: need 1 more ball
+      if (balls.length > ballIdx + 2) {
+        frameScores.push(10 + b2);
+        runningTotal += 10 + b2;
+        cumulative.push(runningTotal);
+      } else {
+        frameScores.push(null);
+        cumulative.push(null);
+      }
+      ballIdx += 2;
+    } else {
+      frameScores.push(b0 + b1);
+      runningTotal += b0 + b1;
+      cumulative.push(runningTotal);
+      ballIdx += 2;
+    }
+  }
+
+  // 10th frame
+  const f10 = frames[9]!;
+  const needsR3 = f10.r1 >= 10 || f10.r1 + f10.r2 >= 10;
+  const f10score = f10.r1 + f10.r2 + (needsR3 ? f10.r3 : 0);
+  frameScores.push(f10score);
+  runningTotal += f10score;
+  cumulative.push(runningTotal);
+
+  return { frameScores, cumulative, total: runningTotal };
+}
 
 function BowlingPinSumForm() {
-  const [frames, setFrames] = useState<BFrame[]>(() => Array.from({ length: 10 }, () => ({ r1: 0, r2: 0 })));
-  const naivePins = useMemo(() => {
-    let s = 0;
-    for (const f of frames) {
-      const a = Math.min(10, Math.max(0, Math.round(f.r1)));
-      if (a >= 10) s += 10;
-      else {
-        const b = Math.min(10 - a, Math.max(0, Math.round(f.r2)));
-        s += a + b;
+  const [frames, setFrames] = useState<BFrame[]>(() =>
+    Array.from({ length: 10 }, () => ({ r1: 0, r2: 0, r3: 0 }))
+  );
+
+  const { frameScores, cumulative, total } = useMemo(() => calcBowlingScores(frames), [frames]);
+
+  const updateFrame = (i: number, field: keyof BFrame, raw: number) => {
+    const next = frames.map((f) => ({ ...f }));
+    const f = next[i]!;
+    if (i < 9) {
+      if (field === "r1") {
+        const v = Math.min(10, Math.max(0, Math.round(raw)));
+        f.r1 = v;
+        if (v >= 10) f.r2 = 0;
+        else f.r2 = Math.min(10 - v, f.r2);
+      } else if (field === "r2") {
+        f.r2 = Math.min(10 - f.r1, Math.max(0, Math.round(raw)));
+      }
+    } else {
+      // 10th frame
+      if (field === "r1") {
+        const v = Math.min(10, Math.max(0, Math.round(raw)));
+        f.r1 = v;
+        if (v < 10) { f.r2 = Math.min(10 - v, f.r2); f.r3 = 0; }
+      } else if (field === "r2") {
+        const maxR2 = f.r1 >= 10 ? 10 : 10 - f.r1;
+        f.r2 = Math.min(maxR2, Math.max(0, Math.round(raw)));
+        if (f.r1 < 10 && f.r1 + f.r2 < 10) f.r3 = 0;
+      } else if (field === "r3") {
+        const needsR3 = f.r1 >= 10 || f.r1 + f.r2 >= 10;
+        if (needsR3) {
+          let maxR3 = 10;
+          if (f.r1 >= 10 && f.r2 >= 10) maxR3 = 10;
+          else if (f.r1 >= 10) maxR3 = 10 - f.r2;
+          f.r3 = Math.min(maxR3, Math.max(0, Math.round(raw)));
+        }
       }
     }
-    return s;
-  }, [frames]);
+    setFrames(next);
+  };
+
   return (
     <Box>
-      <p className="text-sm text-neutral-600">
-        각 프레임 1·2구 낙구만 합산합니다. 스트라이크·스페어 가점 규칙은 적용하지 않습니다.
-      </p>
-      <div className="space-y-3">
-        {frames.map((f, i) => (
-          <div key={i} className="grid grid-cols-[auto_1fr_1fr] items-end gap-2 sm:grid-cols-[4rem_1fr_1fr]">
-            <span className="pb-2 text-xs text-neutral-500">{i + 1}F</span>
-            <Labeled label="1구">
-              <input
-                type="number"
-                className={INPUT_CLASS}
-                value={f.r1}
-                min={0}
-                max={10}
-                onChange={(e) => {
-                  const v = Math.min(10, Math.max(0, Math.round(num(e.target.value))));
-                  const next = [...frames];
-                  const r2 = v >= 10 ? 0 : next[i].r2;
-                  next[i] = { r1: v, r2: r2 };
-                  setFrames(next);
-                }}
-              />
-            </Labeled>
-            <Labeled label="2구">
-              <input
-                type="number"
-                className={INPUT_CLASS}
-                value={f.r2}
-                min={0}
-                max={10}
-                disabled={f.r1 >= 10}
-                onChange={(e) => {
-                  const v = Math.min(10, Math.max(0, Math.round(num(e.target.value))));
-                  const next = [...frames];
-                  next[i] = { ...next[i], r2: f.r1 >= 10 ? 0 : v };
-                  setFrames(next);
-                }}
-              />
-            </Labeled>
-          </div>
-        ))}
+      <p className="mb-3 text-sm text-neutral-500">스트라이크·스페어 가점을 포함한 실제 볼링 점수를 계산합니다.</p>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[600px] text-xs">
+          <thead>
+            <tr className="border-b border-neutral-200 text-neutral-500">
+              <th className="pb-1 pr-2 text-left font-normal">프레임</th>
+              <th className="pb-1 px-1 font-normal">1구</th>
+              <th className="pb-1 px-1 font-normal">2구</th>
+              <th className="pb-1 px-1 font-normal">3구</th>
+              <th className="pb-1 px-1 font-normal">프레임 점수</th>
+              <th className="pb-1 pl-1 font-normal">누계</th>
+            </tr>
+          </thead>
+          <tbody>
+            {frames.map((f, i) => {
+              const is10th = i === 9;
+              const isStrike = f.r1 >= 10;
+              const isSpare = !isStrike && f.r1 + f.r2 >= 10;
+              const needsR3 = is10th && (isStrike || isSpare);
+              const fscore = frameScores[i];
+              const cum = cumulative[i];
+              return (
+                <tr key={i} className="border-b border-neutral-100">
+                  <td className="py-2 pr-2 text-neutral-500">{i + 1}F{is10th ? " (10)" : ""}</td>
+                  <td className="py-2 px-1">
+                    <input type="number" min={0} max={10}
+                      className="w-14 rounded border border-neutral-200 px-2 py-1 text-center text-sm"
+                      value={f.r1}
+                      onChange={(e) => updateFrame(i, "r1", num(e.target.value))} />
+                  </td>
+                  <td className="py-2 px-1">
+                    <input type="number" min={0} max={is10th && isStrike ? 10 : 10 - f.r1}
+                      className="w-14 rounded border border-neutral-200 px-2 py-1 text-center text-sm disabled:bg-neutral-100"
+                      value={f.r2}
+                      disabled={!is10th && isStrike}
+                      onChange={(e) => updateFrame(i, "r2", num(e.target.value))} />
+                  </td>
+                  <td className="py-2 px-1">
+                    {needsR3 ? (
+                      <input type="number" min={0} max={10}
+                        className="w-14 rounded border border-neutral-200 px-2 py-1 text-center text-sm"
+                        value={f.r3}
+                        onChange={(e) => updateFrame(i, "r3", num(e.target.value))} />
+                    ) : (
+                      <span className="pl-4 text-neutral-300">—</span>
+                    )}
+                  </td>
+                  <td className="py-2 px-1 text-center font-medium">
+                    {fscore !== null ? (
+                      <span className={isStrike ? "text-blue-600" : isSpare ? "text-green-600" : ""}>
+                        {fscore}{isStrike && !is10th ? " ★" : isSpare && !is10th ? " /" : ""}
+                      </span>
+                    ) : <span className="text-neutral-300">—</span>}
+                  </td>
+                  <td className="py-2 pl-1 text-right font-medium">
+                    {cum !== null ? cum : <span className="text-neutral-300">—</span>}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
-      <ResultPanel title="순 낙구 합(참고)" highlight={`${naivePins}핀`} />
+      <ResultPanel title="최종 점수" highlight={`${total}점`} subtitle="스트라이크/스페어 앞 프레임 점수는 다음 투구 입력 후 확정됩니다." />
     </Box>
   );
 }
 
 function CurlingEndSumForm() {
-  const [ends, setEnds] = useState(() => Array.from({ length: 8 }, () => 0));
-  const total = ends.reduce((a, b) => a + b, 0);
+  const [endCount, setEndCount] = useState(10);
+  const [teamA, setTeamA] = useState(() => Array.from({ length: 10 }, () => 0));
+  const [teamB, setTeamB] = useState(() => Array.from({ length: 10 }, () => 0));
+
+  const totalA = teamA.slice(0, endCount).reduce((a, b) => a + b, 0);
+  const totalB = teamB.slice(0, endCount).reduce((a, b) => a + b, 0);
+  const winner = totalA > totalB ? "A팀 승" : totalB > totalA ? "B팀 승" : "무승부";
+  const winnerColor = totalA > totalB ? "text-blue-600" : totalB > totalA ? "text-red-500" : "text-neutral-500";
+
+  const updateScore = (team: "A" | "B", i: number, val: number) => {
+    const v = Math.max(0, Math.floor(val));
+    if (team === "A") {
+      const next = [...teamA]; next[i] = v; setTeamA(next);
+    } else {
+      const next = [...teamB]; next[i] = v; setTeamB(next);
+    }
+  };
+
   return (
     <Box>
-      <p className="text-sm text-neutral-600">엔드별 득점을 합산합니다 (한 팀 기준).</p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {ends.map((v, i) => (
-          <Labeled key={i} label={`엔드 ${i + 1}`}>
-            <input
-              type="number"
-              className={INPUT_CLASS}
-              value={v}
-              onChange={(e) => {
-                const next = [...ends];
-                next[i] = Math.max(0, Math.floor(num(e.target.value)));
-                setEnds(next);
-              }}
-            />
-          </Labeled>
+      <div className="mb-4 flex items-center gap-3">
+        <span className="text-sm text-neutral-600">엔드 수:</span>
+        {([8, 10] as const).map((n) => (
+          <button key={n} type="button"
+            className={`rounded-full border px-3 py-1 text-sm ${endCount === n ? "bg-neutral-900 text-white" : ""}`}
+            onClick={() => setEndCount(n)}>{n}엔드</button>
         ))}
       </div>
-      <ResultPanel title="득점 합계" highlight={`${total}점`} />
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[480px] text-sm">
+          <thead>
+            <tr className="border-b border-neutral-200 text-xs text-neutral-500">
+              <th className="pb-1 pr-2 text-left font-normal">팀</th>
+              {Array.from({ length: endCount }, (_, i) => (
+                <th key={i} className="pb-1 px-1 font-normal text-center">{i + 1}</th>
+              ))}
+              <th className="pb-1 pl-2 font-medium text-center">합계</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(["A", "B"] as const).map((team) => {
+              const scores = team === "A" ? teamA : teamB;
+              const total = team === "A" ? totalA : totalB;
+              return (
+                <tr key={team} className="border-b border-neutral-100">
+                  <td className={`py-2 pr-2 font-semibold ${team === "A" ? "text-blue-600" : "text-red-500"}`}>{team}팀</td>
+                  {Array.from({ length: endCount }, (_, i) => (
+                    <td key={i} className="py-2 px-1">
+                      <input type="number" min={0}
+                        className="w-12 rounded border border-neutral-200 px-1 py-1 text-center text-sm"
+                        value={scores[i] ?? 0}
+                        onChange={(e) => updateScore(team, i, num(e.target.value))} />
+                    </td>
+                  ))}
+                  <td className={`py-2 pl-2 text-center text-base font-bold ${team === "A" ? "text-blue-600" : "text-red-500"}`}>{total}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <ResultPanel title="결과">
+        <div className={`mt-4 text-center text-2xl font-bold ${winnerColor}`}>{winner}</div>
+        <ResultRows rows={[
+          { label: "A팀 총점", value: `${totalA}점` },
+          { label: "B팀 총점", value: `${totalB}점` },
+          { label: "점수 차", value: `${Math.abs(totalA - totalB)}점` },
+        ]} />
+      </ResultPanel>
     </Box>
   );
 }
@@ -3462,17 +3665,20 @@ function ParentalLeaveForm() {
   const STD_CAP = 1_500_000;
   const STD_FLOOR = 700_000;
 
-  const CAPS_66 = [200, 250, 300, 350, 400, 450].map((v) => v * 10_000);
+  // 6+6 상한: 1번째 사용 부모 [200~450만], 2번째 사용 부모 [250~500만] (각 월 50만 증가)
+  const CAPS_66_FIRST  = [200, 250, 300, 350, 400, 450].map((v) => v * 10_000);
+  const CAPS_66_SECOND = [250, 300, 350, 400, 450, 500].map((v) => v * 10_000);
 
   const results = useMemo(() => {
     if (mode === "std") {
       const monthly = Math.min(STD_CAP, Math.max(STD_FLOOR, Math.round(wage * STD_RATE)));
       return Array.from({ length: 12 }, (_, i) => ({ month: i + 1, pay: monthly }));
     }
-    // 6+6: 최초 6개월 100% (상한 200~450만), 이후 80% 상한 150만
+    // 6+6: 최초 6개월 100%(상한 월별 상향), 이후 80% 상한 150만
+    const caps = parentOrder === 2 ? CAPS_66_SECOND : CAPS_66_FIRST;
     return Array.from({ length: 12 }, (_, i) => {
       if (i < 6) {
-        const cap = CAPS_66[i];
+        const cap = caps[i]!;
         const pay = Math.min(cap, wage);
         return { month: i + 1, pay };
       }
@@ -4734,21 +4940,42 @@ function CaffeineIntakeForm() {
 // 20. 출산급여
 function MaternityPayForm() {
   const [monthly, setMonthly] = useState(3_000_000);
-  const first60 = monthly * 2;
-  const cap30 = Math.min(monthly, 2_000_000);
-  const last30 = cap30;
+  const [companyType, setCompanyType] = useState<"sme" | "large">("sme");
+
+  // 우선지원대상기업(중소기업): 90일 전체 고용보험 지원, 상한 월 200만원
+  // 대기업: 전반 60일 사업주 전액 지급(상한 없음), 후반 30일 고용보험 상한 200만원
+  const CAP_MONTHLY = 2_000_000;
+  const first60 = companyType === "sme"
+    ? Math.min(monthly * 2, CAP_MONTHLY * 2)   // 중소기업: 상한 200만×2개월
+    : monthly * 2;                               // 대기업: 사업주 전액, 상한 없음
+  const last30 = Math.min(monthly, CAP_MONTHLY); // 후반 30일: 항상 상한 200만원
   const total = first60 + last30;
+  const employerPays = companyType === "large" ? first60 : 0;
+  const insurancePays = companyType === "large" ? last30 : total;
+
   return (
     <Box>
+      <div className='mb-4 flex gap-2 text-sm'>
+        {([["sme", "중소기업(우선지원대상)"], ["large", "대기업"]] as const).map(([v, l]) => (
+          <button key={v} type='button'
+            className={'rounded-full border px-3 py-1 ' + (companyType === v ? 'bg-neutral-900 text-white' : '')}
+            onClick={() => setCompanyType(v)}>{l}</button>
+        ))}
+      </div>
       <Labeled label='통상임금 (월)'>
         <input className={INPUT_CLASS} type='number' value={monthly} onChange={e => setMonthly(num(e.target.value))} />
       </Labeled>
-      <ResultPanel title='출산급여 (90일)'>
+      <ResultPanel title='출산전후휴가 급여 (90일 추정)' highlight={won(total) + '원'}>
         <ResultRows rows={[
-          { label: '전반 60일 (통상임금 100%)', value: won(first60) + '원' },
-          { label: '후반 30일 (한도 200만원)', value: won(last30) + '원' },
-          { label: '합계 (90일)', value: won(total) + '원' },
+          { label: '전반 60일', value: won(first60) + '원' + (companyType === "sme" ? ' (고용보험, 월 200만원 상한)' : ' (사업주 전액)') },
+          { label: '후반 30일', value: won(last30) + '원 (고용보험, 월 200만원 상한)' },
+          { label: '합계', value: won(total) + '원' },
+          ...(companyType === "large" ? [
+            { label: '  사업주 지급분', value: won(employerPays) + '원' },
+            { label: '  고용보험 지급분', value: won(insurancePays) + '원' },
+          ] : []),
         ]} />
+        <p className='mt-3 text-xs text-neutral-400'>실제 지급액은 고용노동부 고시 상한액 변경, 사업장 규모 등에 따라 다를 수 있습니다.</p>
       </ResultPanel>
     </Box>
   );
@@ -4989,18 +5216,21 @@ function RouletteSpinnerForm() {
 // 29. 원천세 계산기
 function WithholdingTaxForm() {
   const [payment, setPayment] = useState(1_000_000);
+  // 소득세와 지방소득세를 합계에서 역산해 1원 오차 방지
+  const incomeTax = Math.round(payment * 0.03);
   const tax = Math.round(payment * 0.033);
+  const localTax = tax - incomeTax; // 합계 - 소득세 = 지방소득세 (정확히 일치)
   const net = payment - tax;
   return (
     <Box>
       <Labeled label='지급액 (원)'>
         <input className={INPUT_CLASS} type='number' value={payment} onChange={e => setPayment(num(e.target.value))} />
       </Labeled>
-      <ResultPanel title='원천세'>
+      <ResultPanel title='원천세 (3.3%)' highlight={won(tax) + '원'}>
         <ResultRows rows={[
-          { label: '소득세 (3%)', value: won(Math.round(payment * 0.03)) + '원' },
-          { label: '지방소득세 (0.3%)', value: won(Math.round(payment * 0.003)) + '원' },
-          { label: '원천세 합계 (3.3%)', value: won(tax) + '원' },
+          { label: '소득세 (3%)', value: won(incomeTax) + '원' },
+          { label: '지방소득세 (0.3%)', value: won(localTax) + '원' },
+          { label: '원천세 합계', value: won(tax) + '원' },
           { label: '실수령액', value: won(net) + '원' },
         ]} />
       </ResultPanel>
