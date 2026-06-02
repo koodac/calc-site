@@ -30,6 +30,8 @@ export function SalaryCalculator() {
   const annualSalaryForCalc =
     retirementPayMode === "included" ? Math.floor((annualSalary * 12) / 13) : annualSalary;
   const invalidChildrenCount = childrenUnder20 >= dependents;
+  // 자녀 수는 최대 (부양가족 수 - 1)로 클램프 (본인이 부양가족 1명 차지)
+  const safeChildrenUnder20 = Math.min(childrenUnder20, Math.max(0, dependents - 1));
 
   const breakdown = useMemo(
     () =>
@@ -37,9 +39,9 @@ export function SalaryCalculator() {
         annualSalary: annualSalaryForCalc,
         annualNonTax,
         dependentsIncludingSelf: dependents,
-        childrenUnder20,
+        childrenUnder20: safeChildrenUnder20,
       }),
-    [annualSalaryForCalc, annualNonTax, dependents, childrenUnder20],
+    [annualSalaryForCalc, annualNonTax, dependents, safeChildrenUnder20],
   );
 
   const tipMap: Record<TipKey, string> = {
