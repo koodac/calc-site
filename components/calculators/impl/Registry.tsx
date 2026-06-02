@@ -2640,18 +2640,74 @@ function EraForm() {
 function BattingForm() {
   const [h, setH] = useState(150);
   const [ab, setAb] = useState(500);
+  const [doubles, setDoubles] = useState(30);
+  const [triples, setTriples] = useState(5);
+  const [hr, setHr] = useState(20);
+  const [bb, setBb] = useState(50);
+  const [hbp, setHbp] = useState(5);
+  const [sf, setSf] = useState(5);
+
+  const singles = Math.max(0, h - doubles - triples - hr);
   const avg = ab > 0 ? h / ab : 0;
+  const obpDenom = ab + bb + hbp + sf;
+  const obp = obpDenom > 0 ? (h + bb + hbp) / obpDenom : 0;
+  const slg = ab > 0 ? (singles + 2 * doubles + 3 * triples + 4 * hr) / ab : 0;
+  const ops = obp + slg;
+
   return (
     <Box>
-      <div className="grid gap-6 sm:grid-cols-2">
+      <p className="mb-4 text-sm text-neutral-500">타격 스탯을 입력하면 타율·출루율·장타율·OPS를 계산합니다.</p>
+      <div className="grid gap-4 sm:grid-cols-2">
         <Labeled label="안타 H">
-          <input type="number" className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
+          <input type="number" min={0} className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
         </Labeled>
         <Labeled label="타수 AB">
-          <input type="number" className={INPUT_CLASS} value={ab} onChange={(e) => setAb(num(e.target.value))} />
+          <input type="number" min={0} className={INPUT_CLASS} value={ab} onChange={(e) => setAb(num(e.target.value))} />
+        </Labeled>
+        <Labeled label="2루타 2B">
+          <input type="number" min={0} className={INPUT_CLASS} value={doubles} onChange={(e) => setDoubles(num(e.target.value))} />
+        </Labeled>
+        <Labeled label="3루타 3B">
+          <input type="number" min={0} className={INPUT_CLASS} value={triples} onChange={(e) => setTriples(num(e.target.value))} />
+        </Labeled>
+        <Labeled label="홈런 HR">
+          <input type="number" min={0} className={INPUT_CLASS} value={hr} onChange={(e) => setHr(num(e.target.value))} />
+        </Labeled>
+        <Labeled label="볼넷 BB">
+          <input type="number" min={0} className={INPUT_CLASS} value={bb} onChange={(e) => setBb(num(e.target.value))} />
+        </Labeled>
+        <Labeled label="사구 HBP">
+          <input type="number" min={0} className={INPUT_CLASS} value={hbp} onChange={(e) => setHbp(num(e.target.value))} />
+        </Labeled>
+        <Labeled label="희생플라이 SF">
+          <input type="number" min={0} className={INPUT_CLASS} value={sf} onChange={(e) => setSf(num(e.target.value))} />
         </Labeled>
       </div>
-      <ResultPanel title="계산 결과" highlight={`타율 ${avg.toFixed(3)}`} />
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-center">
+          <p className="text-xs text-neutral-500">타율 AVG</p>
+          <p className="mt-1 text-2xl font-bold text-blue-600">{avg.toFixed(3)}</p>
+          <p className="mt-0.5 text-xs text-neutral-400">H / AB</p>
+        </div>
+        <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-center">
+          <p className="text-xs text-neutral-500">출루율 OBP</p>
+          <p className="mt-1 text-2xl font-bold text-blue-600">{obp.toFixed(3)}</p>
+          <p className="mt-0.5 text-xs text-neutral-400">(H+BB+HBP) / (AB+BB+HBP+SF)</p>
+        </div>
+        <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-center">
+          <p className="text-xs text-neutral-500">장타율 SLG</p>
+          <p className="mt-1 text-2xl font-bold text-blue-600">{slg.toFixed(3)}</p>
+          <p className="mt-0.5 text-xs text-neutral-400">루타합계 / AB (1B×1 + 2B×2 + 3B×3 + HR×4)</p>
+        </div>
+        <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-center">
+          <p className="text-xs text-neutral-500">OPS</p>
+          <p className="mt-1 text-2xl font-bold text-green-600">{ops.toFixed(3)}</p>
+          <p className="mt-0.5 text-xs text-neutral-400">OBP + SLG</p>
+        </div>
+      </div>
+      {singles < 0 && (
+        <p className="mt-3 text-sm text-red-500">⚠ 2루타+3루타+홈런 합계가 안타 수를 초과합니다. 값을 확인해 주세요.</p>
+      )}
     </Box>
   );
 }
