@@ -1550,36 +1550,101 @@ function FactForm() {
 }
 
 function PermForm() {
-  const [n, setN] = useState(5);
-  const [r, setR] = useState(2);
-  const perm = (x: number) => {
-    let t = 1;
-    for (let i = 0; i < r; i++) t *= x - i;
-    return t;
-  };
-  const comb = (x: number) => perm(x) / (r <= 0 ? 1 : factorial(r));
-  function factorial(k: number) {
-    let t = 1;
-    for (let i = 2; i <= k; i++) t *= i;
-    return t;
-  }
+  const [total, setTotal] = useState(10);
+  const [pick, setPick] = useState(3);
+  const [mode, setMode] = useState<"perm" | "comb" | "repComb">("comb");
+
+  const result = useMemo(() => {
+    const n = total;
+    const r = pick;
+    if (n < 0 || r < 0) return null;
+
+    // 조합 C(n,r) — 곱셈/나눗셈 교대로 정수 유지
+    function combCalc(nn: number, rr: number): number {
+      if (rr > nn) return 0;
+      if (rr === 0 || rr === nn) return 1;
+      const k = Math.min(rr, nn - rr); // 작은 쪽 사용
+      let res = 1;
+      for (let i = 0; i < k; i++) {
+        res = res * (nn - i) / (i + 1);
+      }
+      return Math.round(res);
+    }
+
+    if (mode === "perm") {
+      if (r > n) return null;
+      let t = 1;
+      for (let i = 0; i < r; i++) t *= (n - i);
+      return t;
+    }
+    if (mode === "comb") {
+      if (r > n) return null;
+      return combCalc(n, r);
+    }
+    // 중복조합 H(n,r) = C(n+r-1, r)
+    if (n === 0 && r === 0) return 1;
+    if (n === 0) return 0;
+    return combCalc(n + r - 1, r);
+  }, [total, pick, mode]);
+
+  const modeInfo = {
+    perm:    { label: "순서 있게 뽑기 (순열)", desc: "줄 세우기·비밀번호처럼 순서가 중요할 때", formula: "P(n,r)" },
+    comb:    { label: "순서 없이 뽑기 (조합)", desc: "팀 구성·당첨자 선정처럼 순서가 관계없을 때", formula: "C(n,r)" },
+    repComb: { label: "중복 허용해서 뽑기 (중복조합)", desc: "같은 것을 여러 번 뽑아도 될 때", formula: "H(n,r)" },
+  } as const;
+
+  const displayResult = result === null
+    ? "불가능"
+    : !isFinite(result) || result > Number.MAX_SAFE_INTEGER
+      ? "매우 큰 수 (범위 초과)"
+      : result.toLocaleString("ko-KR");
+
+  const exampleSentence = useMemo(() => {
+    const n = total, r = pick;
+    if (mode === "perm") return `${n}개 중 ${r}개를 순서 있게 나열하는 경우의 수`;
+    if (mode === "comb") return `${n}개 중 ${r}개를 순서 없이 뽑는 경우의 수`;
+    return `${n}종류에서 중복 허용해 ${r}개를 고르는 경우의 수`;
+  }, [total, pick, mode]);
+
   return (
     <Box>
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="n">
-          <input type="number" className={INPUT_CLASS} value={n} onChange={(e) => setN(Math.max(0, Math.floor(num(e.target.value))))} />
+      {/* 모드 선택 */}
+      <div className="flex flex-col gap-2 mb-4">
+        {(["comb", "perm", "repComb"] as const).map((m) => (
+          <button key={m} type="button"
+            onClick={() => setMode(m)}
+            className={`rounded-xl border px-4 py-3 text-left text-sm transition-colors ${
+              mode === m ? "border-blue-500 bg-blue-50 text-blue-700" : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+            }`}>
+            <span className="font-medium">{modeInfo[m].label}</span>
+            <span className="ml-2 text-xs text-neutral-400">{modeInfo[m].formula}</span>
+            <p className="mt-0.5 text-xs text-neutral-400">{modeInfo[m].desc}</p>
+          </button>
+        ))}
+      </div>
+
+      {/* 입력 */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Labeled label="전체 몇 개 중에서 (n)">
+          <input type="number" min={0} max={200} className={INPUT_CLASS} value={total}
+            onChange={(e) => setTotal(Math.max(0, Math.min(200, Math.floor(num(e.target.value)))))} />
         </Labeled>
-        <Labeled label="r">
-          <input type="number" className={INPUT_CLASS} value={r} onChange={(e) => setR(Math.max(0, Math.floor(num(e.target.value))))} />
+        <Labeled label="몇 개를 뽑을 때 (r)">
+          <input type="number" min={0} max={200} className={INPUT_CLASS} value={pick}
+            onChange={(e) => setPick(Math.max(0, Math.min(200, Math.floor(num(e.target.value)))))} />
         </Labeled>
       </div>
-      <ResultPanel title="계산 결과">
-        <ResultRows
-          rows={[
-            { label: `순열 P(n,r)`, value: String(n >= r ? perm(n) : 0) },
-            { label: `조합 C(n,r)`, value: String(n >= r ? comb(n) : 0) },
-          ]}
-        />
+
+      {/* 결과 */}
+      <ResultPanel title="경우의 수" highlight={`${displayResult}가지`}>
+        <p className="mt-3 text-sm text-neutral-500">{exampleSentence}</p>
+        {result === null && (
+          <p className="mt-2 text-sm text-red-500">⚠ 뽑는 수({pick})가 전체 수({total})보다 많습니다.</p>
+        )}
+        <ResultRows rows={[
+          { label: "계산 방식", value: modeInfo[mode].label },
+          { label: "수식", value: `${modeInfo[mode].formula} = ${total}, ${pick}` },
+        ]} />
       </ResultPanel>
     </Box>
   );
