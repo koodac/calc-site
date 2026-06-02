@@ -13,6 +13,7 @@ import { ToolTagsSection } from "@/components/layout/ToolTagsSection";
 import { resolveCalculatorKind } from "@/lib/calculatorKind";
 import { getAllSlugs, getToolBySlug } from "@/lib/tools";
 import { getToolKeywords } from "@/lib/toolKeywords";
+import { getToolFaq } from "@/lib/toolFaqData";
 
 const BASE_URL = "https://www.calcmoa.com";
 
@@ -63,6 +64,23 @@ export default async function ToolPage({ params }: PageProps) {
   const kind = resolveCalculatorKind(tool);
   const keywords = getToolKeywords(slug);
 
+  const faqItems = getToolFaq(slug);
+  const faqJsonLd =
+    faqItems && faqItems.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqItems.map(({ q, a }) => ({
+            "@type": "Question",
+            name: q,
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: a,
+            },
+          })),
+        }
+      : null;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -92,6 +110,12 @@ export default async function ToolPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       <div className="border-b border-neutral-200/80 bg-neutral-50">
         <div className="mx-auto w-full max-w-6xl px-4 pt-5 sm:px-6 sm:pt-6 lg:px-8">
           <SiteAppHeader />
