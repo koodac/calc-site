@@ -5136,24 +5136,22 @@ function JeonseVsMonthlyForm() {
 
   return (
     <Box>
-      {/* 공통 기준 이자율 */}
-      <div className="mb-6">
-        <Labeled label="기준 이자율 (%) — 두 조건을 같은 기준으로 비교합니다">
-          <input className={INPUT_CLASS} type="number" step="0.1" value={rate}
-            onChange={e => setRate(num(e.target.value))} />
-        </Labeled>
-        <p className="mt-1 text-xs text-neutral-400">예금 금리 또는 대출 금리 기준으로 입력하세요.</p>
-      </div>
-
       {/* 좌우 비교 카드 */}
       <div className="grid gap-4 sm:grid-cols-2">
         {/* 전세 카드 */}
         <div className="rounded-2xl border-2 border-blue-200 bg-blue-50 p-5">
           <p className="mb-3 font-semibold text-blue-700">🏠 전세</p>
-          <Labeled label="전세금 (원)">
-            <input className={INPUT_CLASS} type="number" value={jeonse}
-              onChange={e => setJeonse(num(e.target.value))} />
-          </Labeled>
+          <div className="space-y-3">
+            <Labeled label="전세금 (원)">
+              <input className={INPUT_CLASS} type="number" value={jeonse}
+                onChange={e => setJeonse(num(e.target.value))} />
+            </Labeled>
+            <Labeled label="기준 이자율 (%)">
+              <input className={INPUT_CLASS} type="number" step="0.1" value={rate}
+                onChange={e => setRate(num(e.target.value))} />
+            </Labeled>
+            <p className="text-xs text-neutral-400">예금 금리 기준. 월세 보증금 이자 계산에도 동일 적용.</p>
+          </div>
           <div className="mt-4 rounded-xl bg-white p-4 text-sm">
             <p className="text-neutral-500">연간 실질 비용</p>
             <p className="mt-1 text-2xl font-bold text-blue-600">{won(jeonseInterest)}원</p>
