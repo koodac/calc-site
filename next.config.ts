@@ -31,6 +31,13 @@ const nextConfig: NextConfig = {
     "127.0.0.1:3000",
   ],
 
+  async redirects() {
+    return [
+      // 구 URL → 현재 URL 영구 리다이렉트 (301)
+      { source: "/d-day-calc", destination: "/tools/daily-005", permanent: true },
+    ];
+  },
+
   async headers() {
     if (process.env.NODE_ENV === "development") {
       return [
