@@ -5123,25 +5123,97 @@ function JeonseVsMonthlyForm() {
   const [deposit, setDeposit] = useState(50_000_000);
   const [monthly, setMonthly] = useState(800_000);
   const [rate, setRate] = useState(3.5);
-  const jeonseAnnual = jeonse * (rate / 100);
-  const monthlyAnnual = deposit * (rate / 100) + monthly * 12;
-  const diff = monthlyAnnual - jeonseAnnual;
+
+  // 전세 실질 비용 = 전세금을 은행에 넣었다면 받을 이자
+  const jeonseInterest = Math.round(jeonse * (rate / 100));
+  // 월세 실질 비용 = 보증금 이자 + 월세 합계
+  const depositInterest = Math.round(deposit * (rate / 100));
+  const monthlyAnnual = monthly * 12;
+  const monthlyTotal = depositInterest + monthlyAnnual;
+
+  const diff = monthlyTotal - jeonseInterest; // 양수 = 전세 유리, 음수 = 월세 유리
+  const winner = diff > 0 ? '전세' : diff < 0 ? '월세' : null;
+
   return (
     <Box>
-      <div className='grid gap-6 sm:grid-cols-2'>
-        <Labeled label='전세금 (원)'><input className={INPUT_CLASS} type='number' value={jeonse} onChange={e => setJeonse(num(e.target.value))} /></Labeled>
-        <Labeled label='월세 보증금 (원)'><input className={INPUT_CLASS} type='number' value={deposit} onChange={e => setDeposit(num(e.target.value))} /></Labeled>
-        <Labeled label='월세 (원/월)'><input className={INPUT_CLASS} type='number' value={monthly} onChange={e => setMonthly(num(e.target.value))} /></Labeled>
-        <Labeled label='이자율 (%)'><input className={INPUT_CLASS} type='number' step='0.1' value={rate} onChange={e => setRate(num(e.target.value))} /></Labeled>
+      {/* 공통 기준 이자율 */}
+      <div className="mb-6">
+        <Labeled label="기준 이자율 (%) — 두 조건을 같은 기준으로 비교합니다">
+          <input className={INPUT_CLASS} type="number" step="0.1" value={rate}
+            onChange={e => setRate(num(e.target.value))} />
+        </Labeled>
+        <p className="mt-1 text-xs text-neutral-400">예금 금리 또는 대출 금리 기준으로 입력하세요.</p>
       </div>
-      <ResultPanel title='전세 vs 월세 비용 비교'>
-        <ResultRows rows={[
-          { label: '전세 연간 기회비용', value: won(Math.round(jeonseAnnual)) + '원' },
-          { label: '월세 연간 비용', value: won(Math.round(monthlyAnnual)) + '원' },
-          { label: '차이 (월세-전세)', value: (diff >= 0 ? '+' : '') + won(Math.round(diff)) + '원' },
-          { label: '판정', value: diff > 0 ? '전세가 유리' : diff < 0 ? '월세가 유리' : '동일' },
-        ]} />
-      </ResultPanel>
+
+      {/* 좌우 비교 카드 */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {/* 전세 카드 */}
+        <div className="rounded-2xl border-2 border-blue-200 bg-blue-50 p-5">
+          <p className="mb-3 font-semibold text-blue-700">🏠 전세</p>
+          <Labeled label="전세금 (원)">
+            <input className={INPUT_CLASS} type="number" value={jeonse}
+              onChange={e => setJeonse(num(e.target.value))} />
+          </Labeled>
+          <div className="mt-4 rounded-xl bg-white p-4 text-sm">
+            <p className="text-neutral-500">연간 실질 비용</p>
+            <p className="mt-1 text-2xl font-bold text-blue-600">{won(jeonseInterest)}원</p>
+            <p className="mt-2 text-xs text-neutral-400 leading-relaxed">
+              전세금 {won(jeonse)}원을 은행에 맡겼다면<br />
+              연 {rate}%로 받을 이자 = <span className="font-medium text-neutral-600">{won(jeonseInterest)}원</span><br />
+              이 이자를 포기하는 것이 전세의 실제 비용입니다.
+            </p>
+          </div>
+        </div>
+
+        {/* 월세 카드 */}
+        <div className="rounded-2xl border-2 border-orange-200 bg-orange-50 p-5">
+          <p className="mb-3 font-semibold text-orange-700">🏠 월세</p>
+          <div className="space-y-3">
+            <Labeled label="보증금 (원)">
+              <input className={INPUT_CLASS} type="number" value={deposit}
+                onChange={e => setDeposit(num(e.target.value))} />
+            </Labeled>
+            <Labeled label="월세 (원/월)">
+              <input className={INPUT_CLASS} type="number" value={monthly}
+                onChange={e => setMonthly(num(e.target.value))} />
+            </Labeled>
+          </div>
+          <div className="mt-4 rounded-xl bg-white p-4 text-sm">
+            <p className="text-neutral-500">연간 실질 비용</p>
+            <p className="mt-1 text-2xl font-bold text-orange-600">{won(monthlyTotal)}원</p>
+            <p className="mt-2 text-xs text-neutral-400 leading-relaxed">
+              보증금 이자 {won(depositInterest)}원<br />
+              + 월세 {won(monthly)}원 × 12개월 = {won(monthlyAnnual)}원<br />
+              합계 = <span className="font-medium text-neutral-600">{won(monthlyTotal)}원</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 판정 */}
+      <div className={`mt-4 rounded-2xl p-5 text-center ${
+        winner === '전세' ? 'bg-blue-600' : winner === '월세' ? 'bg-orange-500' : 'bg-neutral-200'
+      }`}>
+        {winner ? (
+          <>
+            <p className="text-lg font-bold text-white">
+              {winner === '전세' ? '🏠 전세가' : '🏠 월세가'} 연간{' '}
+              <span className="text-2xl">{won(Math.abs(diff))}원</span> 더 유리
+            </p>
+            <p className="mt-1 text-sm text-white/80">
+              {winner === '전세'
+                ? `전세 ${won(jeonseInterest)}원 vs 월세 ${won(monthlyTotal)}원`
+                : `월세 ${won(monthlyTotal)}원 vs 전세 ${won(jeonseInterest)}원`}
+            </p>
+          </>
+        ) : (
+          <p className="font-bold text-neutral-600">전세와 월세 비용이 동일합니다</p>
+        )}
+      </div>
+
+      <p className="mt-3 text-xs text-neutral-400">
+        * 세금·관리비·이사비용은 포함하지 않습니다. 실제 결정 시 추가 비용도 비교하세요.
+      </p>
     </Box>
   );
 }
