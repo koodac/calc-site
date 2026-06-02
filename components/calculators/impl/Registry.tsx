@@ -2685,27 +2685,70 @@ function MorseForm() {
 }
 
 function PaceForm() {
+  const [mode, setMode] = useState<"paceToSpeed" | "speedToPace">("paceToSpeed");
   const [min, setMin] = useState(5);
   const [sec, setSec] = useState(30);
-  const [dist, setDist] = useState(5);
-  const paceSec = min * 60 + sec;
-  const speed = paceSec > 0 ? dist / (paceSec / 3600) : 0;
+  const [speed, setSpeed] = useState(10);
+
+  function fmtPace(secPerKm: number) {
+    if (!isFinite(secPerKm) || secPerKm <= 0) return "—";
+    const m = Math.floor(secPerKm / 60);
+    const s = Math.round(secPerKm % 60);
+    return `${m}분 ${String(s).padStart(2, "0")}초/km`;
+  }
+  function fmtTime(totalSec: number) {
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = Math.round(totalSec % 60);
+    return h > 0 ? `${h}시간 ${m}분 ${String(s).padStart(2, "0")}초` : `${m}분 ${String(s).padStart(2, "0")}초`;
+  }
+
+  const paceSec = mode === "paceToSpeed" ? min * 60 + sec : (speed > 0 ? 3600 / speed : 0);
+  const calcSpeed = paceSec > 0 ? 3600 / paceSec : 0;
+
+  const RACES = [
+    { name: "5km", dist: 5 },
+    { name: "10km", dist: 10 },
+    { name: "하프(21.1km)", dist: 21.0975 },
+    { name: "풀마라톤(42.2km)", dist: 42.195 },
+  ];
+
   return (
     <Box>
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="페이스 분">
-          <input type="number" className={INPUT_CLASS} value={min} onChange={(e) => setMin(num(e.target.value))} />
-        </Labeled>
-        <Labeled label="페이스 초">
-          <input type="number" className={INPUT_CLASS} value={sec} onChange={(e) => setSec(num(e.target.value))} />
-        </Labeled>
-        <div className="sm:col-span-2">
-          <Labeled label="거리 km">
-            <input type="number" className={INPUT_CLASS} value={dist} onChange={(e) => setDist(num(e.target.value))} />
+      <div className="flex gap-2 text-sm mb-4">
+        {([["paceToSpeed", "페이스 → 속도"] , ["speedToPace", "속도 → 페이스"]] as const).map(([m, l]) => (
+          <button key={m} type="button"
+            className={`rounded-full border px-3 py-1 ${mode === m ? "bg-neutral-900 text-white" : ""}`}
+            onClick={() => setMode(m)}>{l}</button>
+        ))}
+      </div>
+
+      {mode === "paceToSpeed" ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Labeled label="페이스 (분)">
+            <input type="number" min={0} className={INPUT_CLASS} value={min} onChange={(e) => setMin(Math.max(0, num(e.target.value)))} />
+          </Labeled>
+          <Labeled label="페이스 (초)">
+            <input type="number" min={0} max={59} className={INPUT_CLASS} value={sec} onChange={(e) => setSec(Math.min(59, Math.max(0, num(e.target.value))))} />
           </Labeled>
         </div>
-      </div>
-      <ResultPanel title="계산 결과" highlight={`평균 속도 약 ${speed.toFixed(2)} km/h`} />
+      ) : (
+        <Labeled label="평균 속도 (km/h)">
+          <input type="number" step="0.1" min={0} className={INPUT_CLASS} value={speed} onChange={(e) => setSpeed(num(e.target.value))} />
+        </Labeled>
+      )}
+
+      <ResultPanel title="계산 결과">
+        <ResultRows rows={[
+          { label: "페이스", value: fmtPace(paceSec) },
+          { label: "평균 속도", value: `${calcSpeed.toFixed(2)} km/h` },
+        ]} />
+        <p className="mt-4 mb-2 text-xs font-medium text-neutral-500">이 페이스로 완주하면</p>
+        <ResultRows rows={RACES.map(r => ({
+          label: r.name,
+          value: fmtTime(paceSec * r.dist),
+        }))} />
+      </ResultPanel>
     </Box>
   );
 }
@@ -2713,23 +2756,50 @@ function PaceForm() {
 function EraForm() {
   const [er, setEr] = useState(20);
   const [ip, setIp] = useState(120);
-  // IP 소수점 표기 변환: 5.1 = 5이닝 1아웃 = 5 + 1/3 이닝, 5.2 = 5 + 2/3 이닝
-  // 아웃 자리(소수점 이하)가 0~2 범위여야 유효 (3은 다음 이닝)
+  const [h, setH] = useState(100);
+  const [bb, setBb] = useState(35);
+  const [k, setK] = useState(110);
+
   const ipInt = Math.floor(ip);
-  const ipOut = Math.round((ip - ipInt) * 10); // 0, 1, 2
+  const ipOut = Math.round((ip - ipInt) * 10);
   const actualIp = ipInt + (ipOut / 3);
+
   const era = actualIp > 0 ? (er * 9) / actualIp : 0;
+  const whip = actualIp > 0 ? (h + bb) / actualIp : 0;
+  const k9 = actualIp > 0 ? (k * 9) / actualIp : 0;
+  const bb9 = actualIp > 0 ? (bb * 9) / actualIp : 0;
+  const kbb = bb > 0 ? k / bb : 0;
+
   return (
     <Box>
-      <div className="grid gap-6 sm:grid-cols-2">
+      <p className="mb-3 text-sm text-neutral-500">이닝 표기: 5.1 = 5⅓이닝, 5.2 = 5⅔이닝</p>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Labeled label="자책점 ER">
-          <input type="number" className={INPUT_CLASS} value={er} onChange={(e) => setEr(num(e.target.value))} />
+          <input type="number" min={0} className={INPUT_CLASS} value={er} onChange={(e) => setEr(num(e.target.value))} />
         </Labeled>
-        <Labeled label="이닝 IP (소수점 표기: 5.1=5⅓이닝, 5.2=5⅔이닝)">
-          <input type="number" step="0.1" className={INPUT_CLASS} value={ip} onChange={(e) => setIp(num(e.target.value))} />
+        <Labeled label="이닝 IP">
+          <input type="number" step="0.1" min={0} className={INPUT_CLASS} value={ip} onChange={(e) => setIp(num(e.target.value))} />
+        </Labeled>
+        <Labeled label="피안타 H">
+          <input type="number" min={0} className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
+        </Labeled>
+        <Labeled label="볼넷 BB">
+          <input type="number" min={0} className={INPUT_CLASS} value={bb} onChange={(e) => setBb(num(e.target.value))} />
+        </Labeled>
+        <Labeled label="삼진 K">
+          <input type="number" min={0} className={INPUT_CLASS} value={k} onChange={(e) => setK(num(e.target.value))} />
         </Labeled>
       </div>
-      <ResultPanel title="계산 결과" highlight={`ERA 약 ${era.toFixed(2)}`} subtitle={`실제 이닝: ${actualIp.toFixed(3)}`} />
+      <ResultPanel title="투수 스탯">
+        <ResultRows rows={[
+          { label: "ERA (평균자책점)", value: era.toFixed(2) },
+          { label: "WHIP (이닝당 출루허용)", value: whip.toFixed(3) },
+          { label: "K/9 (9이닝당 삼진)", value: k9.toFixed(2) },
+          { label: "BB/9 (9이닝당 볼넷)", value: bb9.toFixed(2) },
+          { label: "K/BB (삼진/볼넷)", value: kbb.toFixed(2) },
+          { label: "실제 이닝", value: `${actualIp.toFixed(2)}이닝` },
+        ]} />
+      </ResultPanel>
     </Box>
   );
 }
@@ -2810,20 +2880,57 @@ function BattingForm() {
 }
 
 function FovForm() {
-  const [sensor, setSensor] = useState(36);
+  const [sensorW, setSensorW] = useState(36);
+  const [sensorH, setSensorH] = useState(24);
   const [focal, setFocal] = useState(50);
-  const h = 2 * Math.atan(sensor / (2 * focal)) * (180 / Math.PI);
+
+  const fovH = 2 * Math.atan(sensorW / (2 * focal)) * (180 / Math.PI);
+  const fovV = 2 * Math.atan(sensorH / (2 * focal)) * (180 / Math.PI);
+  const diag = Math.sqrt(sensorW ** 2 + sensorH ** 2);
+  const fovD = 2 * Math.atan(diag / (2 * focal)) * (180 / Math.PI);
+  // 풀프레임(36×24) 환산 등가 초점거리
+  const ffDiag = Math.sqrt(36 ** 2 + 24 ** 2);
+  const cropFactor = ffDiag / diag;
+  const efl = focal * cropFactor;
+
+  // 프리셋
+  const PRESETS = [
+    { label: "풀프레임", w: 36, h: 24 },
+    { label: "APS-C(캐논)", w: 22.3, h: 14.9 },
+    { label: "APS-C(소니/니콘)", w: 23.5, h: 15.6 },
+    { label: "MFT", w: 17.3, h: 13 },
+    { label: "1인치", w: 13.2, h: 8.8 },
+  ];
+
   return (
     <Box>
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="센서 가로(mm)">
-          <input type="number" className={INPUT_CLASS} value={sensor} onChange={(e) => setSensor(num(e.target.value))} />
+      <div className="mb-3 flex flex-wrap gap-2">
+        {PRESETS.map(p => (
+          <button key={p.label} type="button"
+            className="rounded-full border px-3 py-1 text-xs text-neutral-600 hover:bg-neutral-50"
+            onClick={() => { setSensorW(p.w); setSensorH(p.h); }}>{p.label}</button>
+        ))}
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Labeled label="센서 가로 (mm)">
+          <input type="number" step="0.1" className={INPUT_CLASS} value={sensorW} onChange={(e) => setSensorW(num(e.target.value))} />
         </Labeled>
-        <Labeled label="초점거리(mm)">
+        <Labeled label="센서 세로 (mm)">
+          <input type="number" step="0.1" className={INPUT_CLASS} value={sensorH} onChange={(e) => setSensorH(num(e.target.value))} />
+        </Labeled>
+        <Labeled label="초점거리 (mm)">
           <input type="number" className={INPUT_CLASS} value={focal} onChange={(e) => setFocal(num(e.target.value))} />
         </Labeled>
       </div>
-      <ResultPanel title="계산 결과" subtitle="근사값입니다." highlight={`수평 시야각 약 ${h.toFixed(2)}°`} />
+      <ResultPanel title="화각 계산" subtitle="근사값입니다.">
+        <ResultRows rows={[
+          { label: "수평 화각", value: `${fovH.toFixed(1)}°` },
+          { label: "수직 화각", value: `${fovV.toFixed(1)}°` },
+          { label: "대각선 화각", value: `${fovD.toFixed(1)}°` },
+          { label: "크롭팩터", value: cropFactor.toFixed(2) + "x" },
+          { label: "풀프레임 환산 초점거리", value: `${efl.toFixed(1)} mm` },
+        ]} />
+      </ResultPanel>
     </Box>
   );
 }
@@ -2961,40 +3068,50 @@ function MarineClassEstimateForm() {
 function DischargeDateEstimateForm() {
   const [enlist, setEnlist] = useState("2026-03-18");
   const [months, setMonths] = useState(18);
+
+  const PRESETS = [
+    { label: "육군 18개월", m: 18 },
+    { label: "해군 20개월", m: 20 },
+    { label: "공군 21개월", m: 21 },
+    { label: "사회복무 21개월", m: 21 },
+    { label: "해병대 18개월", m: 18 },
+  ];
+
   const out = useMemo(() => {
     if (!enlist) return "";
     return addCalendarMonths(enlist, Math.max(0, Math.floor(months)));
   }, [enlist, months]);
+
+  const totalDays = useMemo(() => {
+    if (!enlist || !out) return null;
+    const s = new Date(`${enlist}T00:00:00`);
+    const e = new Date(`${out}T00:00:00`);
+    return Math.round((e.getTime() - s.getTime()) / 86400000);
+  }, [enlist, out]);
+
   return (
     <Box>
       <Labeled label="입대일">
         <input type="date" className={INPUT_CLASS} value={enlist} onChange={(e) => setEnlist(e.target.value)} />
       </Labeled>
       <Labeled label="복무 개월 수">
-        <input
-          type="number"
-          className={INPUT_CLASS}
-          value={months}
-          onChange={(e) => setMonths(Math.max(0, Math.floor(num(e.target.value))))}
-        />
+        <input type="number" className={INPUT_CLASS} value={months}
+          onChange={(e) => setMonths(Math.max(0, Math.floor(num(e.target.value))))} />
       </Labeled>
       <div className="flex flex-wrap gap-2">
-        {[18, 20, 21].map((m) => (
-          <button
-            key={m}
-            type="button"
+        {PRESETS.map((p) => (
+          <button key={p.label} type="button"
             className="rounded-full border px-3 py-1.5 text-xs text-neutral-700 hover:bg-neutral-50"
-            onClick={() => setMonths(m)}
-          >
-            {m}개월
-          </button>
+            onClick={() => setMonths(p.m)}>{p.label}</button>
         ))}
       </div>
-      <ResultPanel
-        title="전역 예정일(달력 가산)"
-        subtitle="휴가·편성·감면 일수는 반영하지 않습니다."
-        highlight={out || "—"}
-      />
+      <ResultPanel title="전역 예정일" subtitle="휴가·편성·감면 일수는 반영하지 않습니다." highlight={out || "—"}>
+        <ResultRows rows={[
+          { label: "입대일", value: enlist },
+          { label: "전역 예정일", value: out || "—" },
+          { label: "복무 일수(달력 기준)", value: totalDays != null ? `${totalDays.toLocaleString("ko-KR")}일` : "—" },
+        ]} />
+      </ResultPanel>
     </Box>
   );
 }
@@ -4377,31 +4494,52 @@ function VdotEstimateForm() {
     if (pct <= 0) return 0;
     return vo2 / pct;
   }, [distKm, min, sec]);
+  // VDOT → 훈련 페이스 (Jack Daniels, m/min 기준)
+  const trainingPaces = useMemo(() => {
+    if (vdot <= 0) return null;
+    const vMax = 29.54 + 5.000663 * vdot - 0.007546 * vdot * vdot; // m/min
+    function toPace(pct: number) {
+      const v = vMax * pct;
+      if (v <= 0) return "—";
+      const secPerKm = 1000 / v * 60; // 실제 초/km
+      const m = Math.floor(secPerKm / 60);
+      const s = Math.round(secPerKm % 60);
+      return `${m}:${String(s).padStart(2, "0")}/km`;
+    }
+    return [
+      { label: "Easy (회복·장거리)", value: toPace(0.70) },
+      { label: "Marathon (마라톤 레이스)", value: toPace(0.82) },
+      { label: "Threshold (젖산역치)", value: toPace(0.88) },
+      { label: "Interval (VO₂max)", value: toPace(0.975) },
+      { label: "Repetition (스피드)", value: toPace(1.10) },
+    ];
+  }, [vdot]);
+
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <Labeled label="거리 (km)">
-            <input
-              type="number"
-              className={INPUT_CLASS}
-              value={distKm}
-              onChange={(e) => setDistKm(Math.max(0.001, num(e.target.value)))}
-            />
+          <Labeled label="완주 거리 (km)">
+            <input type="number" className={INPUT_CLASS} value={distKm}
+              onChange={(e) => setDistKm(Math.max(0.001, num(e.target.value)))} />
           </Labeled>
         </div>
-        <Labeled label="시간(분)">
+        <Labeled label="완주 시간 (분)">
           <input type="number" className={INPUT_CLASS} value={min} onChange={(e) => setMin(num(e.target.value))} />
         </Labeled>
-        <Labeled label="시간(초)">
+        <Labeled label="완주 시간 (초)">
           <input type="number" className={INPUT_CLASS} value={sec} onChange={(e) => setSec(num(e.target.value))} />
         </Labeled>
       </div>
-      <ResultPanel
-        title="VDOT (추정)"
-        subtitle="Jack Daniels 공식류로 경주 거리·시간에서 추정합니다."
-        highlight={vdot > 0 ? vdot.toFixed(1) : "—"}
-      />
+      <ResultPanel title="VDOT 및 훈련 페이스" subtitle="Jack Daniels 공식 기반 추정값입니다."
+        highlight={vdot > 0 ? `VDOT ${vdot.toFixed(1)}` : "—"}>
+        {trainingPaces && (
+          <>
+            <p className="mt-4 mb-2 text-xs font-medium text-neutral-500">권장 훈련 페이스</p>
+            <ResultRows rows={trainingPaces} />
+          </>
+        )}
+      </ResultPanel>
     </Box>
   );
 }
@@ -4735,17 +4873,26 @@ function SchoolRankForm() {
 function GpaCalcForm() {
   const EMPTY = { score: '', credit: '' };
   const [subjects, setSubjects] = useState(Array.from({ length: 4 }, () => ({ ...EMPTY })));
+  const [scale, setScale] = useState<'4.5' | '4.3' | '4.0'>('4.5');
+
   function scoreToGrade(s: number): number {
-    if (s >= 95) return 4.5;
-    if (s >= 90) return 4.0;
-    if (s >= 85) return 3.5;
-    if (s >= 80) return 3.0;
-    if (s >= 75) return 2.5;
-    if (s >= 70) return 2.0;
-    if (s >= 65) return 1.5;
-    if (s >= 60) return 1.0;
-    return 0.0;
+    if (scale === '4.5') {
+      if (s >= 95) return 4.5; if (s >= 90) return 4.0; if (s >= 85) return 3.5;
+      if (s >= 80) return 3.0; if (s >= 75) return 2.5; if (s >= 70) return 2.0;
+      if (s >= 65) return 1.5; if (s >= 60) return 1.0; return 0.0;
+    }
+    if (scale === '4.3') {
+      if (s >= 97) return 4.3; if (s >= 93) return 4.0; if (s >= 90) return 3.7;
+      if (s >= 87) return 3.3; if (s >= 83) return 3.0; if (s >= 80) return 2.7;
+      if (s >= 77) return 2.3; if (s >= 73) return 2.0; if (s >= 70) return 1.7;
+      if (s >= 67) return 1.3; if (s >= 63) return 1.0; if (s >= 60) return 0.7;
+      return 0.0;
+    }
+    // 4.0
+    if (s >= 90) return 4.0; if (s >= 80) return 3.0;
+    if (s >= 70) return 2.0; if (s >= 60) return 1.0; return 0.0;
   }
+
   const { gpa, totalCredit } = useMemo(() => {
     let wSum = 0; let cSum = 0;
     for (const sub of subjects) {
@@ -4753,22 +4900,33 @@ function GpaCalcForm() {
       if (!isNaN(s) && !isNaN(c) && c > 0) { wSum += scoreToGrade(s) * c; cSum += c; }
     }
     return { gpa: cSum > 0 ? wSum / cSum : 0, totalCredit: cSum };
-  }, [subjects]);
+  }, [subjects, scale]);
+
   function updateSubject(i: number, key: 'score' | 'credit', val: string) {
     setSubjects(prev => prev.map((s, idx) => idx === i ? { ...s, [key]: val } : s));
   }
-  function addRow() { if (subjects.length < 8) setSubjects(prev => [...prev, { ...EMPTY }]); }
+  function addRow() { if (subjects.length < 12) setSubjects(prev => [...prev, { ...EMPTY }]); }
   function removeRow() { if (subjects.length > 1) setSubjects(prev => prev.slice(0, -1)); }
+
   return (
     <Box>
+      <div className='flex gap-2 text-sm mb-4'>
+        {(['4.5', '4.3', '4.0'] as const).map(s => (
+          <button key={s} type='button'
+            className={'rounded-full border px-3 py-1 ' + (scale === s ? 'bg-neutral-900 text-white' : '')}
+            onClick={() => setScale(s)}>{s}점 기준</button>
+        ))}
+      </div>
       <div className='space-y-2'>
         {subjects.map((sub, i) => (
           <div key={i} className='grid grid-cols-2 gap-3'>
-            <Labeled label={'과목 ' + (i + 1) + ' 점수'}>
-              <input className={INPUT_CLASS} type='number' placeholder='0~100' value={sub.score} onChange={e => updateSubject(i, 'score', e.target.value)} />
+            <Labeled label={'과목 ' + (i + 1) + ' 점수 (0~100)'}>
+              <input className={INPUT_CLASS} type='number' placeholder='85' value={sub.score}
+                onChange={e => updateSubject(i, 'score', e.target.value)} />
             </Labeled>
-            <Labeled label='학점'>
-              <input className={INPUT_CLASS} type='number' placeholder='3' value={sub.credit} onChange={e => updateSubject(i, 'credit', e.target.value)} />
+            <Labeled label='학점 수'>
+              <input className={INPUT_CLASS} type='number' placeholder='3' value={sub.credit}
+                onChange={e => updateSubject(i, 'credit', e.target.value)} />
             </Labeled>
           </div>
         ))}
@@ -4780,7 +4938,7 @@ function GpaCalcForm() {
       <ResultPanel title='GPA 결과'>
         <ResultRows rows={[
           { label: '총 이수학점', value: String(totalCredit) },
-          { label: '가중평균 GPA (4.5 기준)', value: gpa.toFixed(2) },
+          { label: `가중평균 GPA (${scale} 기준)`, value: gpa.toFixed(2) },
         ]} />
       </ResultPanel>
     </Box>
@@ -4941,7 +5099,16 @@ function CorrelationForm() {
 // 18. 키 백분위
 function HeightPercentileForm() {
   const [male, setMale] = useState(true);
+  const [ageGroup, setAgeGroup] = useState<'20' | '30' | '40' | '50'>('20');
   const [height, setHeight] = useState(175);
+
+  // 출처: 국민건강통계 (질병관리청, 2021년 기준 연령별 평균·표준편차 근사)
+  const STATS: Record<string, Record<string, { mu: number; sigma: number }>> = {
+    male:   { '20': { mu: 175.0, sigma: 5.9 }, '30': { mu: 173.9, sigma: 6.0 }, '40': { mu: 172.0, sigma: 6.1 }, '50': { mu: 169.8, sigma: 6.2 } },
+    female: { '20': { mu: 162.6, sigma: 5.7 }, '30': { mu: 161.4, sigma: 5.8 }, '40': { mu: 159.8, sigma: 5.9 }, '50': { mu: 157.3, sigma: 6.1 } },
+  };
+  const { mu, sigma } = STATS[male ? 'male' : 'female'][ageGroup]!;
+
   function phi(x: number): number {
     const p = 0.2316419;
     const b = [0.319381530, -0.356563782, 1.781477937, -1.821255978, 1.330274429];
@@ -4951,32 +5118,40 @@ function HeightPercentileForm() {
     const q = 1 - pdf * poly;
     return x >= 0 ? q : 1 - q;
   }
-  const mu = male ? 174 : 161;
-  const sigma = 6;
+
   const z = (height - mu) / sigma;
   const topPct = (1 - phi(z)) * 100;
   const bottomPct = phi(z) * 100;
+
   return (
     <Box>
-      <div className='flex gap-2 mb-4'>
-        {[true, false].map(m => (
+      <div className='flex flex-wrap gap-2 mb-3'>
+        {([true, false] as const).map(m => (
           <button key={String(m)} type='button' onClick={() => setMale(m)}
             className={'rounded-full px-4 py-2 text-sm ' + (male === m ? 'bg-neutral-900 text-white' : 'border border-neutral-300')}>
             {m ? '남성' : '여성'}
           </button>
         ))}
       </div>
+      <div className='flex flex-wrap gap-2 mb-4'>
+        {(['20', '30', '40', '50'] as const).map(a => (
+          <button key={a} type='button' onClick={() => setAgeGroup(a)}
+            className={'rounded-full border px-3 py-1 text-sm ' + (ageGroup === a ? 'bg-blue-600 text-white border-blue-600' : '')}>
+            {a}대
+          </button>
+        ))}
+      </div>
       <Labeled label='키 (cm)'>
-        <input className={INPUT_CLASS} type='number' value={height} onChange={e => setHeight(num(e.target.value))} />
+        <input className={INPUT_CLASS} type='number' step='0.1' value={height} onChange={e => setHeight(num(e.target.value))} />
       </Labeled>
       <ResultPanel title='키 백분위'>
         <ResultRows rows={[
-          { label: '기준 평균(μ)', value: mu + ' cm' },
+          { label: '비교 기준 (평균)', value: `${male ? '남성' : '여성'} ${ageGroup}대 평균 ${mu} cm` },
           { label: '표준편차(σ)', value: sigma + ' cm' },
-          { label: 'Z값', value: z.toFixed(3) },
           { label: '상위 %', value: topPct.toFixed(1) + '%' },
           { label: '하위 %', value: bottomPct.toFixed(1) + '%' },
         ]} />
+        <p className='mt-3 text-xs text-neutral-400'>* 질병관리청 국민건강통계 기반 추정값</p>
       </ResultPanel>
     </Box>
   );
@@ -5070,9 +5245,10 @@ function EitcPayForm() {
       if (i < 41_000_000) return 8_500_000 * (41_000_000 - i) / 19_000_000;
       return 0;
     }
-    if (i < 10_000_000) return i * (3_000_000 / 10_000_000);
-    if (i <= 22_000_000) return 3_000_000;
-    if (i < 38_000_000) return 3_000_000 * (38_000_000 - i) / 16_000_000;
+    // 맞벌이: 2025년 기준 최대 3,600,000원
+    if (i < 10_000_000) return i * (3_600_000 / 10_000_000);
+    if (i <= 22_000_000) return 3_600_000;
+    if (i < 38_000_000) return 3_600_000 * (38_000_000 - i) / 16_000_000;
     return 0;
   }, [type, income]);
   return (
@@ -5377,23 +5553,32 @@ function WithholdingTaxForm() {
 function CarTaxForm() {
   const [cc, setCc] = useState(2000);
   const [age, setAge] = useState(0);
-  const baseRate = cc <= 1000 ? 80 : cc <= 1600 ? 140 : 200;
-  const baseTax = cc * baseRate;
+  const baseRate = cc <= 0 ? 0 : cc <= 1000 ? 80 : cc <= 1600 ? 140 : 200;
+  const baseTax = Math.max(0, cc) * baseRate;
   const reductionYears = Math.min(Math.max(age - 2, 0), 10);
   const reductionPct = Math.min(reductionYears * 5, 50);
-  const finalTax = Math.round(baseTax * (1 - reductionPct / 100));
+  const carTax = Math.round(baseTax * (1 - reductionPct / 100));
+  // 지방교육세 = 자동차세 × 30% (자동차세법 제6조)
+  const eduTax = Math.round(carTax * 0.3);
+  const totalTax = carTax + eduTax;
   return (
     <Box>
       <div className='grid gap-6 sm:grid-cols-2'>
-        <Labeled label='배기량 (cc)'><input className={INPUT_CLASS} type='number' value={cc} onChange={e => setCc(num(e.target.value))} /></Labeled>
-        <Labeled label='차령 (년, 0=신차)'><input className={INPUT_CLASS} type='number' value={age} onChange={e => setAge(Math.max(0, num(e.target.value)))} /></Labeled>
+        <Labeled label='배기량 (cc)'>
+          <input className={INPUT_CLASS} type='number' min={0} value={cc} onChange={e => setCc(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='차령 (년, 0=신차)'>
+          <input className={INPUT_CLASS} type='number' min={0} value={age} onChange={e => setAge(Math.max(0, num(e.target.value)))} />
+        </Labeled>
       </div>
-      <ResultPanel title='자동차세'>
+      <ResultPanel title='자동차세' highlight={won(totalTax) + '원'} subtitle='연간 납부액 (상반기·하반기 분납 합산)'>
         <ResultRows rows={[
-          { label: '기본세율', value: baseRate + '원/cc' },
+          { label: '세율', value: baseRate + '원/cc' },
           { label: '기준 세액', value: won(baseTax) + '원' },
           { label: '차령 감면율', value: reductionPct + '%' },
-          { label: '최종 자동차세', value: won(finalTax) + '원' },
+          { label: '자동차세', value: won(carTax) + '원' },
+          { label: '지방교육세 (30%)', value: won(eduTax) + '원' },
+          { label: '합계 (실납부액)', value: won(totalTax) + '원' },
         ]} />
       </ResultPanel>
     </Box>
