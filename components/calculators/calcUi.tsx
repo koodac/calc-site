@@ -2,6 +2,7 @@
 
 import {
   useState,
+  useEffect,
   type ChangeEvent,
   type FocusEvent,
   type InputHTMLAttributes,
@@ -44,11 +45,10 @@ function addCommas(s: string): string {
   if (!s) return s;
   const neg = s.startsWith("-");
   const abs = neg ? s.slice(1) : s;
-  // 숫자+소수점 형식이 아니면 그대로 반환 (사용자가 이상한 문자 입력 시)
   if (!/^\d*\.?\d*$/.test(abs)) return s;
   const dotIdx = abs.indexOf(".");
   const intPart = dotIdx >= 0 ? abs.slice(0, dotIdx) : abs;
-  const decPart = dotIdx >= 0 ? abs.slice(dotIdx) : ""; // "." 포함
+  const decPart = dotIdx >= 0 ? abs.slice(dotIdx) : "";
   const formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return (neg ? "-" : "") + formatted + decPart;
 }
@@ -64,6 +64,7 @@ type NumInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "type
  * - 타이핑 중 천단위 쉼표 자동 적용 (4000000 → 4,000,000)
  * - 포커스 해제 시 앞자리 0 정리 (05 → 5)
  * - num()이 쉼표를 제거하므로 부모 onChange 핸들러 변경 불필요
+ * - value prop이 외부에서 바뀌면 표시 동기화 (핫리로드·리셋 시에도 올바르게 표시)
  */
 export function NumInput({
   value,
@@ -72,7 +73,6 @@ export function NumInput({
   step,
   className,
   placeholder,
-  // min/max는 type="number" 전용 속성 — type="text" 내부에선 사용 안 함
   min: _min,
   max: _max,
   ...rest
@@ -82,8 +82,21 @@ export function NumInput({
 
   const [str, setStr] = useState(() => {
     if (!isNumericValue) return String(value);
-    return value === 0 ? "" : addCommas(String(value));
+    return (value as number) === 0 ? "" : addCommas(String(value));
   });
+
+  // value prop이 외부에서 바뀔 때(핫리로드·초기값 등) 표시 문자열 동기화
+  useEffect(() => {
+    if (!isNumericValue) return;
+    const numVal = value as number;
+    const expected = numVal === 0 ? "" : addCommas(String(numVal));
+    setStr((prev) => {
+      if (prev === expected) return prev; // 이미 올바른 포맷 — 아무것도 안 함
+      const prevStripped = prev.replace(/,/g, "");
+      if (prevStripped.endsWith(".")) return prev; // "3." 처럼 소수점 입력 중 — 보호
+      return expected; // 포맷 불일치(핫리로드·스테일 상태 등) → 교정
+    });
+  }, [isNumericValue, value]);
 
   return (
     <input
@@ -96,10 +109,8 @@ export function NumInput({
       onChange={(e: ChangeEvent<HTMLInputElement>) => {
         const raw = e.target.value;
         if (isNumericValue) {
-          // 쉼표 제거 후 재포맷
           const stripped = raw.replace(/,/g, "");
           setStr(addCommas(stripped));
-          // 부모 핸들러에게는 쉼표 제거된 값 전달 (num()이 파싱 가능하도록)
           e.target.value = stripped;
         } else {
           setStr(raw);
