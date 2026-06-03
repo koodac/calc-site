@@ -14,7 +14,7 @@ import {
   ResultRows,
   TEXTAREA_CLASS,
 } from "@/components/calculators/ToolFormLayout";
-import { Labeled, num, won } from "@/components/calculators/calcUi";
+import { Labeled, num, won, NumInput } from "@/components/calculators/calcUi";
 import {
   EMPLOYMENT_INSURANCE_RATE_EMPLOYEE,
   HEALTH_INSURANCE_RATE_EMPLOYEE,
@@ -413,8 +413,7 @@ function FourInsuranceForm() {
           </p>
           <div className="mt-4">
             <Labeled label="월 급여(원)">
-              <input
-                type="number"
+              <NumInput
                 className={INPUT_CLASS}
                 value={monthly}
                 onChange={(e) => setMonthly(num(e.target.value))}
@@ -497,8 +496,7 @@ function SeverancePayForm() {
               </button>
             </div>
             <label className="mt-4 block text-xs text-neutral-500">원</label>
-            <input
-              type="number"
+            <NumInput
               min={0}
               step={1000}
               className={INPUT_CLASS}
@@ -544,8 +542,8 @@ function BmiForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="체중 (kg)"><input type="number" className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} /></Labeled>
-        <Labeled label="키 (cm)"><input type="number" className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} /></Labeled>
+        <Labeled label="체중 (kg)"><NumInput className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} /></Labeled>
+        <Labeled label="키 (cm)"><NumInput className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} /></Labeled>
       </div>
       <ResultPanel title="BMI 측정 결과" highlight={`BMI ${bmi.toFixed(1)}`} subtitle={`판정: ${cat}`}>
         <ResultRows rows={[
@@ -600,9 +598,9 @@ function BmrForm() {
         ))}
       </div>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="나이"><input type="number" className={INPUT_CLASS} value={age} onChange={(e) => setAge(Math.max(1, num(e.target.value)))} /></Labeled>
-        <Labeled label="체중(kg)"><input type="number" className={INPUT_CLASS} value={weight} onChange={(e) => setWeight(num(e.target.value))} /></Labeled>
-        <Labeled label="키(cm)"><input type="number" className={INPUT_CLASS} value={height} onChange={(e) => setHeight(num(e.target.value))} /></Labeled>
+        <Labeled label="나이"><NumInput className={INPUT_CLASS} value={age} onChange={(e) => setAge(Math.max(1, num(e.target.value)))} /></Labeled>
+        <Labeled label="체중(kg)"><NumInput className={INPUT_CLASS} value={weight} onChange={(e) => setWeight(num(e.target.value))} /></Labeled>
+        <Labeled label="키(cm)"><NumInput className={INPUT_CLASS} value={height} onChange={(e) => setHeight(num(e.target.value))} /></Labeled>
       </div>
       <div>
         <p className="mb-2 text-sm font-medium text-neutral-800">활동 수준</p>
@@ -688,16 +686,16 @@ function PercentForm() {
       </div>
       <div className="grid gap-6 sm:grid-cols-2">
         {mode === "change" && (<>
-          <Labeled label="기준값"><input type="number" className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} /></Labeled>
-          <Labeled label="변경값"><input type="number" className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} /></Labeled>
+          <Labeled label="기준값"><NumInput className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} /></Labeled>
+          <Labeled label="변경값"><NumInput className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} /></Labeled>
         </>)}
         {mode === "aOfB" && (<>
-          <Labeled label="A (기준값)"><input type="number" className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} /></Labeled>
-          <Labeled label="B (%)"><input type="number" className={INPUT_CLASS} value={pct} onChange={(e) => setPct(num(e.target.value))} /></Labeled>
+          <Labeled label="A (기준값)"><NumInput className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} /></Labeled>
+          <Labeled label="B (%)"><NumInput className={INPUT_CLASS} value={pct} onChange={(e) => setPct(num(e.target.value))} /></Labeled>
         </>)}
         {mode === "bOfA" && (<>
-          <Labeled label="A (전체값)"><input type="number" className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} /></Labeled>
-          <Labeled label="B (부분값)"><input type="number" className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} /></Labeled>
+          <Labeled label="A (전체값)"><NumInput className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} /></Labeled>
+          <Labeled label="B (부분값)"><NumInput className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} /></Labeled>
         </>)}
       </div>
       <ResultPanel
@@ -720,8 +718,8 @@ function SalaryRaiseForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="기존 연봉(원)"><input type="number" className={INPUT_CLASS} value={before} onChange={(e) => setBefore(num(e.target.value))} /></Labeled>
-        <Labeled label="인상 후 연봉(원)"><input type="number" className={INPUT_CLASS} value={after} onChange={(e) => setAfter(num(e.target.value))} /></Labeled>
+        <Labeled label="기존 연봉(원)"><NumInput className={INPUT_CLASS} value={before} onChange={(e) => setBefore(num(e.target.value))} /></Labeled>
+        <Labeled label="인상 후 연봉(원)"><NumInput className={INPUT_CLASS} value={after} onChange={(e) => setAfter(num(e.target.value))} /></Labeled>
       </div>
       <ResultPanel title="연봉 인상 분석" highlight={`${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%`} subtitle="인상률">
         <ResultRows rows={[
@@ -761,7 +759,7 @@ function VatForm() {
         ))}
       </div>
       <Labeled label={mode === "supplyToTotal" ? "공급가액(원)" : "합계금액(원)"}>
-        <input type="number" className={INPUT_CLASS} value={value} onChange={(e) => setValue(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} value={value} onChange={(e) => setValue(num(e.target.value))} />
       </Labeled>
       <ResultPanel title="부가가치세(10%) 계산" highlight={mode === "supplyToTotal" ? `합계 ${won(total)}원` : `공급가액 ${won(supply)}원`}>
         <ResultRows rows={[
@@ -789,10 +787,10 @@ function DiscountForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="정가(원)"><input type="number" className={INPUT_CLASS} value={price} onChange={(e) => setPrice(num(e.target.value))} /></Labeled>
-        <Labeled label="1차 할인율(%)"><input type="number" step="0.1" min={0} max={100} className={INPUT_CLASS} value={rate1} onChange={(e) => setRate1(num(e.target.value))} /></Labeled>
+        <Labeled label="정가(원)"><NumInput className={INPUT_CLASS} value={price} onChange={(e) => setPrice(num(e.target.value))} /></Labeled>
+        <Labeled label="1차 할인율(%)"><NumInput step="0.1" min={0} max={100} className={INPUT_CLASS} value={rate1} onChange={(e) => setRate1(num(e.target.value))} /></Labeled>
         <div className="sm:col-span-2">
-          <Labeled label="2차 추가 할인율(%)"><input type="number" step="0.1" min={0} max={100} className={INPUT_CLASS} value={rate2} onChange={(e) => setRate2(num(e.target.value))} /></Labeled>
+          <Labeled label="2차 추가 할인율(%)"><NumInput step="0.1" min={0} max={100} className={INPUT_CLASS} value={rate2} onChange={(e) => setRate2(num(e.target.value))} /></Labeled>
         </div>
       </div>
       <div>
@@ -853,7 +851,7 @@ function CurrencyForm() {
         ))}
       </div>
       <Labeled label={mode === "krwToFx" ? "원화 금액(원)" : "외화 금액"}>
-        <input type="number" className={INPUT_CLASS} value={amount} onChange={(e) => setAmount(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} value={amount} onChange={(e) => setAmount(num(e.target.value))} />
       </Labeled>
       {mode === "fxToKrw" && (
         <div className="flex flex-wrap gap-2">
@@ -870,7 +868,7 @@ function CurrencyForm() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {currencies.map(({ key, label }) => (
             <Labeled key={key} label={label}>
-              <input type="number" className={INPUT_CLASS} value={rates[key]}
+              <NumInput className={INPUT_CLASS} value={rates[key]}
                 onChange={(e) => setRates((prev) => ({ ...prev, [key]: num(e.target.value) }))} />
             </Labeled>
           ))}
@@ -900,11 +898,11 @@ function CagrForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="초기값(원)"><input type="number" className={INPUT_CLASS} value={startVal} onChange={(e) => setStartVal(num(e.target.value))} /></Labeled>
-        <Labeled label="최종값(원)"><input type="number" className={INPUT_CLASS} value={endVal} onChange={(e) => setEndVal(num(e.target.value))} /></Labeled>
+        <Labeled label="초기값(원)"><NumInput className={INPUT_CLASS} value={startVal} onChange={(e) => setStartVal(num(e.target.value))} /></Labeled>
+        <Labeled label="최종값(원)"><NumInput className={INPUT_CLASS} value={endVal} onChange={(e) => setEndVal(num(e.target.value))} /></Labeled>
         <div className="sm:col-span-2">
           <Labeled label="기간(년)" hint="연도별 표는 최대 10년까지 표시됩니다">
-            <input type="number" className={INPUT_CLASS} value={years} min={1} onChange={(e) => setYears(Math.max(1, Math.floor(num(e.target.value))))} />
+            <NumInput className={INPUT_CLASS} value={years} min={1} onChange={(e) => setYears(Math.max(1, Math.floor(num(e.target.value))))} />
           </Labeled>
         </div>
       </div>
@@ -948,11 +946,11 @@ function RoiForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="투입 비용(원)"><input type="number" className={INPUT_CLASS} value={cost} onChange={(e) => setCost(num(e.target.value))} /></Labeled>
-        <Labeled label="최종 회수액(원)"><input type="number" className={INPUT_CLASS} value={returns} onChange={(e) => setReturns(num(e.target.value))} /></Labeled>
+        <Labeled label="투입 비용(원)"><NumInput className={INPUT_CLASS} value={cost} onChange={(e) => setCost(num(e.target.value))} /></Labeled>
+        <Labeled label="최종 회수액(원)"><NumInput className={INPUT_CLASS} value={returns} onChange={(e) => setReturns(num(e.target.value))} /></Labeled>
         <div className="sm:col-span-2">
           <Labeled label="기간(년)" hint="연환산 ROI(CAGR 방식) 계산에 사용됩니다">
-            <input type="number" className={INPUT_CLASS} value={period} min={0.1} step={0.5} onChange={(e) => setPeriod(Math.max(0.1, num(e.target.value)))} />
+            <NumInput className={INPUT_CLASS} value={period} min={0.1} step={0.5} onChange={(e) => setPeriod(Math.max(0.1, num(e.target.value)))} />
           </Labeled>
         </div>
       </div>
@@ -982,11 +980,11 @@ function RoasForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="매출(원)"><input type="number" className={INPUT_CLASS} value={revenue} onChange={(e) => setRevenue(num(e.target.value))} /></Labeled>
-        <Labeled label="광고비(원)"><input type="number" className={INPUT_CLASS} value={adCost} onChange={(e) => setAdCost(num(e.target.value))} /></Labeled>
+        <Labeled label="매출(원)"><NumInput className={INPUT_CLASS} value={revenue} onChange={(e) => setRevenue(num(e.target.value))} /></Labeled>
+        <Labeled label="광고비(원)"><NumInput className={INPUT_CLASS} value={adCost} onChange={(e) => setAdCost(num(e.target.value))} /></Labeled>
         <div className="sm:col-span-2">
           <Labeled label="마진율(%)" hint="매출 대비 총이익 비율 (예: 30 → 30%)">
-            <input type="number" className={INPUT_CLASS} value={marginRate} min={0} max={100} onChange={(e) => setMarginRate(Math.max(0, Math.min(100, num(e.target.value))))} />
+            <NumInput className={INPUT_CLASS} value={marginRate} min={0} max={100} onChange={(e) => setMarginRate(Math.max(0, Math.min(100, num(e.target.value))))} />
           </Labeled>
         </div>
       </div>
@@ -1027,11 +1025,11 @@ function MortgageForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="대출원금(원)"><input type="number" className={INPUT_CLASS} value={principal} onChange={(e) => setPrincipal(num(e.target.value))} /></Labeled>
-        <Labeled label="연이율(%)"><input type="number" className={INPUT_CLASS} value={annualRate} step={0.1} onChange={(e) => setAnnualRate(num(e.target.value))} /></Labeled>
+        <Labeled label="대출원금(원)"><NumInput className={INPUT_CLASS} value={principal} onChange={(e) => setPrincipal(num(e.target.value))} /></Labeled>
+        <Labeled label="연이율(%)"><NumInput className={INPUT_CLASS} value={annualRate} step={0.1} onChange={(e) => setAnnualRate(num(e.target.value))} /></Labeled>
         <div className="sm:col-span-2">
           <Labeled label="상환 개월 수" hint="예: 360개월 = 30년, 180개월 = 15년">
-            <input type="number" className={INPUT_CLASS} value={months} min={1} onChange={(e) => setMonths(Math.max(1, Math.floor(num(e.target.value))))} />
+            <NumInput className={INPUT_CLASS} value={months} min={1} onChange={(e) => setMonths(Math.max(1, Math.floor(num(e.target.value))))} />
           </Labeled>
         </div>
       </div>
@@ -1102,10 +1100,10 @@ function SavingsForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="월 납입(원)"><input type="number" className={INPUT_CLASS} value={pmt} onChange={(e) => setPmt(Math.max(0, num(e.target.value)))} /></Labeled>
-        <Labeled label="연이율(%)"><input type="number" className={INPUT_CLASS} value={annual} onChange={(e) => setAnnual(num(e.target.value))} /></Labeled>
+        <Labeled label="월 납입(원)"><NumInput className={INPUT_CLASS} value={pmt} onChange={(e) => setPmt(Math.max(0, num(e.target.value)))} /></Labeled>
+        <Labeled label="연이율(%)"><NumInput className={INPUT_CLASS} value={annual} onChange={(e) => setAnnual(num(e.target.value))} /></Labeled>
         <div className="sm:col-span-2">
-          <Labeled label="개월 수"><input type="number" className={INPUT_CLASS} value={months} onChange={(e) => setMonths(Math.max(1, Math.min(1200, Math.floor(num(e.target.value)))))} /></Labeled>
+          <Labeled label="개월 수"><NumInput className={INPUT_CLASS} value={months} onChange={(e) => setMonths(Math.max(1, Math.min(1200, Math.floor(num(e.target.value)))))} /></Labeled>
         </div>
       </div>
       <ResultPanel title="만기 예상액" subtitle="월말 복리 기준 · 이자소득세 15.4% 적용" highlight={`약 ${won(result.fv)}원`}>
@@ -1157,8 +1155,8 @@ function MarginForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="원가(원)"><input type="number" className={INPUT_CLASS} value={cost} onChange={(e) => setCost(Math.max(0, num(e.target.value)))} /></Labeled>
-        <Labeled label="판매가(원)"><input type="number" className={INPUT_CLASS} value={price} onChange={(e) => setPrice(Math.max(0, num(e.target.value)))} /></Labeled>
+        <Labeled label="원가(원)"><NumInput className={INPUT_CLASS} value={cost} onChange={(e) => setCost(Math.max(0, num(e.target.value)))} /></Labeled>
+        <Labeled label="판매가(원)"><NumInput className={INPUT_CLASS} value={price} onChange={(e) => setPrice(Math.max(0, num(e.target.value)))} /></Labeled>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs text-neutral-500">목표 마진율:</span>
@@ -1199,10 +1197,10 @@ function RatioForm({
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label={aLabel}>
-          <input type="number" className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} />
         </Labeled>
         <Labeled label={bLabel}>
-          <input type="number" className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} />
         </Labeled>
       </div>
       <ResultPanel
@@ -1230,8 +1228,8 @@ function ApyForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="명목 연이율(%)"><input type="number" className={INPUT_CLASS} value={nominal} onChange={(e) => setNominal(num(e.target.value))} /></Labeled>
-        <Labeled label="복리 주기(연 n회)"><input type="number" className={INPUT_CLASS} value={n} onChange={(e) => setN(Math.max(1, Math.floor(num(e.target.value))))} /></Labeled>
+        <Labeled label="명목 연이율(%)"><NumInput className={INPUT_CLASS} value={nominal} onChange={(e) => setNominal(num(e.target.value))} /></Labeled>
+        <Labeled label="복리 주기(연 n회)"><NumInput className={INPUT_CLASS} value={n} onChange={(e) => setN(Math.max(1, Math.floor(num(e.target.value))))} /></Labeled>
       </div>
       <ResultPanel title="유효 연율 (APY)" subtitle="실질 연 수익률 (복리 효과 반영)" highlight={`약 ${apy.toFixed(4)}%`}>
         <div className="mt-6 overflow-x-auto">
@@ -1274,10 +1272,10 @@ function CpmForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="광고비(원)"><input type="number" className={INPUT_CLASS} value={adCost} onChange={(e) => setAdCost(Math.max(0, num(e.target.value)))} /></Labeled>
-        <Labeled label="노출수"><input type="number" className={INPUT_CLASS} value={impressions} onChange={(e) => setImpressions(Math.max(0, num(e.target.value)))} /></Labeled>
-        <Labeled label="클릭수"><input type="number" className={INPUT_CLASS} value={clicks} onChange={(e) => setClicks(Math.max(0, num(e.target.value)))} /></Labeled>
-        <Labeled label="전환수"><input type="number" className={INPUT_CLASS} value={conversions} onChange={(e) => setConversions(Math.max(0, num(e.target.value)))} /></Labeled>
+        <Labeled label="광고비(원)"><NumInput className={INPUT_CLASS} value={adCost} onChange={(e) => setAdCost(Math.max(0, num(e.target.value)))} /></Labeled>
+        <Labeled label="노출수"><NumInput className={INPUT_CLASS} value={impressions} onChange={(e) => setImpressions(Math.max(0, num(e.target.value)))} /></Labeled>
+        <Labeled label="클릭수"><NumInput className={INPUT_CLASS} value={clicks} onChange={(e) => setClicks(Math.max(0, num(e.target.value)))} /></Labeled>
+        <Labeled label="전환수"><NumInput className={INPUT_CLASS} value={conversions} onChange={(e) => setConversions(Math.max(0, num(e.target.value)))} /></Labeled>
       </div>
       <ResultPanel title="광고 지표" highlight={`CPM ${won(result.cpm)}원`}>
         <ResultRows rows={[
@@ -1314,7 +1312,7 @@ function BreakevenForm() {
   return (
     <Box>
       <Labeled label="손실률(%)">
-        <input type="number" className={INPUT_CLASS} value={loss} min={0} max={99.99} step={1} onChange={(e) => setLoss(Math.max(0, Math.min(99.99, num(e.target.value))))} />
+        <NumInput className={INPUT_CLASS} value={loss} min={0} max={99.99} step={1} onChange={(e) => setLoss(Math.max(0, Math.min(99.99, num(e.target.value))))} />
       </Labeled>
       <ResultPanel title="본전 복구 필요 수익률" subtitle="손실 후 원금을 회복하기 위해 필요한 수익률 (참고)"
         highlight={Number.isFinite(recoveryPct) ? `약 ${recoveryPct.toFixed(2)}%` : "∞"}>
@@ -1374,9 +1372,9 @@ function LcmForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-3">
-        <Labeled label="a"><input type="number" className={INPUT_CLASS} value={aStr} onChange={(e) => setAStr(e.target.value)} /></Labeled>
-        <Labeled label="b"><input type="number" className={INPUT_CLASS} value={bStr} onChange={(e) => setBStr(e.target.value)} /></Labeled>
-        <Labeled label="c (0 = 무시)"><input type="number" className={INPUT_CLASS} value={cStr} onChange={(e) => setCStr(e.target.value)} /></Labeled>
+        <Labeled label="a"><NumInput className={INPUT_CLASS} value={aStr} onChange={(e) => setAStr(e.target.value)} /></Labeled>
+        <Labeled label="b"><NumInput className={INPUT_CLASS} value={bStr} onChange={(e) => setBStr(e.target.value)} /></Labeled>
+        <Labeled label="c (0 = 무시)"><NumInput className={INPUT_CLASS} value={cStr} onChange={(e) => setCStr(e.target.value)} /></Labeled>
       </div>
       <ResultPanel title="최소공배수(LCM)" highlight={`LCM(a,b) = ${won(lcmAB)}`} subtitle={hasC && lcmABC !== null ? `LCM(LCM(a,b),c) = ${won(lcmABC)}` : undefined}>
         {hasC && lcmABC !== null && <ResultRows rows={[{ label: "LCM(a, b)", value: won(lcmAB) }, { label: "LCM(LCM(a,b), c)", value: won(lcmABC) }]} />}
@@ -1414,9 +1412,9 @@ function GcdForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-3">
-        <Labeled label="a"><input type="number" className={INPUT_CLASS} value={aStr} onChange={(e) => setAStr(e.target.value)} /></Labeled>
-        <Labeled label="b"><input type="number" className={INPUT_CLASS} value={bStr} onChange={(e) => setBStr(e.target.value)} /></Labeled>
-        <Labeled label="c (0 = 무시)"><input type="number" className={INPUT_CLASS} value={cStr} onChange={(e) => setCStr(e.target.value)} /></Labeled>
+        <Labeled label="a"><NumInput className={INPUT_CLASS} value={aStr} onChange={(e) => setAStr(e.target.value)} /></Labeled>
+        <Labeled label="b"><NumInput className={INPUT_CLASS} value={bStr} onChange={(e) => setBStr(e.target.value)} /></Labeled>
+        <Labeled label="c (0 = 무시)"><NumInput className={INPUT_CLASS} value={cStr} onChange={(e) => setCStr(e.target.value)} /></Labeled>
       </div>
       <ResultPanel title="최대공약수(GCD)" highlight={`GCD(a,b) = ${gcdAB}`} subtitle={hasC && gcdABC !== null ? `GCD(GCD(a,b),c) = ${gcdABC}` : undefined}>
         {hasC && gcdABC !== null && <ResultRows rows={[{ label: "GCD(a, b)", value: String(gcdAB) }, { label: "GCD(GCD(a,b), c)", value: String(gcdABC) }]} />}
@@ -1477,10 +1475,10 @@ function ModForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="피제수">
-          <input type="number" className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} />
         </Labeled>
         <Labeled label="제수">
-          <input type="number" className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} />
         </Labeled>
       </div>
       <ResultPanel title="계산 결과">
@@ -1510,7 +1508,7 @@ function FibForm() {
   return (
     <Box>
       <Labeled label="n (0 ~ 50)">
-        <input type="number" min={0} max={50} className={INPUT_CLASS} value={nStr} onChange={(e) => setNStr(e.target.value)} />
+        <NumInput min={0} max={50} className={INPUT_CLASS} value={nStr} onChange={(e) => setNStr(e.target.value)} />
       </Labeled>
       <ResultPanel title="피보나치 수열" highlight={`F(${n}) = ${won(fn)}`} subtitle={phi !== null ? `황금비 근사: F(n)/F(n-1) ≈ ${phi.toFixed(8)}` : undefined}>
         <div className="mt-4">
@@ -1542,7 +1540,7 @@ function FactForm() {
   return (
     <Box>
       <Labeled label="n">
-        <input type="number" className={INPUT_CLASS} value={n} onChange={(e) => setN(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} value={n} onChange={(e) => setN(num(e.target.value))} />
       </Labeled>
       <ResultPanel title="계산 결과" highlight={`n! = ${v}`} />
     </Box>
@@ -1626,11 +1624,11 @@ function PermForm() {
       {/* 입력 */}
       <div className="grid gap-4 sm:grid-cols-2">
         <Labeled label="전체 몇 개 중에서 (n)">
-          <input type="number" min={0} max={200} className={INPUT_CLASS} value={total}
+          <NumInput min={0} max={200} className={INPUT_CLASS} value={total}
             onChange={(e) => setTotal(Math.max(0, Math.min(200, Math.floor(num(e.target.value)))))} />
         </Labeled>
         <Labeled label="몇 개를 뽑을 때 (r)">
-          <input type="number" min={0} max={200} className={INPUT_CLASS} value={pick}
+          <NumInput min={0} max={200} className={INPUT_CLASS} value={pick}
             onChange={(e) => setPick(Math.max(0, Math.min(200, Math.floor(num(e.target.value)))))} />
         </Labeled>
       </div>
@@ -1681,7 +1679,7 @@ function PyeongForm() {
         </button>
       </div>
       <Labeled label={mode === "pyeong" ? "평수 입력" : "㎡ 입력"}>
-        <input type="number" step="0.01" className={INPUT_CLASS} value={valStr} onChange={(e) => setValStr(e.target.value)} />
+        <NumInput step="0.01" className={INPUT_CLASS} value={valStr} onChange={(e) => setValStr(e.target.value)} />
       </Labeled>
       <ResultPanel title="변환 결과" highlight={mode === "pyeong" ? `${num(valStr).toFixed(1)}평 → ${converted.toFixed(2)}㎡` : `${num(valStr).toFixed(2)}㎡ → ${converted.toFixed(2)}평`} subtitle="1평 = 3.30579 ㎡">
         <div className="mt-6 overflow-x-auto">
@@ -1739,7 +1737,7 @@ function TempForm() {
         ))}
       </div>
       <Labeled label={`입력값 (${unit === "C" ? "°C" : unit === "F" ? "°F" : "K"})`}>
-        <input type="number" className={INPUT_CLASS} value={raw} onChange={(e) => setRaw(e.target.value)} />
+        <NumInput className={INPUT_CLASS} value={raw} onChange={(e) => setRaw(e.target.value)} />
       </Labeled>
       <ResultPanel title="온도 변환" highlight={unit === "C" ? `${celsius.toFixed(2)} °C` : unit === "F" ? `${fahrenheit.toFixed(2)} °F` : `${kelvin.toFixed(2)} K`}>
         <ResultRows rows={resultRows} />
@@ -1795,7 +1793,7 @@ function InchCmForm() {
           className={`rounded-full px-4 py-2 text-sm ${dir === "cm-to-inch" ? "bg-neutral-900 text-white" : "border border-neutral-300"}`}>cm → inch</button>
       </div>
       <Labeled label={dir === "inch-to-cm" ? "인치(inch)" : "센티미터(cm)"}>
-        <input type="number" className={INPUT_CLASS} value={raw} onChange={(e) => setRaw(e.target.value)} />
+        <NumInput className={INPUT_CLASS} value={raw} onChange={(e) => setRaw(e.target.value)} />
       </Labeled>
       <ResultPanel title="변환 결과" highlight={result.primary}>
         <ResultRows rows={[{ label: "feet+inches 형식", value: result.secondary }]} />
@@ -1835,7 +1833,7 @@ function ByteForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="값"><input type="number" className={INPUT_CLASS} value={raw} onChange={(e) => setRaw(e.target.value)} /></Labeled>
+        <Labeled label="값"><NumInput className={INPUT_CLASS} value={raw} onChange={(e) => setRaw(e.target.value)} /></Labeled>
         <Labeled label="단위">
           <select className={INPUT_CLASS} value={unit} onChange={(e) => setUnit(e.target.value as ByteUnit)}>
             {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
@@ -1857,10 +1855,10 @@ function ParallelRForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="R1(Ω)">
-          <input type="number" className={INPUT_CLASS} value={r1} onChange={(e) => setR1(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={r1} onChange={(e) => setR1(num(e.target.value))} />
         </Labeled>
         <Labeled label="R2(Ω)">
-          <input type="number" className={INPUT_CLASS} value={r2} onChange={(e) => setR2(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={r2} onChange={(e) => setR2(num(e.target.value))} />
         </Labeled>
       </div>
       <ResultPanel title="계산 결과" highlight={`합성 R ≈ ${rp.toFixed(2)}Ω`} />
@@ -1898,17 +1896,17 @@ function SdtForm() {
       <div className="grid gap-6 sm:grid-cols-2">
         {mode !== "v" && (
           <Labeled label="속도 (km/h)">
-            <input type="number" step="0.1" className={INPUT_CLASS} value={v} onChange={(e) => setV(num(e.target.value))} />
+            <NumInput step="0.1" className={INPUT_CLASS} value={v} onChange={(e) => setV(num(e.target.value))} />
           </Labeled>
         )}
         {mode !== "t" && (
           <Labeled label="시간 (h)">
-            <input type="number" step="0.1" className={INPUT_CLASS} value={t} onChange={(e) => setT(num(e.target.value))} />
+            <NumInput step="0.1" className={INPUT_CLASS} value={t} onChange={(e) => setT(num(e.target.value))} />
           </Labeled>
         )}
         {mode !== "d" && (
           <Labeled label="거리 (km)">
-            <input type="number" step="0.1" className={INPUT_CLASS} value={d} onChange={(e) => setD(num(e.target.value))} />
+            <NumInput step="0.1" className={INPUT_CLASS} value={d} onChange={(e) => setD(num(e.target.value))} />
           </Labeled>
         )}
       </div>
@@ -2017,7 +2015,7 @@ function DutchForm() {
         <button type="button" onClick={() => setMode("items")} className={`rounded-full px-4 py-2 text-sm font-medium ${mode === "items" ? "bg-neutral-900 text-white" : "border border-neutral-200"}`}>항목별 입력</button>
       </div>
       {mode === "total" && (
-        <Labeled label="총 금액(원)"><input type="number" className={INPUT_CLASS} value={total} onChange={(e) => setTotal(num(e.target.value))} /></Labeled>
+        <Labeled label="총 금액(원)"><NumInput className={INPUT_CLASS} value={total} onChange={(e) => setTotal(num(e.target.value))} /></Labeled>
       )}
       {mode === "items" && (
         <div className="space-y-2">
@@ -2030,13 +2028,13 @@ function DutchForm() {
           ))}
           <div className="flex gap-2">
             <input className={`${INPUT_CLASS} flex-1`} placeholder="항목명" value={newName} onChange={(e) => setNewName(e.target.value)} />
-            <input type="number" className={`${INPUT_CLASS} w-32`} placeholder="금액" value={newAmt || ""} onChange={(e) => setNewAmt(num(e.target.value))} />
+            <NumInput className={`${INPUT_CLASS} w-32`} placeholder="금액" value={newAmt} onChange={(e) => setNewAmt(num(e.target.value))} />
             <button type="button" onClick={addItem} className="rounded-lg bg-neutral-900 px-3 py-2 text-sm text-white">추가</button>
           </div>
         </div>
       )}
       <Labeled label="인원">
-        <input type="number" className={INPUT_CLASS} value={people} min={1} onChange={(e) => setPeople(Math.max(1, Math.floor(num(e.target.value))))} />
+        <NumInput className={INPUT_CLASS} value={people} min={1} onChange={(e) => setPeople(Math.max(1, Math.floor(num(e.target.value))))} />
       </Labeled>
       <ResultPanel title="더치페이 계산" highlight={`1인당 약 ${won(perPerson)}원`}>
         <ResultRows rows={[
@@ -2060,10 +2058,10 @@ function TipForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="식사금액(원)"><input type="number" className={INPUT_CLASS} value={bill} onChange={(e) => setBill(num(e.target.value))} /></Labeled>
-        <Labeled label="팁(%)"><input type="number" className={INPUT_CLASS} value={pct} onChange={(e) => setPct(num(e.target.value))} /></Labeled>
+        <Labeled label="식사금액(원)"><NumInput className={INPUT_CLASS} value={bill} onChange={(e) => setBill(num(e.target.value))} /></Labeled>
+        <Labeled label="팁(%)"><NumInput className={INPUT_CLASS} value={pct} onChange={(e) => setPct(num(e.target.value))} /></Labeled>
         <div className="sm:col-span-2">
-          <Labeled label="인원"><input type="number" className={INPUT_CLASS} value={n} min={1} onChange={(e) => setN(Math.max(1, Math.floor(num(e.target.value))))} /></Labeled>
+          <Labeled label="인원"><NumInput className={INPUT_CLASS} value={n} min={1} onChange={(e) => setN(Math.max(1, Math.floor(num(e.target.value))))} /></Labeled>
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -2125,7 +2123,7 @@ function PwForm() {
   return (
     <Box>
       <Labeled label="길이">
-        <input type="number" className={INPUT_CLASS} value={len} onChange={(e) => setLen(Math.max(4, Math.min(64, Math.floor(num(e.target.value)))))} />
+        <NumInput className={INPUT_CLASS} value={len} onChange={(e) => setLen(Math.max(4, Math.min(64, Math.floor(num(e.target.value)))))} />
       </Labeled>
       <button type="button" className="rounded-xl bg-neutral-900 px-4 py-2 text-sm font-medium text-white" onClick={gen}>
         생성
@@ -2205,7 +2203,7 @@ function RadixForm() {
           <input className={`${INPUT_CLASS} font-mono text-sm`} value={n} onChange={(e) => setN(e.target.value)} />
         </Labeled>
         <Labeled label="from 진수">
-          <input type="number" className={INPUT_CLASS} value={from} onChange={(e) => setFrom(Math.min(36, Math.max(2, Math.floor(num(e.target.value)))))} />
+          <NumInput className={INPUT_CLASS} value={from} onChange={(e) => setFrom(Math.min(36, Math.max(2, Math.floor(num(e.target.value)))))} />
         </Labeled>
       </div>
       <ResultPanel title="변환 결과">
@@ -2268,10 +2266,10 @@ function EdpiForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="DPI">
-          <input type="number" className={INPUT_CLASS} value={dpi} onChange={(e) => setDpi(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={dpi} onChange={(e) => setDpi(num(e.target.value))} />
         </Labeled>
         <Labeled label="감도">
-          <input type="number" className={INPUT_CLASS} value={sens} onChange={(e) => setSens(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={sens} onChange={(e) => setSens(num(e.target.value))} />
         </Labeled>
       </div>
       <ResultPanel title="계산 결과" highlight={`eDPI ≈ ${Math.round(dpi * sens)}`} />
@@ -2300,10 +2298,10 @@ function GachaForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="1회 성공 확률 p">
-          <input type="number" step="0.001" className={INPUT_CLASS} value={p} onChange={(e) => setP(num(e.target.value))} />
+          <NumInput step="0.001" className={INPUT_CLASS} value={p} onChange={(e) => setP(num(e.target.value))} />
         </Labeled>
         <Labeled label="시도 횟수">
-          <input type="number" className={INPUT_CLASS} value={t} onChange={(e) => setT(Math.max(1, Math.floor(num(e.target.value))))} />
+          <NumInput className={INPUT_CLASS} value={t} onChange={(e) => setT(Math.max(1, Math.floor(num(e.target.value))))} />
         </Labeled>
       </div>
       <ResultPanel title="계산 결과" highlight={`최소 1회 성공 확률 ${(prob * 100).toFixed(4)}%`} />
@@ -2332,16 +2330,16 @@ function HaversineForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="위도 A">
-          <input type="number" className={INPUT_CLASS} value={la} onChange={(e) => setLa(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={la} onChange={(e) => setLa(num(e.target.value))} />
         </Labeled>
         <Labeled label="경도 A">
-          <input type="number" className={INPUT_CLASS} value={lo} onChange={(e) => setLo(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={lo} onChange={(e) => setLo(num(e.target.value))} />
         </Labeled>
         <Labeled label="위도 B">
-          <input type="number" className={INPUT_CLASS} value={lb} onChange={(e) => setLb(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={lb} onChange={(e) => setLb(num(e.target.value))} />
         </Labeled>
         <Labeled label="경도 B">
-          <input type="number" className={INPUT_CLASS} value={lob} onChange={(e) => setLob(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={lob} onChange={(e) => setLob(num(e.target.value))} />
         </Labeled>
       </div>
       <ResultPanel title="계산 결과" highlight={`대략 거리 ${d.toFixed(2)} km`} />
@@ -2361,10 +2359,10 @@ function FuelForm() {
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
-        <Labeled label="연비(km/L)"><input type="number" className={INPUT_CLASS} value={efficiency} onChange={(e) => setEfficiency(num(e.target.value))} /></Labeled>
-        <Labeled label="유가(원/L)"><input type="number" className={INPUT_CLASS} value={fuelPrice} onChange={(e) => setFuelPrice(num(e.target.value))} /></Labeled>
+        <Labeled label="연비(km/L)"><NumInput className={INPUT_CLASS} value={efficiency} onChange={(e) => setEfficiency(num(e.target.value))} /></Labeled>
+        <Labeled label="유가(원/L)"><NumInput className={INPUT_CLASS} value={fuelPrice} onChange={(e) => setFuelPrice(num(e.target.value))} /></Labeled>
         <div className="sm:col-span-2">
-          <Labeled label="이동거리(km)"><input type="number" className={INPUT_CLASS} value={distance} onChange={(e) => setDistance(num(e.target.value))} /></Labeled>
+          <Labeled label="이동거리(km)"><NumInput className={INPUT_CLASS} value={distance} onChange={(e) => setDistance(num(e.target.value))} /></Labeled>
         </div>
       </div>
       <ResultPanel title="연료비 계산" highlight={`예상 연료비 ${won(tripCost)}원`}>
@@ -2427,7 +2425,7 @@ function ElecForm() {
   return (
     <Box>
       <Labeled label="월 사용량(kWh)">
-        <input type="number" className={INPUT_CLASS} value={kwh} min={0} onChange={(e) => setKwh(Math.max(0, num(e.target.value)))} />
+        <NumInput className={INPUT_CLASS} value={kwh} min={0} onChange={(e) => setKwh(Math.max(0, num(e.target.value)))} />
       </Labeled>
       <ResultPanel title="전기요금 계산" subtitle="주택용 저압 기준 (2024 한전 누진제) · 실제 고지와 다를 수 있습니다" highlight={`총 청구금액 약 ${won(result.total)}원`}>
         <ResultRows rows={[
@@ -2580,7 +2578,7 @@ function SubnetForm() {
           <input className={`${INPUT_CLASS} font-mono text-sm`} value={ip} onChange={(e) => setIp(e.target.value)} placeholder="192.168.1.10" />
         </Labeled>
         <Labeled label="프리픽스 길이 /CIDR (0–32)">
-          <input type="number" className={INPUT_CLASS} value={cidr} min={0} max={32} onChange={(e) => setCidr(Math.min(32, Math.max(0, Math.floor(num(e.target.value)))))} />
+          <NumInput className={INPUT_CLASS} value={cidr} min={0} max={32} onChange={(e) => setCidr(Math.min(32, Math.max(0, Math.floor(num(e.target.value)))))} />
         </Labeled>
       </div>
       {info ? (
@@ -2632,7 +2630,7 @@ function CaesarForm() {
     <Box>
       <textarea className={TEXTAREA_CLASS} rows={2} value={t} onChange={(e) => setT(e.target.value)} />
       <Labeled label="시프트">
-        <input type="number" className={INPUT_CLASS} value={shift} onChange={(e) => setShift(Math.floor(num(e.target.value)))} />
+        <NumInput className={INPUT_CLASS} value={shift} onChange={(e) => setShift(Math.floor(num(e.target.value)))} />
       </Labeled>
       <ResultPanel title="암호문">
         <p className="mt-4 font-mono text-sm text-neutral-900">{enc}</p>
@@ -2726,15 +2724,15 @@ function PaceForm() {
       {mode === "paceToSpeed" ? (
         <div className="grid gap-4 sm:grid-cols-2">
           <Labeled label="페이스 (분)">
-            <input type="number" min={0} className={INPUT_CLASS} value={min} onChange={(e) => setMin(Math.max(0, num(e.target.value)))} />
+            <NumInput min={0} className={INPUT_CLASS} value={min} onChange={(e) => setMin(Math.max(0, num(e.target.value)))} />
           </Labeled>
           <Labeled label="페이스 (초)">
-            <input type="number" min={0} max={59} className={INPUT_CLASS} value={sec} onChange={(e) => setSec(Math.min(59, Math.max(0, num(e.target.value))))} />
+            <NumInput min={0} max={59} className={INPUT_CLASS} value={sec} onChange={(e) => setSec(Math.min(59, Math.max(0, num(e.target.value))))} />
           </Labeled>
         </div>
       ) : (
         <Labeled label="평균 속도 (km/h)">
-          <input type="number" step="0.1" min={0} className={INPUT_CLASS} value={speed} onChange={(e) => setSpeed(num(e.target.value))} />
+          <NumInput step="0.1" min={0} className={INPUT_CLASS} value={speed} onChange={(e) => setSpeed(num(e.target.value))} />
         </Labeled>
       )}
 
@@ -2775,19 +2773,19 @@ function EraForm() {
       <p className="mb-3 text-sm text-neutral-500">이닝 표기: 5.1 = 5⅓이닝, 5.2 = 5⅔이닝</p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Labeled label="자책점 ER">
-          <input type="number" min={0} className={INPUT_CLASS} value={er} onChange={(e) => setEr(num(e.target.value))} />
+          <NumInput min={0} className={INPUT_CLASS} value={er} onChange={(e) => setEr(num(e.target.value))} />
         </Labeled>
         <Labeled label="이닝 IP">
-          <input type="number" step="0.1" min={0} className={INPUT_CLASS} value={ip} onChange={(e) => setIp(num(e.target.value))} />
+          <NumInput step="0.1" min={0} className={INPUT_CLASS} value={ip} onChange={(e) => setIp(num(e.target.value))} />
         </Labeled>
         <Labeled label="피안타 H">
-          <input type="number" min={0} className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
+          <NumInput min={0} className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
         </Labeled>
         <Labeled label="볼넷 BB">
-          <input type="number" min={0} className={INPUT_CLASS} value={bb} onChange={(e) => setBb(num(e.target.value))} />
+          <NumInput min={0} className={INPUT_CLASS} value={bb} onChange={(e) => setBb(num(e.target.value))} />
         </Labeled>
         <Labeled label="삼진 K">
-          <input type="number" min={0} className={INPUT_CLASS} value={k} onChange={(e) => setK(num(e.target.value))} />
+          <NumInput min={0} className={INPUT_CLASS} value={k} onChange={(e) => setK(num(e.target.value))} />
         </Labeled>
       </div>
       <ResultPanel title="투수 스탯">
@@ -2826,28 +2824,28 @@ function BattingForm() {
       <p className="mb-4 text-sm text-neutral-500">타격 스탯을 입력하면 타율·출루율·장타율·OPS를 계산합니다.</p>
       <div className="grid gap-4 sm:grid-cols-2">
         <Labeled label="안타 H">
-          <input type="number" min={0} className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
+          <NumInput min={0} className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
         </Labeled>
         <Labeled label="타수 AB">
-          <input type="number" min={0} className={INPUT_CLASS} value={ab} onChange={(e) => setAb(num(e.target.value))} />
+          <NumInput min={0} className={INPUT_CLASS} value={ab} onChange={(e) => setAb(num(e.target.value))} />
         </Labeled>
         <Labeled label="2루타 2B">
-          <input type="number" min={0} className={INPUT_CLASS} value={doubles} onChange={(e) => setDoubles(num(e.target.value))} />
+          <NumInput min={0} className={INPUT_CLASS} value={doubles} onChange={(e) => setDoubles(num(e.target.value))} />
         </Labeled>
         <Labeled label="3루타 3B">
-          <input type="number" min={0} className={INPUT_CLASS} value={triples} onChange={(e) => setTriples(num(e.target.value))} />
+          <NumInput min={0} className={INPUT_CLASS} value={triples} onChange={(e) => setTriples(num(e.target.value))} />
         </Labeled>
         <Labeled label="홈런 HR">
-          <input type="number" min={0} className={INPUT_CLASS} value={hr} onChange={(e) => setHr(num(e.target.value))} />
+          <NumInput min={0} className={INPUT_CLASS} value={hr} onChange={(e) => setHr(num(e.target.value))} />
         </Labeled>
         <Labeled label="볼넷 BB">
-          <input type="number" min={0} className={INPUT_CLASS} value={bb} onChange={(e) => setBb(num(e.target.value))} />
+          <NumInput min={0} className={INPUT_CLASS} value={bb} onChange={(e) => setBb(num(e.target.value))} />
         </Labeled>
         <Labeled label="사구 HBP">
-          <input type="number" min={0} className={INPUT_CLASS} value={hbp} onChange={(e) => setHbp(num(e.target.value))} />
+          <NumInput min={0} className={INPUT_CLASS} value={hbp} onChange={(e) => setHbp(num(e.target.value))} />
         </Labeled>
         <Labeled label="희생플라이 SF">
-          <input type="number" min={0} className={INPUT_CLASS} value={sf} onChange={(e) => setSf(num(e.target.value))} />
+          <NumInput min={0} className={INPUT_CLASS} value={sf} onChange={(e) => setSf(num(e.target.value))} />
         </Labeled>
       </div>
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -2913,13 +2911,13 @@ function FovForm() {
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <Labeled label="센서 가로 (mm)">
-          <input type="number" step="0.1" className={INPUT_CLASS} value={sensorW} onChange={(e) => setSensorW(num(e.target.value))} />
+          <NumInput step="0.1" className={INPUT_CLASS} value={sensorW} onChange={(e) => setSensorW(num(e.target.value))} />
         </Labeled>
         <Labeled label="센서 세로 (mm)">
-          <input type="number" step="0.1" className={INPUT_CLASS} value={sensorH} onChange={(e) => setSensorH(num(e.target.value))} />
+          <NumInput step="0.1" className={INPUT_CLASS} value={sensorH} onChange={(e) => setSensorH(num(e.target.value))} />
         </Labeled>
         <Labeled label="초점거리 (mm)">
-          <input type="number" className={INPUT_CLASS} value={focal} onChange={(e) => setFocal(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={focal} onChange={(e) => setFocal(num(e.target.value))} />
         </Labeled>
       </div>
       <ResultPanel title="화각 계산" subtitle="근사값입니다.">
@@ -2988,8 +2986,7 @@ function AirForceWeightedScoreForm() {
               />
             </Labeled>
             <Labeled label="점수">
-              <input
-                type="number"
+              <NumInput
                 className={INPUT_CLASS}
                 value={r.score}
                 onChange={(e) => {
@@ -3000,8 +2997,7 @@ function AirForceWeightedScoreForm() {
               />
             </Labeled>
             <Labeled label="가중치">
-              <input
-                type="number"
+              <NumInput
                 className={INPUT_CLASS}
                 value={r.weight}
                 onChange={(e) => {
@@ -3095,7 +3091,7 @@ function DischargeDateEstimateForm() {
         <input type="date" className={INPUT_CLASS} value={enlist} onChange={(e) => setEnlist(e.target.value)} />
       </Labeled>
       <Labeled label="복무 개월 수">
-        <input type="number" className={INPUT_CLASS} value={months}
+        <NumInput className={INPUT_CLASS} value={months}
           onChange={(e) => setMonths(Math.max(0, Math.floor(num(e.target.value))))} />
       </Labeled>
       <div className="flex flex-wrap gap-2">
@@ -3252,13 +3248,13 @@ function BowlingPinSumForm() {
                 <tr key={i} className="border-b border-neutral-100">
                   <td className="py-2 pr-2 text-neutral-500">{i + 1}F{is10th ? " (10)" : ""}</td>
                   <td className="py-2 px-1">
-                    <input type="number" min={0} max={10}
+                    <NumInput min={0} max={10}
                       className="w-14 rounded border border-neutral-200 px-2 py-1 text-center text-sm"
                       value={f.r1}
                       onChange={(e) => updateFrame(i, "r1", num(e.target.value))} />
                   </td>
                   <td className="py-2 px-1">
-                    <input type="number" min={0} max={is10th && isStrike ? 10 : 10 - f.r1}
+                    <NumInput min={0} max={is10th && isStrike ? 10 : 10 - f.r1}
                       className="w-14 rounded border border-neutral-200 px-2 py-1 text-center text-sm disabled:bg-neutral-100"
                       value={f.r2}
                       disabled={!is10th && isStrike}
@@ -3266,7 +3262,7 @@ function BowlingPinSumForm() {
                   </td>
                   <td className="py-2 px-1">
                     {needsR3 ? (
-                      <input type="number" min={0} max={10}
+                      <NumInput min={0} max={10}
                         className="w-14 rounded border border-neutral-200 px-2 py-1 text-center text-sm"
                         value={f.r3}
                         onChange={(e) => updateFrame(i, "r3", num(e.target.value))} />
@@ -3344,7 +3340,7 @@ function CurlingEndSumForm() {
                   <td className={`py-2 pr-2 font-semibold ${team === "A" ? "text-blue-600" : "text-red-500"}`}>{team}팀</td>
                   {Array.from({ length: endCount }, (_, i) => (
                     <td key={i} className="py-2 px-1">
-                      <input type="number" min={0}
+                      <NumInput min={0}
                         className="w-12 rounded border border-neutral-200 px-1 py-1 text-center text-sm"
                         value={scores[i] ?? 0}
                         onChange={(e) => updateScore(team, i, num(e.target.value))} />
@@ -3400,17 +3396,17 @@ function PpmForm() {
       <div className="grid gap-6 sm:grid-cols-2">
         {mode !== "mass" && (
           <Labeled label="용질 질량 (mg 또는 g)">
-            <input type="number" className={INPUT_CLASS} value={solute} onChange={(e) => setSolute(num(e.target.value))} />
+            <NumInput className={INPUT_CLASS} value={solute} onChange={(e) => setSolute(num(e.target.value))} />
           </Labeled>
         )}
         {mode !== "vol" && (
           <Labeled label="용액 질량/부피 (mL 또는 g)">
-            <input type="number" className={INPUT_CLASS} value={solution} onChange={(e) => setSolution(num(e.target.value))} />
+            <NumInput className={INPUT_CLASS} value={solution} onChange={(e) => setSolution(num(e.target.value))} />
           </Labeled>
         )}
         {mode !== "ppm" && (
           <Labeled label="농도 (ppm)">
-            <input type="number" className={INPUT_CLASS} value={ppmVal} onChange={(e) => setPpmVal(num(e.target.value))} />
+            <NumInput className={INPUT_CLASS} value={ppmVal} onChange={(e) => setPpmVal(num(e.target.value))} />
           </Labeled>
         )}
       </div>
@@ -3461,16 +3457,16 @@ function PerimeterForm() {
         ))}
       </div>
       <div className="grid gap-6 sm:grid-cols-2">
-        {shape === "circle" && <Labeled label="반지름 r"><input type="number" className={INPUT_CLASS} value={r} onChange={(e) => setR(num(e.target.value))} /></Labeled>}
-        {shape === "square" && <Labeled label="한 변의 길이 a"><input type="number" className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} /></Labeled>}
+        {shape === "circle" && <Labeled label="반지름 r"><NumInput className={INPUT_CLASS} value={r} onChange={(e) => setR(num(e.target.value))} /></Labeled>}
+        {shape === "square" && <Labeled label="한 변의 길이 a"><NumInput className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} /></Labeled>}
         {shape === "rect" && (<>
-          <Labeled label="가로 w"><input type="number" className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} /></Labeled>
-          <Labeled label="세로 h"><input type="number" className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} /></Labeled>
+          <Labeled label="가로 w"><NumInput className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} /></Labeled>
+          <Labeled label="세로 h"><NumInput className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} /></Labeled>
         </>)}
         {shape === "triangle" && (<>
-          <Labeled label="변 a"><input type="number" className={INPUT_CLASS} value={s1} onChange={(e) => setS1(num(e.target.value))} /></Labeled>
-          <Labeled label="변 b"><input type="number" className={INPUT_CLASS} value={s2} onChange={(e) => setS2(num(e.target.value))} /></Labeled>
-          <div className="sm:col-span-2"><Labeled label="변 c"><input type="number" className={INPUT_CLASS} value={s3} onChange={(e) => setS3(num(e.target.value))} /></Labeled></div>
+          <Labeled label="변 a"><NumInput className={INPUT_CLASS} value={s1} onChange={(e) => setS1(num(e.target.value))} /></Labeled>
+          <Labeled label="변 b"><NumInput className={INPUT_CLASS} value={s2} onChange={(e) => setS2(num(e.target.value))} /></Labeled>
+          <div className="sm:col-span-2"><Labeled label="변 c"><NumInput className={INPUT_CLASS} value={s3} onChange={(e) => setS3(num(e.target.value))} /></Labeled></div>
         </>)}
       </div>
       <ResultPanel title="계산 결과">
@@ -3512,9 +3508,9 @@ function DensityForm() {
         ))}
       </div>
       <div className="grid gap-6 sm:grid-cols-2">
-        {mode !== "m" && <Labeled label="질량 m (g)"><input type="number" className={INPUT_CLASS} value={mass} onChange={(e) => setMass(num(e.target.value))} /></Labeled>}
-        {mode !== "v" && <Labeled label="부피 V (cm³)"><input type="number" className={INPUT_CLASS} value={volume} onChange={(e) => setVolume(num(e.target.value))} /></Labeled>}
-        {mode !== "d" && <Labeled label="밀도 ρ (g/cm³)"><input type="number" className={INPUT_CLASS} value={density} onChange={(e) => setDensity(num(e.target.value))} /></Labeled>}
+        {mode !== "m" && <Labeled label="질량 m (g)"><NumInput className={INPUT_CLASS} value={mass} onChange={(e) => setMass(num(e.target.value))} /></Labeled>}
+        {mode !== "v" && <Labeled label="부피 V (cm³)"><NumInput className={INPUT_CLASS} value={volume} onChange={(e) => setVolume(num(e.target.value))} /></Labeled>}
+        {mode !== "d" && <Labeled label="밀도 ρ (g/cm³)"><NumInput className={INPUT_CLASS} value={density} onChange={(e) => setDensity(num(e.target.value))} /></Labeled>}
       </div>
       <ResultPanel title="계산 결과" subtitle="ρ = m / V" highlight={`${label}: ${result.toFixed(6)}`} />
     </Box>
@@ -3559,9 +3555,9 @@ function PolynomialFactorForm() {
     <Box>
       <p className="text-sm text-neutral-500">이차방정식 ax² + bx + c = 0 형태</p>
       <div className="grid gap-6 sm:grid-cols-3">
-        <Labeled label="a (x² 계수)"><input type="number" className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} /></Labeled>
-        <Labeled label="b (x 계수)"><input type="number" className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} /></Labeled>
-        <Labeled label="c (상수)"><input type="number" className={INPUT_CLASS} value={c} onChange={(e) => setC(num(e.target.value))} /></Labeled>
+        <Labeled label="a (x² 계수)"><NumInput className={INPUT_CLASS} value={a} onChange={(e) => setA(num(e.target.value))} /></Labeled>
+        <Labeled label="b (x 계수)"><NumInput className={INPUT_CLASS} value={b} onChange={(e) => setB(num(e.target.value))} /></Labeled>
+        <Labeled label="c (상수)"><NumInput className={INPUT_CLASS} value={c} onChange={(e) => setC(num(e.target.value))} /></Labeled>
       </div>
       <ResultPanel title="계산 결과" subtitle={`식: ${expr}`}>
         {res.type === "all" && <p className="mt-4 text-sm">모든 실수가 해입니다.</p>}
@@ -3655,8 +3651,7 @@ function GaussianForm() {
             <span className="text-xs text-neutral-500 w-6">{ri + 1}식</span>
             {row.map((val, ci) => (
               <div key={ci} className="flex items-center gap-1">
-                <input
-                  type="number"
+                <NumInput
                   className={`${INPUT_CLASS} w-20`}
                   value={val}
                   onChange={(e) => setCell(ri, ci, num(e.target.value))}
@@ -3702,13 +3697,13 @@ function IncomeTaxMonthlyForm() {
         <section className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5">
           <h2 className="text-base font-semibold text-neutral-900">입력</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Labeled label="월 급여 (원)"><input type="number" className={INPUT_CLASS} value={monthly} onChange={(e) => setMonthly(num(e.target.value))} /></Labeled>
-            <Labeled label="비과세액 (원, 식대 등)"><input type="number" className={INPUT_CLASS} value={nonTax} onChange={(e) => setNonTax(num(e.target.value))} /></Labeled>
+            <Labeled label="월 급여 (원)"><NumInput className={INPUT_CLASS} value={monthly} onChange={(e) => setMonthly(num(e.target.value))} /></Labeled>
+            <Labeled label="비과세액 (원, 식대 등)"><NumInput className={INPUT_CLASS} value={nonTax} onChange={(e) => setNonTax(num(e.target.value))} /></Labeled>
             <Labeled label="공제 대상 부양가족 수 (본인 포함)">
-              <input type="number" min={1} max={11} className={INPUT_CLASS} value={deps} onChange={(e) => setDeps(Math.min(11, Math.max(1, Math.floor(num(e.target.value)))))} />
+              <NumInput min={1} max={11} className={INPUT_CLASS} value={deps} onChange={(e) => setDeps(Math.min(11, Math.max(1, Math.floor(num(e.target.value)))))} />
             </Labeled>
             <Labeled label="20세 이하 자녀 수">
-              <input type="number" min={0} max={10} className={INPUT_CLASS} value={children} onChange={(e) => setChildren(Math.min(10, Math.max(0, Math.floor(num(e.target.value)))))} />
+              <NumInput min={0} max={10} className={INPUT_CLASS} value={children} onChange={(e) => setChildren(Math.min(10, Math.max(0, Math.floor(num(e.target.value)))))} />
             </Labeled>
           </div>
         </section>
@@ -3754,13 +3749,13 @@ function BonusTaxForm() {
           <h2 className="text-base font-semibold text-neutral-900">입력</h2>
           <p className="mt-1 text-xs text-neutral-500">국세청 간이세액표 방법: (월급 + 상여÷12)에서 월급 세액을 뺀 후 12배</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Labeled label="성과급·상여 총액 (원)"><input type="number" className={INPUT_CLASS} value={bonus} onChange={(e) => setBonus(num(e.target.value))} /></Labeled>
-            <Labeled label="과세 월 급여 (원)"><input type="number" className={INPUT_CLASS} value={monthly} onChange={(e) => setMonthly(num(e.target.value))} /></Labeled>
+            <Labeled label="성과급·상여 총액 (원)"><NumInput className={INPUT_CLASS} value={bonus} onChange={(e) => setBonus(num(e.target.value))} /></Labeled>
+            <Labeled label="과세 월 급여 (원)"><NumInput className={INPUT_CLASS} value={monthly} onChange={(e) => setMonthly(num(e.target.value))} /></Labeled>
             <Labeled label="부양가족 수 (본인 포함)">
-              <input type="number" min={1} max={11} className={INPUT_CLASS} value={deps} onChange={(e) => setDeps(Math.min(11, Math.max(1, Math.floor(num(e.target.value)))))} />
+              <NumInput min={1} max={11} className={INPUT_CLASS} value={deps} onChange={(e) => setDeps(Math.min(11, Math.max(1, Math.floor(num(e.target.value)))))} />
             </Labeled>
             <Labeled label="20세 이하 자녀 수">
-              <input type="number" min={0} max={10} className={INPUT_CLASS} value={children} onChange={(e) => setChildren(Math.min(10, Math.max(0, Math.floor(num(e.target.value)))))} />
+              <NumInput min={0} max={10} className={INPUT_CLASS} value={children} onChange={(e) => setChildren(Math.min(10, Math.max(0, Math.floor(num(e.target.value)))))} />
             </Labeled>
           </div>
         </section>
@@ -3813,10 +3808,10 @@ function UnemploymentForm() {
         <section className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5">
           <h2 className="text-base font-semibold">입력</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Labeled label="1일 평균임금 (원)"><input type="number" className={INPUT_CLASS} value={dailyWage} onChange={(e) => setDailyWage(num(e.target.value))} /></Labeled>
-            <Labeled label="이직 당시 나이"><input type="number" min={18} max={80} className={INPUT_CLASS} value={age} onChange={(e) => setAge(num(e.target.value))} /></Labeled>
+            <Labeled label="1일 평균임금 (원)"><NumInput className={INPUT_CLASS} value={dailyWage} onChange={(e) => setDailyWage(num(e.target.value))} /></Labeled>
+            <Labeled label="이직 당시 나이"><NumInput min={18} max={80} className={INPUT_CLASS} value={age} onChange={(e) => setAge(num(e.target.value))} /></Labeled>
             <Labeled label="피보험 단위기간(고용보험 가입 년수)">
-              <input type="number" min={0} max={30} step={0.5} className={INPUT_CLASS} value={workYears} onChange={(e) => setWorkYears(num(e.target.value))} />
+              <NumInput min={0} max={30} step={0.5} className={INPUT_CLASS} value={workYears} onChange={(e) => setWorkYears(num(e.target.value))} />
             </Labeled>
           </div>
         </section>
@@ -3890,7 +3885,7 @@ function ParentalLeaveForm() {
       )}
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)] lg:gap-6">
         <section className="rounded-xl border border-neutral-200 bg-white p-4">
-          <Labeled label="통상임금 (월)"><input type="number" className={INPUT_CLASS} value={wage} onChange={(e) => setWage(num(e.target.value))} /></Labeled>
+          <Labeled label="통상임금 (월)"><NumInput className={INPUT_CLASS} value={wage} onChange={(e) => setWage(num(e.target.value))} /></Labeled>
           <p className="mt-2 text-xs text-neutral-500">
             {mode === "std"
               ? "일반: 통상임금 80%, 상한 150만원, 하한 70만원"
@@ -3962,13 +3957,13 @@ function SubscriptionScoreForm() {
           <h2 className="text-base font-semibold">입력</h2>
           <div className="mt-4 grid gap-4">
             <Labeled label="무주택 기간 (년, 0=주택 소유)">
-              <input type="number" min={0} max={15} className={INPUT_CLASS} value={noHomeYears} onChange={(e) => setNoHomeYears(num(e.target.value))} />
+              <NumInput min={0} max={15} className={INPUT_CLASS} value={noHomeYears} onChange={(e) => setNoHomeYears(num(e.target.value))} />
             </Labeled>
             <Labeled label="부양가족 수 (0~6명 이상)">
-              <input type="number" min={0} max={6} className={INPUT_CLASS} value={dependants} onChange={(e) => setDependants(num(e.target.value))} />
+              <NumInput min={0} max={6} className={INPUT_CLASS} value={dependants} onChange={(e) => setDependants(num(e.target.value))} />
             </Labeled>
             <Labeled label="청약통장 가입기간 (년)">
-              <input type="number" min={0} max={20} step={0.5} className={INPUT_CLASS} value={accountYears} onChange={(e) => setAccountYears(num(e.target.value))} />
+              <NumInput min={0} max={20} step={0.5} className={INPUT_CLASS} value={accountYears} onChange={(e) => setAccountYears(num(e.target.value))} />
             </Labeled>
           </div>
         </section>
@@ -4258,8 +4253,8 @@ function OnlineTimerForm() {
       </div>
       {tab === "countdown" && remaining === null && (
         <div className="grid gap-6 sm:grid-cols-2">
-          <Labeled label="분"><input type="number" min={0} max={99} className={INPUT_CLASS} value={minutes} onChange={(e) => setMinutes(Math.max(0, Math.floor(num(e.target.value))))} /></Labeled>
-          <Labeled label="초"><input type="number" min={0} max={59} className={INPUT_CLASS} value={seconds} onChange={(e) => setSeconds(Math.max(0, Math.min(59, Math.floor(num(e.target.value)))))} /></Labeled>
+          <Labeled label="분"><NumInput min={0} max={99} className={INPUT_CLASS} value={minutes} onChange={(e) => setMinutes(Math.max(0, Math.floor(num(e.target.value))))} /></Labeled>
+          <Labeled label="초"><NumInput min={0} max={59} className={INPUT_CLASS} value={seconds} onChange={(e) => setSeconds(Math.max(0, Math.min(59, Math.floor(num(e.target.value)))))} /></Labeled>
         </div>
       )}
       <div className="flex flex-col items-center gap-6 rounded-xl border border-neutral-200 bg-white p-6">
@@ -4323,9 +4318,9 @@ function MortgageCompareForm() {
         <section className="rounded-xl border border-neutral-200 bg-white p-4">
           <h2 className="text-base font-semibold">대출 조건</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Labeled label="대출원금 (원)"><input type="number" className={INPUT_CLASS} value={principal} onChange={(e) => setPrincipal(num(e.target.value))} /></Labeled>
-            <Labeled label="연이율 (%)"><input type="number" step="0.1" className={INPUT_CLASS} value={annualRate} onChange={(e) => setAnnualRate(num(e.target.value))} /></Labeled>
-            <div className="sm:col-span-2"><Labeled label="상환 개월 수"><input type="number" className={INPUT_CLASS} value={months} onChange={(e) => setMonths(Math.max(1, Math.floor(num(e.target.value))))} /></Labeled></div>
+            <Labeled label="대출원금 (원)"><NumInput className={INPUT_CLASS} value={principal} onChange={(e) => setPrincipal(num(e.target.value))} /></Labeled>
+            <Labeled label="연이율 (%)"><NumInput step="0.1" className={INPUT_CLASS} value={annualRate} onChange={(e) => setAnnualRate(num(e.target.value))} /></Labeled>
+            <div className="sm:col-span-2"><Labeled label="상환 개월 수"><NumInput className={INPUT_CLASS} value={months} onChange={(e) => setMonths(Math.max(1, Math.floor(num(e.target.value))))} /></Labeled></div>
           </div>
         </section>
         <ResultPanel title="상환 방식 비교" subtitle="원금균등이 총이자는 적지만 초기 월납입이 더 큽니다.">
@@ -4409,11 +4404,11 @@ function PrepaymentForm() {
         <section className="rounded-xl border border-neutral-200 bg-white p-4">
           <h2 className="text-base font-semibold">대출 조건</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Labeled label="대출원금 (원)"><input type="number" className={INPUT_CLASS} value={principal} onChange={(e) => setPrincipal(num(e.target.value))} /></Labeled>
-            <Labeled label="연이율 (%)"><input type="number" step="0.1" className={INPUT_CLASS} value={annualRate} onChange={(e) => setAnnualRate(num(e.target.value))} /></Labeled>
-            <Labeled label="총 상환 기간 (개월)"><input type="number" className={INPUT_CLASS} value={totalMonths} onChange={(e) => setTotalMonths(Math.max(1, Math.floor(num(e.target.value))))} /></Labeled>
-            <Labeled label="중도상환 시점 (n개월 후)"><input type="number" min={1} className={INPUT_CLASS} value={prepayMonth} onChange={(e) => setPrepayMonth(Math.max(1, Math.floor(num(e.target.value))))} /></Labeled>
-            <div className="sm:col-span-2"><Labeled label="중도상환 금액 (원)"><input type="number" className={INPUT_CLASS} value={prepayAmount} onChange={(e) => setPrepayAmount(num(e.target.value))} /></Labeled></div>
+            <Labeled label="대출원금 (원)"><NumInput className={INPUT_CLASS} value={principal} onChange={(e) => setPrincipal(num(e.target.value))} /></Labeled>
+            <Labeled label="연이율 (%)"><NumInput step="0.1" className={INPUT_CLASS} value={annualRate} onChange={(e) => setAnnualRate(num(e.target.value))} /></Labeled>
+            <Labeled label="총 상환 기간 (개월)"><NumInput className={INPUT_CLASS} value={totalMonths} onChange={(e) => setTotalMonths(Math.max(1, Math.floor(num(e.target.value))))} /></Labeled>
+            <Labeled label="중도상환 시점 (n개월 후)"><NumInput min={1} className={INPUT_CLASS} value={prepayMonth} onChange={(e) => setPrepayMonth(Math.max(1, Math.floor(num(e.target.value))))} /></Labeled>
+            <div className="sm:col-span-2"><Labeled label="중도상환 금액 (원)"><NumInput className={INPUT_CLASS} value={prepayAmount} onChange={(e) => setPrepayAmount(num(e.target.value))} /></Labeled></div>
           </div>
         </section>
         <ResultPanel title="중도상환 효과" subtitle="중도상환 수수료는 포함하지 않습니다.">
@@ -4458,14 +4453,14 @@ function JeonwolseForm() {
         <section className="rounded-xl border border-neutral-200 bg-white p-4">
           <div className="space-y-4">
             {mode === "toMonthly" ? (<>
-              <Labeled label="전세 보증금 (원)"><input type="number" className={INPUT_CLASS} value={jeonse} onChange={(e) => setJeonse(num(e.target.value))} /></Labeled>
-              <Labeled label="월세 보증금 (원)"><input type="number" className={INPUT_CLASS} value={deposit} onChange={(e) => setDeposit(num(e.target.value))} /></Labeled>
+              <Labeled label="전세 보증금 (원)"><NumInput className={INPUT_CLASS} value={jeonse} onChange={(e) => setJeonse(num(e.target.value))} /></Labeled>
+              <Labeled label="월세 보증금 (원)"><NumInput className={INPUT_CLASS} value={deposit} onChange={(e) => setDeposit(num(e.target.value))} /></Labeled>
             </>) : (<>
-              <Labeled label="월세 보증금 (원)"><input type="number" className={INPUT_CLASS} value={deposit} onChange={(e) => setDeposit(num(e.target.value))} /></Labeled>
-              <Labeled label="월세 (원/월)"><input type="number" className={INPUT_CLASS} value={monthly} onChange={(e) => setMonthly(num(e.target.value))} /></Labeled>
+              <Labeled label="월세 보증금 (원)"><NumInput className={INPUT_CLASS} value={deposit} onChange={(e) => setDeposit(num(e.target.value))} /></Labeled>
+              <Labeled label="월세 (원/월)"><NumInput className={INPUT_CLASS} value={monthly} onChange={(e) => setMonthly(num(e.target.value))} /></Labeled>
             </>)}
             <Labeled label="전월세 전환율 (%, 법정 기준금리+2%)">
-              <input type="number" step="0.1" className={INPUT_CLASS} value={rate} onChange={(e) => setRate(num(e.target.value))} />
+              <NumInput step="0.1" className={INPUT_CLASS} value={rate} onChange={(e) => setRate(num(e.target.value))} />
             </Labeled>
           </div>
         </section>
@@ -4520,15 +4515,15 @@ function VdotEstimateForm() {
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Labeled label="완주 거리 (km)">
-            <input type="number" className={INPUT_CLASS} value={distKm}
+            <NumInput className={INPUT_CLASS} value={distKm}
               onChange={(e) => setDistKm(Math.max(0.001, num(e.target.value)))} />
           </Labeled>
         </div>
         <Labeled label="완주 시간 (분)">
-          <input type="number" className={INPUT_CLASS} value={min} onChange={(e) => setMin(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={min} onChange={(e) => setMin(num(e.target.value))} />
         </Labeled>
         <Labeled label="완주 시간 (초)">
-          <input type="number" className={INPUT_CLASS} value={sec} onChange={(e) => setSec(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={sec} onChange={(e) => setSec(num(e.target.value))} />
         </Labeled>
       </div>
       <ResultPanel title="VDOT 및 훈련 페이스" subtitle="Jack Daniels 공식 기반 추정값입니다."
@@ -4560,7 +4555,7 @@ function GallonLiterForm() {
         ))}
       </div>
       <Labeled label={mode === 'galToL' ? '갤런 (gal)' : '리터 (L)'}>
-        <input className={INPUT_CLASS} type='number' value={val} onChange={e => setVal(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} value={val} onChange={e => setVal(num(e.target.value))} />
       </Labeled>
       <ResultPanel title='변환 결과'>
         <ResultRows rows={[{ label: mode === 'galToL' ? '리터 (L)' : '갤런 (gal)', value: result.toFixed(6) }]} />
@@ -4577,8 +4572,8 @@ function BuildingCoverageForm() {
   return (
     <Box>
       <div className='grid gap-6 sm:grid-cols-2'>
-        <Labeled label='건축면적 (㎡)'><input className={INPUT_CLASS} type='number' value={building} onChange={e => setBuilding(num(e.target.value))} /></Labeled>
-        <Labeled label='대지면적 (㎡)'><input className={INPUT_CLASS} type='number' value={land} onChange={e => setLand(num(e.target.value))} /></Labeled>
+        <Labeled label='건축면적 (㎡)'><NumInput className={INPUT_CLASS} value={building} onChange={e => setBuilding(num(e.target.value))} /></Labeled>
+        <Labeled label='대지면적 (㎡)'><NumInput className={INPUT_CLASS} value={land} onChange={e => setLand(num(e.target.value))} /></Labeled>
       </div>
       <ResultPanel title='건폐율'>
         <ResultRows rows={[{ label: '건폐율', value: ratio.toFixed(2) + '%' }]} />
@@ -4595,8 +4590,8 @@ function FloorAreaRatioForm() {
   return (
     <Box>
       <div className='grid gap-6 sm:grid-cols-2'>
-        <Labeled label='연면적 (㎡)'><input className={INPUT_CLASS} type='number' value={floor} onChange={e => setFloor(num(e.target.value))} /></Labeled>
-        <Labeled label='대지면적 (㎡)'><input className={INPUT_CLASS} type='number' value={land} onChange={e => setLand(num(e.target.value))} /></Labeled>
+        <Labeled label='연면적 (㎡)'><NumInput className={INPUT_CLASS} value={floor} onChange={e => setFloor(num(e.target.value))} /></Labeled>
+        <Labeled label='대지면적 (㎡)'><NumInput className={INPUT_CLASS} value={land} onChange={e => setLand(num(e.target.value))} /></Labeled>
       </div>
       <ResultPanel title='용적률'>
         <ResultRows rows={[{ label: '용적률', value: ratio.toFixed(2) + '%' }]} />
@@ -4627,13 +4622,13 @@ function DmsConvertForm() {
       </div>
       {mode === 'dmsToDecimal' ? (
         <div className='grid gap-6 sm:grid-cols-3'>
-          <Labeled label='도 (°)'><input className={INPUT_CLASS} type='number' value={deg} onChange={e => setDeg(num(e.target.value))} /></Labeled>
-          <Labeled label='분 (′)'><input className={INPUT_CLASS} type='number' value={minVal} onChange={e => setMinVal(num(e.target.value))} /></Labeled>
-          <Labeled label='초 (″)'><input className={INPUT_CLASS} type='number' value={sec} onChange={e => setSec(num(e.target.value))} /></Labeled>
+          <Labeled label='도 (°)'><NumInput className={INPUT_CLASS} value={deg} onChange={e => setDeg(num(e.target.value))} /></Labeled>
+          <Labeled label='분 (′)'><NumInput className={INPUT_CLASS} value={minVal} onChange={e => setMinVal(num(e.target.value))} /></Labeled>
+          <Labeled label='초 (″)'><NumInput className={INPUT_CLASS} value={sec} onChange={e => setSec(num(e.target.value))} /></Labeled>
         </div>
       ) : (
         <Labeled label='십진도 (°)'>
-          <input className={INPUT_CLASS} type='number' step='0.000001' value={decimal} onChange={e => setDecimal(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} step='0.000001' value={decimal} onChange={e => setDecimal(num(e.target.value))} />
         </Labeled>
       )}
       <ResultPanel title='변환 결과'>
@@ -4656,8 +4651,8 @@ function SlopeAngleForm() {
   return (
     <Box>
       <div className='grid gap-6 sm:grid-cols-2'>
-        <Labeled label='높이 (m)'><input className={INPUT_CLASS} type='number' value={h} onChange={e => setH(num(e.target.value))} /></Labeled>
-        <Labeled label='수평 거리 (m)'><input className={INPUT_CLASS} type='number' value={d} onChange={e => setD(num(e.target.value))} /></Labeled>
+        <Labeled label='높이 (m)'><NumInput className={INPUT_CLASS} value={h} onChange={e => setH(num(e.target.value))} /></Labeled>
+        <Labeled label='수평 거리 (m)'><NumInput className={INPUT_CLASS} value={d} onChange={e => setD(num(e.target.value))} /></Labeled>
       </div>
       <ResultPanel title='경사도 결과'>
         <ResultRows rows={[
@@ -4684,7 +4679,7 @@ function RadianConvertForm() {
         ))}
       </div>
       <Labeled label={mode === 'degToRad' ? '도 (°)' : '라디안 (rad)'}>
-        <input className={INPUT_CLASS} type='number' value={val} onChange={e => setVal(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} value={val} onChange={e => setVal(num(e.target.value))} />
       </Labeled>
       <ResultPanel title='변환 결과'>
         <ResultRows rows={[{ label: mode === 'degToRad' ? '라디안 (rad)' : '도 (°)', value: result.toFixed(6) }]} />
@@ -4702,9 +4697,9 @@ function CubicMeterForm() {
   return (
     <Box>
       <div className='grid gap-6 sm:grid-cols-3'>
-        <Labeled label='가로 (m)'><input className={INPUT_CLASS} type='number' step='0.01' value={w} onChange={e => setW(num(e.target.value))} /></Labeled>
-        <Labeled label='세로 (m)'><input className={INPUT_CLASS} type='number' step='0.01' value={l} onChange={e => setL(num(e.target.value))} /></Labeled>
-        <Labeled label='높이 (m)'><input className={INPUT_CLASS} type='number' step='0.01' value={h} onChange={e => setH(num(e.target.value))} /></Labeled>
+        <Labeled label='가로 (m)'><NumInput className={INPUT_CLASS} step='0.01' value={w} onChange={e => setW(num(e.target.value))} /></Labeled>
+        <Labeled label='세로 (m)'><NumInput className={INPUT_CLASS} step='0.01' value={l} onChange={e => setL(num(e.target.value))} /></Labeled>
+        <Labeled label='높이 (m)'><NumInput className={INPUT_CLASS} step='0.01' value={h} onChange={e => setH(num(e.target.value))} /></Labeled>
       </div>
       <ResultPanel title='루베 계산'>
         <ResultRows rows={[{ label: '부피 (m³ / 루베)', value: volume.toFixed(4) + ' m³' }]} />
@@ -4721,8 +4716,8 @@ function WattCalcForm() {
   return (
     <Box>
       <div className='grid gap-6 sm:grid-cols-2'>
-        <Labeled label='전압 (V)'><input className={INPUT_CLASS} type='number' value={volt} onChange={e => setVolt(num(e.target.value))} /></Labeled>
-        <Labeled label='전류 (A)'><input className={INPUT_CLASS} type='number' value={amp} onChange={e => setAmp(num(e.target.value))} /></Labeled>
+        <Labeled label='전압 (V)'><NumInput className={INPUT_CLASS} value={volt} onChange={e => setVolt(num(e.target.value))} /></Labeled>
+        <Labeled label='전류 (A)'><NumInput className={INPUT_CLASS} value={amp} onChange={e => setAmp(num(e.target.value))} /></Labeled>
       </div>
       <ResultPanel title='전력 계산'>
         <ResultRows rows={[
@@ -4753,11 +4748,11 @@ function DecibelCalcForm() {
       </div>
       {mode === 'toDb' ? (
         <div className='grid gap-6 sm:grid-cols-2'>
-          <Labeled label='측정값'><input className={INPUT_CLASS} type='number' value={measured} onChange={e => setMeasured(num(e.target.value))} /></Labeled>
-          <Labeled label='기준값'><input className={INPUT_CLASS} type='number' value={reference} onChange={e => setReference(num(e.target.value))} /></Labeled>
+          <Labeled label='측정값'><NumInput className={INPUT_CLASS} value={measured} onChange={e => setMeasured(num(e.target.value))} /></Labeled>
+          <Labeled label='기준값'><NumInput className={INPUT_CLASS} value={reference} onChange={e => setReference(num(e.target.value))} /></Labeled>
         </div>
       ) : (
-        <Labeled label='데시벨 (dB)'><input className={INPUT_CLASS} type='number' value={db} onChange={e => setDb(num(e.target.value))} /></Labeled>
+        <Labeled label='데시벨 (dB)'><NumInput className={INPUT_CLASS} value={db} onChange={e => setDb(num(e.target.value))} /></Labeled>
       )}
       <ResultPanel title='데시벨 결과'>
         {mode === 'toDb' ? (
@@ -4827,7 +4822,7 @@ function UnitConvertForm() {
       </div>
       <div className='grid gap-6 sm:grid-cols-3 items-end'>
         <Labeled label='값'>
-          <input className={INPUT_CLASS} type='number' value={val} onChange={e => setVal(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={val} onChange={e => setVal(num(e.target.value))} />
         </Labeled>
         <Labeled label='변환 전'>
           <select className={INPUT_CLASS} value={fromIdx} onChange={e => setFromIdx(Number(e.target.value))}>
@@ -4856,8 +4851,8 @@ function SchoolRankForm() {
   return (
     <Box>
       <div className='grid gap-6 sm:grid-cols-2'>
-        <Labeled label='내 석차'><input className={INPUT_CLASS} type='number' value={rank} onChange={e => setRank(num(e.target.value))} /></Labeled>
-        <Labeled label='전체 인원'><input className={INPUT_CLASS} type='number' value={total} onChange={e => setTotal(num(e.target.value))} /></Labeled>
+        <Labeled label='내 석차'><NumInput className={INPUT_CLASS} value={rank} onChange={e => setRank(num(e.target.value))} /></Labeled>
+        <Labeled label='전체 인원'><NumInput className={INPUT_CLASS} value={total} onChange={e => setTotal(num(e.target.value))} /></Labeled>
       </div>
       <ResultPanel title='석차 결과'>
         <ResultRows rows={[
@@ -4921,11 +4916,11 @@ function GpaCalcForm() {
         {subjects.map((sub, i) => (
           <div key={i} className='grid grid-cols-2 gap-3'>
             <Labeled label={'과목 ' + (i + 1) + ' 점수 (0~100)'}>
-              <input className={INPUT_CLASS} type='number' placeholder='85' value={sub.score}
+              <NumInput className={INPUT_CLASS} placeholder='85' value={sub.score}
                 onChange={e => updateSubject(i, 'score', e.target.value)} />
             </Labeled>
             <Labeled label='학점 수'>
-              <input className={INPUT_CLASS} type='number' placeholder='3' value={sub.credit}
+              <NumInput className={INPUT_CLASS} placeholder='3' value={sub.credit}
                 onChange={e => updateSubject(i, 'credit', e.target.value)} />
             </Labeled>
           </div>
@@ -4964,9 +4959,9 @@ function ConfidenceIntervalForm() {
         ))}
       </div>
       <div className='grid gap-6 sm:grid-cols-3'>
-        <Labeled label='표본평균 (μ)'><input className={INPUT_CLASS} type='number' value={mean} onChange={e => setMean(num(e.target.value))} /></Labeled>
-        <Labeled label='표준편차 (σ)'><input className={INPUT_CLASS} type='number' value={sigma} onChange={e => setSigma(num(e.target.value))} /></Labeled>
-        <Labeled label='표본 수 (n)'><input className={INPUT_CLASS} type='number' value={n} onChange={e => setN(Math.max(1, num(e.target.value)))} /></Labeled>
+        <Labeled label='표본평균 (μ)'><NumInput className={INPUT_CLASS} value={mean} onChange={e => setMean(num(e.target.value))} /></Labeled>
+        <Labeled label='표준편차 (σ)'><NumInput className={INPUT_CLASS} value={sigma} onChange={e => setSigma(num(e.target.value))} /></Labeled>
+        <Labeled label='표본 수 (n)'><NumInput className={INPUT_CLASS} value={n} onChange={e => setN(Math.max(1, num(e.target.value)))} /></Labeled>
       </div>
       <ResultPanel title='신뢰구간'>
         <ResultRows rows={[
@@ -4990,8 +4985,8 @@ function SpeechTimeForm() {
   return (
     <Box>
       <div className='grid gap-6 sm:grid-cols-2'>
-        <Labeled label='글자 수'><input className={INPUT_CLASS} type='number' value={chars} onChange={e => setChars(num(e.target.value))} /></Labeled>
-        <Labeled label='분당 글자 수 (기본 250)'><input className={INPUT_CLASS} type='number' value={cpm} onChange={e => setCpm(Math.max(1, num(e.target.value)))} /></Labeled>
+        <Labeled label='글자 수'><NumInput className={INPUT_CLASS} value={chars} onChange={e => setChars(num(e.target.value))} /></Labeled>
+        <Labeled label='분당 글자 수 (기본 250)'><NumInput className={INPUT_CLASS} value={cpm} onChange={e => setCpm(Math.max(1, num(e.target.value)))} /></Labeled>
       </div>
       <ResultPanel title='발표 시간'>
         <ResultRows rows={[
@@ -5019,7 +5014,7 @@ function PValueZForm() {
   return (
     <Box>
       <Labeled label='Z값'>
-        <input className={INPUT_CLASS} type='number' step='0.01' value={z} onChange={e => setZ(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} step='0.01' value={z} onChange={e => setZ(num(e.target.value))} />
       </Labeled>
       <ResultPanel title='P값'>
         <ResultRows rows={[
@@ -5142,7 +5137,7 @@ function HeightPercentileForm() {
         ))}
       </div>
       <Labeled label='키 (cm)'>
-        <input className={INPUT_CLASS} type='number' step='0.1' value={height} onChange={e => setHeight(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} step='0.1' value={height} onChange={e => setHeight(num(e.target.value))} />
       </Labeled>
       <ResultPanel title='키 백분위'>
         <ResultRows rows={[
@@ -5165,7 +5160,7 @@ function CaffeineIntakeForm() {
   return (
     <Box>
       <Labeled label='체중 (kg)'>
-        <input className={INPUT_CLASS} type='number' value={weight} onChange={e => setWeight(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} value={weight} onChange={e => setWeight(num(e.target.value))} />
       </Labeled>
       <ResultPanel title='카페인 섭취량'>
         <ResultRows rows={[
@@ -5203,7 +5198,7 @@ function MaternityPayForm() {
         ))}
       </div>
       <Labeled label='통상임금 (월)'>
-        <input className={INPUT_CLASS} type='number' value={monthly} onChange={e => setMonthly(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} value={monthly} onChange={e => setMonthly(num(e.target.value))} />
       </Labeled>
       <ResultPanel title='출산전후휴가 급여 (90일 추정)' highlight={won(total) + '원'}>
         <ResultRows rows={[
@@ -5261,7 +5256,7 @@ function EitcPayForm() {
         ))}
       </div>
       <Labeled label='총급여 (연간)'>
-        <input className={INPUT_CLASS} type='number' value={income} onChange={e => setIncome(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} value={income} onChange={e => setIncome(num(e.target.value))} />
       </Labeled>
       <ResultPanel title='근로장려금 (추정)'>
         <ResultRows rows={[{ label: '근로장려금', value: won(Math.round(eitc)) + '원' }]} />
@@ -5279,8 +5274,8 @@ function OverspendRatioForm() {
   return (
     <Box>
       <div className='grid gap-6 sm:grid-cols-2'>
-        <Labeled label='소득 (월)'><input className={INPUT_CLASS} type='number' value={income} onChange={e => setIncome(num(e.target.value))} /></Labeled>
-        <Labeled label='지출 (월)'><input className={INPUT_CLASS} type='number' value={expense} onChange={e => setExpense(num(e.target.value))} /></Labeled>
+        <Labeled label='소득 (월)'><NumInput className={INPUT_CLASS} value={income} onChange={e => setIncome(num(e.target.value))} /></Labeled>
+        <Labeled label='지출 (월)'><NumInput className={INPUT_CLASS} value={expense} onChange={e => setExpense(num(e.target.value))} /></Labeled>
       </div>
       <ResultPanel title='소비율 / 저축률'>
         <ResultRows rows={[
@@ -5319,11 +5314,11 @@ function JeonseVsMonthlyForm() {
           <p className="mb-3 font-semibold text-blue-700">🏠 전세</p>
           <div className="space-y-3">
             <Labeled label="전세금 (원)">
-              <input className={INPUT_CLASS} type="number" value={jeonse}
+              <NumInput className={INPUT_CLASS} value={jeonse}
                 onChange={e => setJeonse(num(e.target.value))} />
             </Labeled>
             <Labeled label="기준 이자율 (%)">
-              <input className={INPUT_CLASS} type="number" step="0.1" value={rate}
+              <NumInput className={INPUT_CLASS} step="0.1" value={rate}
                 onChange={e => setRate(num(e.target.value))} />
             </Labeled>
             <p className="text-xs text-neutral-400">예금 금리 기준. 월세 보증금 이자 계산에도 동일 적용.</p>
@@ -5344,11 +5339,11 @@ function JeonseVsMonthlyForm() {
           <p className="mb-3 font-semibold text-orange-700">🏠 월세</p>
           <div className="space-y-3">
             <Labeled label="보증금 (원)">
-              <input className={INPUT_CLASS} type="number" value={deposit}
+              <NumInput className={INPUT_CLASS} value={deposit}
                 onChange={e => setDeposit(num(e.target.value))} />
             </Labeled>
             <Labeled label="월세 (원/월)">
-              <input className={INPUT_CLASS} type="number" value={monthly}
+              <NumInput className={INPUT_CLASS} value={monthly}
                 onChange={e => setMonthly(num(e.target.value))} />
             </Labeled>
           </div>
@@ -5410,9 +5405,9 @@ function StraightLineDepreciationForm() {
   return (
     <Box>
       <div className='grid gap-6 sm:grid-cols-3'>
-        <Labeled label='취득가 (원)'><input className={INPUT_CLASS} type='number' value={cost} onChange={e => setCost(num(e.target.value))} /></Labeled>
-        <Labeled label='잔존가치 (원)'><input className={INPUT_CLASS} type='number' value={residual} onChange={e => setResidual(num(e.target.value))} /></Labeled>
-        <Labeled label='내용연수 (년)'><input className={INPUT_CLASS} type='number' value={life} onChange={e => setLife(Math.max(1, num(e.target.value)))} /></Labeled>
+        <Labeled label='취득가 (원)'><NumInput className={INPUT_CLASS} value={cost} onChange={e => setCost(num(e.target.value))} /></Labeled>
+        <Labeled label='잔존가치 (원)'><NumInput className={INPUT_CLASS} value={residual} onChange={e => setResidual(num(e.target.value))} /></Labeled>
+        <Labeled label='내용연수 (년)'><NumInput className={INPUT_CLASS} value={life} onChange={e => setLife(Math.max(1, num(e.target.value)))} /></Labeled>
       </div>
       <ResultPanel title='정액법 감가상각'>
         <ResultRows rows={[
@@ -5435,10 +5430,10 @@ function EbitdaCalcForm() {
   return (
     <Box>
       <div className='grid gap-6 sm:grid-cols-2'>
-        <Labeled label='매출 (원)'><input className={INPUT_CLASS} type='number' value={revenue} onChange={e => setRevenue(num(e.target.value))} /></Labeled>
-        <Labeled label='영업이익 (원)'><input className={INPUT_CLASS} type='number' value={opIncome} onChange={e => setOpIncome(num(e.target.value))} /></Labeled>
-        <Labeled label='감가상각 (원)'><input className={INPUT_CLASS} type='number' value={da} onChange={e => setDa(num(e.target.value))} /></Labeled>
-        <Labeled label='무형자산상각 (원)'><input className={INPUT_CLASS} type='number' value={ia} onChange={e => setIa(num(e.target.value))} /></Labeled>
+        <Labeled label='매출 (원)'><NumInput className={INPUT_CLASS} value={revenue} onChange={e => setRevenue(num(e.target.value))} /></Labeled>
+        <Labeled label='영업이익 (원)'><NumInput className={INPUT_CLASS} value={opIncome} onChange={e => setOpIncome(num(e.target.value))} /></Labeled>
+        <Labeled label='감가상각 (원)'><NumInput className={INPUT_CLASS} value={da} onChange={e => setDa(num(e.target.value))} /></Labeled>
+        <Labeled label='무형자산상각 (원)'><NumInput className={INPUT_CLASS} value={ia} onChange={e => setIa(num(e.target.value))} /></Labeled>
       </div>
       <ResultPanel title='EBITDA'>
         <ResultRows rows={[
@@ -5458,7 +5453,7 @@ function AprCalcForm() {
   return (
     <Box>
       <Labeled label='APR (연 %)'>
-        <input className={INPUT_CLASS} type='number' step='0.01' value={apr} onChange={e => setApr(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} step='0.01' value={apr} onChange={e => setApr(num(e.target.value))} />
       </Labeled>
       <div className='flex flex-wrap gap-2 text-sm mt-2 mb-2'>
         {([12, 4, 2] as const).map(n => (
@@ -5485,7 +5480,7 @@ function FifaFeeForm() {
   return (
     <Box>
       <Labeled label='판매 가격 (코인)'>
-        <input className={INPUT_CLASS} type='number' value={price} onChange={e => setPrice(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} value={price} onChange={e => setPrice(num(e.target.value))} />
       </Labeled>
       <ResultPanel title='FIFA 수수료'>
         <ResultRows rows={[
@@ -5535,7 +5530,7 @@ function WithholdingTaxForm() {
   return (
     <Box>
       <Labeled label='지급액 (원)'>
-        <input className={INPUT_CLASS} type='number' value={payment} onChange={e => setPayment(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} value={payment} onChange={e => setPayment(num(e.target.value))} />
       </Labeled>
       <ResultPanel title='원천세 (3.3%)' highlight={won(tax) + '원'}>
         <ResultRows rows={[
@@ -5565,10 +5560,10 @@ function CarTaxForm() {
     <Box>
       <div className='grid gap-6 sm:grid-cols-2'>
         <Labeled label='배기량 (cc)'>
-          <input className={INPUT_CLASS} type='number' min={0} value={cc} onChange={e => setCc(Math.max(0, num(e.target.value)))} />
+          <NumInput className={INPUT_CLASS} min={0} value={cc} onChange={e => setCc(Math.max(0, num(e.target.value)))} />
         </Labeled>
         <Labeled label='차령 (년, 0=신차)'>
-          <input className={INPUT_CLASS} type='number' min={0} value={age} onChange={e => setAge(Math.max(0, num(e.target.value)))} />
+          <NumInput className={INPUT_CLASS} min={0} value={age} onChange={e => setAge(Math.max(0, num(e.target.value)))} />
         </Labeled>
       </div>
       <ResultPanel title='자동차세' highlight={won(totalTax) + '원'} subtitle='연간 납부액 (상반기·하반기 분납 합산)'>

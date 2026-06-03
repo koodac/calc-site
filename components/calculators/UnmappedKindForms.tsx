@@ -10,7 +10,7 @@ import {
   ResultPanel,
   ResultRows,
 } from "@/components/calculators/ToolFormLayout";
-import { Labeled, num, won } from "@/components/calculators/calcUi";
+import { Labeled, num, won, NumInput } from "@/components/calculators/calcUi";
 
 function Box({ children }: { children: React.ReactNode }) {
   return <CalculatorShell>{children}</CalculatorShell>;
@@ -29,10 +29,10 @@ export function DailyRateMoneyForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="월 봉급·급여(원)">
-          <input type="number" className={INPUT_CLASS} value={monthly} onChange={(e) => setMonthly(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={monthly} onChange={(e) => setMonthly(num(e.target.value))} />
         </Labeled>
         <Labeled label="연가·환산 일수">
-          <input type="number" className={INPUT_CLASS} value={days} onChange={(e) => setDays(Math.max(0, num(e.target.value)))} />
+          <NumInput className={INPUT_CLASS} value={days} onChange={(e) => setDays(Math.max(0, num(e.target.value)))} />
         </Labeled>
       </div>
       <ResultPanel title="간이 연가보상비(추정)" subtitle="소속·직렬·계급별 세부 규정과 다를 수 있습니다." highlight={`${won(pay)}원`}>
@@ -50,10 +50,10 @@ export function AchievementRateForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="목표값">
-          <input type="number" className={INPUT_CLASS} value={target} onChange={(e) => setTarget(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={target} onChange={(e) => setTarget(num(e.target.value))} />
         </Labeled>
         <Labeled label="달성값">
-          <input type="number" className={INPUT_CLASS} value={achieved} onChange={(e) => setAchieved(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={achieved} onChange={(e) => setAchieved(num(e.target.value))} />
         </Labeled>
       </div>
       <ResultPanel title="달성률" highlight={`${rate.toFixed(2)}%`} subtitle="달성값 ÷ 목표값 × 100" />
@@ -70,14 +70,14 @@ export function SalaryForecastForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="현재 연봉(원)">
-          <input type="number" className={INPUT_CLASS} value={current} onChange={(e) => setCurrent(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={current} onChange={(e) => setCurrent(num(e.target.value))} />
         </Labeled>
         <Labeled label="연평균 인상률(%)">
-          <input type="number" step="0.1" className={INPUT_CLASS} value={pct} onChange={(e) => setPct(num(e.target.value))} />
+          <NumInput step="0.1" className={INPUT_CLASS} value={pct} onChange={(e) => setPct(num(e.target.value))} />
         </Labeled>
         <div className="sm:col-span-2">
           <Labeled label="적용 연수">
-            <input type="number" className={INPUT_CLASS} value={years} onChange={(e) => setYears(Math.max(0, num(e.target.value)))} />
+            <NumInput className={INPUT_CLASS} value={years} onChange={(e) => setYears(Math.max(0, num(e.target.value)))} />
           </Labeled>
         </div>
       </div>
@@ -152,16 +152,16 @@ export function WorkMinutesSimpleForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="출근(시)">
-          <input type="number" className={INPUT_CLASS} value={sh} onChange={(e) => setSh(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={sh} onChange={(e) => setSh(num(e.target.value))} />
         </Labeled>
         <Labeled label="출근(분)">
-          <input type="number" className={INPUT_CLASS} value={sm} onChange={(e) => setSm(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={sm} onChange={(e) => setSm(num(e.target.value))} />
         </Labeled>
         <Labeled label="퇴근(시)">
-          <input type="number" className={INPUT_CLASS} value={eh} onChange={(e) => setEh(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={eh} onChange={(e) => setEh(num(e.target.value))} />
         </Labeled>
         <Labeled label="퇴근(분)">
-          <input type="number" className={INPUT_CLASS} value={em} onChange={(e) => setEm(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={em} onChange={(e) => setEm(num(e.target.value))} />
         </Labeled>
       </div>
       <ResultPanel title="근무시간" highlight={`${Math.floor(minutes / 60)}시간 ${minutes % 60}분`} subtitle="휴게·연장·야간은 미반영" />
@@ -177,10 +177,10 @@ export function MonthlyHourlyForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="월 급여(원)">
-          <input type="number" className={INPUT_CLASS} value={monthly} onChange={(e) => setMonthly(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={monthly} onChange={(e) => setMonthly(num(e.target.value))} />
         </Labeled>
         <Labeled hint="소정근로시간 합(통상 209h 전후)" label="월 소정근로시간(h)">
-          <input type="number" className={INPUT_CLASS} value={hours} onChange={(e) => setHours(Math.max(1, num(e.target.value)))} />
+          <NumInput className={INPUT_CLASS} value={hours} onChange={(e) => setHours(Math.max(1, num(e.target.value)))} />
         </Labeled>
       </div>
       <ResultPanel title="시급 환산" highlight={`${won(hourly)}원`} />
@@ -196,10 +196,10 @@ export function UnitsPerHourForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="처리량·생산량">
-          <input type="number" className={INPUT_CLASS} value={units} onChange={(e) => setUnits(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={units} onChange={(e) => setUnits(num(e.target.value))} />
         </Labeled>
         <Labeled label="투입 시간(h)">
-          <input type="number" className={INPUT_CLASS} value={h} onChange={(e) => setH(Math.max(0, num(e.target.value)))} />
+          <NumInput className={INPUT_CLASS} value={h} onChange={(e) => setH(Math.max(0, num(e.target.value)))} />
         </Labeled>
       </div>
       <ResultPanel title="UPH" highlight={uph.toFixed(2)} />
@@ -213,7 +213,7 @@ export function MinimumWageForm() {
   return (
     <Box>
       <Labeled label="시급(원)">
-        <input type="number" className={INPUT_CLASS} value={hourly} onChange={(e) => setHourly(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} value={hourly} onChange={(e) => setHourly(num(e.target.value))} />
       </Labeled>
       <ResultPanel
         title="최저임금 대비"
@@ -233,10 +233,10 @@ export function WeeklyHolidaySimpleForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="시급(원)">
-          <input type="number" className={INPUT_CLASS} value={wage} onChange={(e) => setWage(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={wage} onChange={(e) => setWage(num(e.target.value))} />
         </Labeled>
         <Labeled label="주 소정근로(h)">
-          <input type="number" className={INPUT_CLASS} value={wh} onChange={(e) => setWh(Math.max(1, num(e.target.value)))} />
+          <NumInput className={INPUT_CLASS} value={wh} onChange={(e) => setWh(Math.max(1, num(e.target.value)))} />
         </Labeled>
       </div>
       <ResultPanel title="주휴수당(대략)" highlight={`${won(bonus)}원`} subtitle="1일 8시간 기준 가정 · 주15h 미만 지급 없음 · 7일 개근·유급 요건 등 별도" />
@@ -252,10 +252,10 @@ export function UnusedAnnualPayForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="1일 통상임금(원)">
-          <input type="number" className={INPUT_CLASS} value={daily} onChange={(e) => setDaily(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={daily} onChange={(e) => setDaily(num(e.target.value))} />
         </Labeled>
         <Labeled label="미사용 연차 일수">
-          <input type="number" className={INPUT_CLASS} value={unused} onChange={(e) => setUnused(Math.max(0, num(e.target.value)))} />
+          <NumInput className={INPUT_CLASS} value={unused} onChange={(e) => setUnused(Math.max(0, num(e.target.value)))} />
         </Labeled>
       </div>
       <ResultPanel title="연차수당(추정)" highlight={`${won(pay)}원`} />
@@ -271,10 +271,10 @@ export function AttendanceRateForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="실근무·출근 일수">
-          <input type="number" className={INPUT_CLASS} value={ok} onChange={(e) => setOk(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={ok} onChange={(e) => setOk(num(e.target.value))} />
         </Labeled>
         <Labeled label="전체 근무일·대상 일수">
-          <input type="number" className={INPUT_CLASS} value={total} onChange={(e) => setTotal(Math.max(1, num(e.target.value)))} />
+          <NumInput className={INPUT_CLASS} value={total} onChange={(e) => setTotal(Math.max(1, num(e.target.value)))} />
         </Labeled>
       </div>
       <ResultPanel title="출근율" highlight={`${rate.toFixed(2)}%`} />
@@ -291,14 +291,14 @@ export function PartTimeWeeklyPayForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="시급(원)">
-          <input type="number" className={INPUT_CLASS} value={wage} onChange={(e) => setWage(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={wage} onChange={(e) => setWage(num(e.target.value))} />
         </Labeled>
         <Labeled label="주 근무시간">
-          <input type="number" className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
         </Labeled>
         <div className="sm:col-span-2">
           <Labeled label="주 수">
-            <input type="number" className={INPUT_CLASS} value={weeks} onChange={(e) => setWeeks(Math.max(1, num(e.target.value)))} />
+            <NumInput className={INPUT_CLASS} value={weeks} onChange={(e) => setWeeks(Math.max(1, num(e.target.value)))} />
           </Labeled>
         </div>
       </div>
@@ -318,7 +318,7 @@ export function StandardWeightForm() {
         <button type="button" className={`rounded-full px-4 py-2 text-sm ${!male ? "bg-neutral-900 text-white" : "border"}`} onClick={() => setMale(false)}>여</button>
       </div>
       <Labeled label="키(cm)">
-        <input type="number" className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
       </Labeled>
       <ResultPanel title="표준체중(브로카 참고)" highlight={`${ideal.toFixed(1)} kg`} />
     </Box>
@@ -331,7 +331,7 @@ export function ProteinIntakeForm() {
   return (
     <Box>
       <Labeled label="체중(kg)">
-        <input type="number" className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
       </Labeled>
       <ResultPanel title="단백질(참고, g/일)" highlight={`${g.toFixed(0)} g`} subtitle="운동 강도에 따라 증가 권장" />
     </Box>
@@ -344,7 +344,7 @@ export function WaterIntakeForm() {
   return (
     <Box>
       <Labeled label="체중(kg)">
-        <input type="number" className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
+        <NumInput className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
       </Labeled>
       <ResultPanel title="물(참고, ml/일)" highlight={`${ml.toLocaleString("ko-KR")} ml`} />
     </Box>
@@ -357,7 +357,7 @@ export function SleepCycleForm() {
   return (
     <Box>
       <Labeled label="잠자리에 드는 시각(시, 0–23)">
-        <input type="number" className={INPUT_CLASS} value={bedH} onChange={(e) => setBedH(Math.min(23, Math.max(0, num(e.target.value))))} />
+        <NumInput className={INPUT_CLASS} value={bedH} onChange={(e) => setBedH(Math.min(23, Math.max(0, num(e.target.value))))} />
       </Labeled>
       <ResultPanel title="90분 주기 기상(참고)">
         <ul className="mt-4 list-inside space-y-1 text-sm text-neutral-700">
@@ -385,10 +385,10 @@ export function StepsCaloriesForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="걸음 수">
-          <input type="number" className={INPUT_CLASS} value={steps} onChange={(e) => setSteps(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={steps} onChange={(e) => setSteps(num(e.target.value))} />
         </Labeled>
         <Labeled label="체중(kg)">
-          <input type="number" className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
         </Labeled>
       </div>
       <ResultPanel title="소모 칼로리(추정)" highlight={`${kcal.toFixed(0)} kcal`} />
@@ -405,10 +405,10 @@ export function HeatIndexForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="기온(°C)">
-          <input type="number" className={INPUT_CLASS} value={t} onChange={(e) => setT(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={t} onChange={(e) => setT(num(e.target.value))} />
         </Labeled>
         <Labeled label="상대습도(%)">
-          <input type="number" className={INPUT_CLASS} value={rh} onChange={(e) => setRh(Math.min(100, Math.max(0, num(e.target.value))))} />
+          <NumInput className={INPUT_CLASS} value={rh} onChange={(e) => setRh(Math.min(100, Math.max(0, num(e.target.value))))} />
         </Labeled>
       </div>
       <ResultPanel title="체감(근사)" highlight={`${hi.toFixed(1)}°C`} />
@@ -424,10 +424,10 @@ export function OneRmForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="들어 올린 무게(kg)">
-          <input type="number" className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
         </Labeled>
         <Labeled label="반복 횟수">
-          <input type="number" className={INPUT_CLASS} value={r} onChange={(e) => setR(Math.max(1, num(e.target.value)))} />
+          <NumInput className={INPUT_CLASS} value={r} onChange={(e) => setR(Math.max(1, num(e.target.value)))} />
         </Labeled>
       </div>
       <ResultPanel title="1RM(Epley 추정)" highlight={`${one.toFixed(1)} kg`} />
@@ -473,10 +473,10 @@ export function HeartRateReserveForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="나이">
-          <input type="number" className={INPUT_CLASS} value={age} onChange={(e) => setAge(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={age} onChange={(e) => setAge(num(e.target.value))} />
         </Labeled>
         <Labeled label="안정 시 심박">
-          <input type="number" className={INPUT_CLASS} value={rest} onChange={(e) => setRest(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={rest} onChange={(e) => setRest(num(e.target.value))} />
         </Labeled>
       </div>
       <ResultPanel title="HRR" subtitle={`예측 최대 심박(220−나이) ${max}bpm`} highlight={`${reserve} bpm`} />
@@ -503,16 +503,16 @@ export function TdeeForm() {
       </div>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="체중(kg)">
-          <input type="number" className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
         </Labeled>
         <Labeled label="키(cm)">
-          <input type="number" className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
         </Labeled>
         <Labeled label="나이">
-          <input type="number" className={INPUT_CLASS} value={age} onChange={(e) => setAge(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={age} onChange={(e) => setAge(num(e.target.value))} />
         </Labeled>
         <Labeled hint="보통 1.2~1.9" label="활동 계수">
-          <input type="number" step="0.05" className={INPUT_CLASS} value={act} onChange={(e) => setAct(num(e.target.value))} />
+          <NumInput step="0.05" className={INPUT_CLASS} value={act} onChange={(e) => setAct(num(e.target.value))} />
         </Labeled>
       </div>
       <ResultPanel title="TDEE(추정)" highlight={`${Math.round(tdee)} kcal/일`} />
@@ -531,13 +531,13 @@ export function FfmiForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="키(cm)">
-          <input type="number" className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
         </Labeled>
         <Labeled label="체중(kg)">
-          <input type="number" className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
         </Labeled>
         <Labeled label="체지방률(%)">
-          <input type="number" className={INPUT_CLASS} value={bf} onChange={(e) => setBf(Math.min(60, Math.max(0, num(e.target.value))))} />
+          <NumInput className={INPUT_CLASS} value={bf} onChange={(e) => setBf(Math.min(60, Math.max(0, num(e.target.value))))} />
         </Labeled>
       </div>
       <ResultPanel title="FFMI" highlight={ffmi.toFixed(2)} />
@@ -553,10 +553,10 @@ export function BsaForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="키(cm)">
-          <input type="number" className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
         </Labeled>
         <Labeled label="체중(kg)">
-          <input type="number" className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
         </Labeled>
       </div>
       <ResultPanel title="BSA(Mosteller)" highlight={`${bsa.toFixed(2)} ㎡`} />
@@ -578,13 +578,13 @@ export function CreatinineClearanceForm() {
       </div>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="나이">
-          <input type="number" className={INPUT_CLASS} value={age} onChange={(e) => setAge(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={age} onChange={(e) => setAge(num(e.target.value))} />
         </Labeled>
         <Labeled label="체중(kg)">
-          <input type="number" className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
         </Labeled>
         <Labeled label="크레아티닌(mg/dL)">
-          <input type="number" step="0.01" className={INPUT_CLASS} value={cr} onChange={(e) => setCr(Math.max(0.01, num(e.target.value)))} />
+          <NumInput step="0.01" className={INPUT_CLASS} value={cr} onChange={(e) => setCr(Math.max(0.01, num(e.target.value)))} />
         </Labeled>
       </div>
       <ResultPanel title="CrCl(C-G, ml/min)" highlight={crCl.toFixed(1)} subtitle="임상 판단·신기능 평가는 의료진 상담" />
@@ -604,7 +604,7 @@ export function OvulationForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="주기(일)">
-          <input type="number" className={INPUT_CLASS} value={cycle} onChange={(e) => setCycle(Math.max(20, num(e.target.value)))} />
+          <NumInput className={INPUT_CLASS} value={cycle} onChange={(e) => setCycle(Math.max(20, num(e.target.value)))} />
         </Labeled>
         <Labeled label="최근 월경 시작일">
           <input type="date" className={INPUT_CLASS} value={last} onChange={(e) => setLast(e.target.value)} />
@@ -633,10 +633,10 @@ export function EgfrForm() {
       </div>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="혈청 크레아티닌(mg/dL)">
-          <input type="number" step="0.01" className={INPUT_CLASS} value={cr} onChange={(e) => setCr(Math.max(0.01, num(e.target.value)))} />
+          <NumInput step="0.01" className={INPUT_CLASS} value={cr} onChange={(e) => setCr(Math.max(0.01, num(e.target.value)))} />
         </Labeled>
         <Labeled label="나이">
-          <input type="number" className={INPUT_CLASS} value={age} onChange={(e) => setAge(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={age} onChange={(e) => setAge(num(e.target.value))} />
         </Labeled>
       </div>
       <ResultPanel title="eGFR(CKD-EPI 1변수 근사)" highlight={`${egfr.toFixed(1)}`} subtitle="체중·인종 미반영 단순화" />
@@ -653,14 +653,14 @@ export function FriedewaldLdlForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="총콜레스테롤(mg/dL)">
-          <input type="number" className={INPUT_CLASS} value={tc} onChange={(e) => setTc(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={tc} onChange={(e) => setTc(num(e.target.value))} />
         </Labeled>
         <Labeled label="HDL(mg/dL)">
-          <input type="number" className={INPUT_CLASS} value={hdl} onChange={(e) => setHdl(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={hdl} onChange={(e) => setHdl(num(e.target.value))} />
         </Labeled>
         <div className="sm:col-span-2">
           <Labeled label="중성지방(mg/dL)">
-            <input type="number" className={INPUT_CLASS} value={tg} onChange={(e) => setTg(num(e.target.value))} />
+            <NumInput className={INPUT_CLASS} value={tg} onChange={(e) => setTg(num(e.target.value))} />
           </Labeled>
         </div>
       </div>
@@ -681,14 +681,14 @@ export function BacWidmarkForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="체중(kg)">
-          <input type="number" className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
         </Labeled>
         <Labeled label="잔 수">
-          <input type="number" className={INPUT_CLASS} value={drinks} onChange={(e) => setDrinks(Math.max(0, num(e.target.value)))} />
+          <NumInput className={INPUT_CLASS} value={drinks} onChange={(e) => setDrinks(Math.max(0, num(e.target.value)))} />
         </Labeled>
         <div className="sm:col-span-2">
           <Labeled label="1잔 기준 음료량(ml, 소주 50ml 등 · 도수 16% 기준)">
-            <input type="number" className={INPUT_CLASS} value={ml} onChange={(e) => setMl(Math.max(1, num(e.target.value)))} />
+            <NumInput className={INPUT_CLASS} value={ml} onChange={(e) => setMl(Math.max(1, num(e.target.value)))} />
           </Labeled>
         </div>
       </div>
@@ -705,10 +705,10 @@ export function FractionDecimalForm() {
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
         <Labeled label="분자">
-          <input type="number" className={INPUT_CLASS} value={nume} onChange={(e) => setNume(num(e.target.value))} />
+          <NumInput className={INPUT_CLASS} value={nume} onChange={(e) => setNume(num(e.target.value))} />
         </Labeled>
         <Labeled label="분모">
-          <input type="number" className={INPUT_CLASS} value={den} onChange={(e) => setDen(Math.max(1, num(e.target.value)))} />
+          <NumInput className={INPUT_CLASS} value={den} onChange={(e) => setDen(Math.max(1, num(e.target.value)))} />
         </Labeled>
       </div>
       <ResultPanel title="소수" highlight={String(dec)} />
