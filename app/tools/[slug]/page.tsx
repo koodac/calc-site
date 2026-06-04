@@ -14,6 +14,7 @@ import { resolveCalculatorKind } from "@/lib/calculatorKind";
 import { getAllSlugs, getToolBySlug } from "@/lib/tools";
 import { getToolKeywords } from "@/lib/toolKeywords";
 import { getToolFaq } from "@/lib/toolFaqData";
+import { getToolMetaDescription } from "@/lib/toolMetaDescriptions";
 
 const BASE_URL = "https://www.calcmoa.com";
 
@@ -34,9 +35,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = `${tool.title} — 계산기 & 툴`;
   const url = `${BASE_URL}/tools/${slug}`;
   const keywords = getToolKeywords(slug);
+  const description = getToolMetaDescription(slug) ?? tool.description;
   return {
     title,
-    description: tool.description,
+    description,
     keywords,
     alternates: { canonical: url },
     robots: { index: true, follow: true },
@@ -45,13 +47,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       locale: "ko_KR",
       url,
       title,
-      description: tool.description,
+      description,
       siteName: "계산기 & 툴",
     },
     twitter: {
       card: "summary_large_image",
       title,
-      description: tool.description,
+      description,
     },
   };
 }
