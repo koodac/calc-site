@@ -399,8 +399,32 @@ export function StepsCaloriesForm() {
 export function HeatIndexForm() {
   const [t, setT] = useState(32);
   const [rh, setRh] = useState(70);
-  /** 매우 단순한 불쾌지수 근사(교육용) */
-  const hi = useMemo(() => t + 0.05 * Math.max(0, rh - 40), [t, rh]);
+
+  const result = useMemo(() => {
+    // 불쾌지수 (Thom, 1959) — 기상청 통용 공식
+    const di = 0.81 * t + 0.01 * rh * (0.99 * t - 14.99) + 46.3;
+    const diLabel = di < 68 ? "쾌적" : di < 75 ? "보통" : di < 80 ? "약간 불쾌" : "매우 불쾌";
+
+    // Heat Index (Rothfusz / NOAA 공식) — 27°C 이상, 습도 40% 이상에서 유효
+    let hi: number | null = null;
+    if (t >= 27 && rh >= 40) {
+      const tf = t * 9 / 5 + 32;
+      const hif =
+        -42.379 +
+        2.04901523 * tf +
+        10.14333127 * rh -
+        0.22475541 * tf * rh -
+        0.00683783 * tf * tf -
+        0.05481717 * rh * rh +
+        0.00122874 * tf * tf * rh +
+        0.00085282 * tf * rh * rh -
+        0.00000199 * tf * tf * rh * rh;
+      hi = (hif - 32) * 5 / 9;
+    }
+
+    return { di, diLabel, hi };
+  }, [t, rh]);
+
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -411,7 +435,31 @@ export function HeatIndexForm() {
           <NumInput className={INPUT_CLASS} value={rh} onChange={(e) => setRh(Math.min(100, Math.max(0, num(e.target.value))))} />
         </Labeled>
       </div>
-      <ResultPanel title="체감(근사)" highlight={`${hi.toFixed(1)}°C`} />
+      <ResultPanel
+        title="체감온도·불쾌지수"
+        highlight={`불쾌지수 ${result.di.toFixed(1)}`}
+        subtitle={result.diLabel}
+      >
+        <ResultRows rows={[
+          { label: "불쾌지수 (Thom)", value: `${result.di.toFixed(1)} — ${result.diLabel}` },
+          ...(result.hi !== null
+            ? [{ label: "Heat Index (Rothfusz)", value: `${result.hi.toFixed(1)}°C` }]
+            : [{ label: "Heat Index", value: "27°C·습도 40% 이상일 때 표시" }]
+          ),
+        ]} />
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead><tr className="bg-neutral-100">
+              {["불쾌지수","판정"].map(h => <th key={h} className="border border-neutral-200 px-2 py-1.5 font-medium">{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {[["68 미만","쾌적"],["68~74","보통"],["75~79","약간 불쾌"],["80 이상","매우 불쾌"]].map(([r,l]) => (
+                <tr key={r}><td className="border border-neutral-200 px-2 py-1.5 text-center">{r}</td><td className="border border-neutral-200 px-2 py-1.5 text-center">{l}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </ResultPanel>
     </Box>
   );
 }

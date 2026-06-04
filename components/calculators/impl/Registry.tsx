@@ -399,10 +399,11 @@ function FourInsuranceForm() {
   const ceiling = getPensionHealthCeiling();
   // 국민연금만 상한(637만원) 적용; 건강보험·고용보험은 상한이 훨씬 높아 실질적으로 전액 기준
   const pensionBase = Math.min(monthly, ceiling);
-  const np = Math.round(pensionBase * NATIONAL_PENSION_RATE_EMPLOYEE);
-  const hi = Math.round(monthly * HEALTH_INSURANCE_RATE_EMPLOYEE);
-  const lt = Math.round(hi * LONG_TERM_CARE_FACTOR_OF_HEALTH);
-  const ei = Math.round(monthly * EMPLOYMENT_INSURANCE_RATE_EMPLOYEE);
+  const flr10 = (n: number) => Math.floor(n / 10) * 10;
+  const np = flr10(pensionBase * NATIONAL_PENSION_RATE_EMPLOYEE);
+  const hi = flr10(monthly * HEALTH_INSURANCE_RATE_EMPLOYEE);
+  const lt = Math.round(hi * LONG_TERM_CARE_FACTOR_OF_HEALTH / 10) * 10;
+  const ei = flr10(monthly * EMPLOYMENT_INSURANCE_RATE_EMPLOYEE);
   return (
     <Box>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)] lg:gap-6">
@@ -5177,13 +5178,13 @@ function MaternityPayForm() {
   const [monthly, setMonthly] = useState(3_000_000);
   const [companyType, setCompanyType] = useState<"sme" | "large">("sme");
 
-  // 우선지원대상기업(중소기업): 90일 전체 고용보험 지원, 상한 월 200만원
-  // 대기업: 전반 60일 사업주 전액 지급(상한 없음), 후반 30일 고용보험 상한 200만원
-  const CAP_MONTHLY = 2_000_000;
+  // 우선지원대상기업(중소기업): 90일 전체 고용보험 지원, 상한 월 210만원 (2024년 7월부터 인상)
+  // 대기업: 전반 60일 사업주 전액 지급(상한 없음), 후반 30일 고용보험 상한 210만원
+  const CAP_MONTHLY = 2_100_000;
   const first60 = companyType === "sme"
-    ? Math.min(monthly * 2, CAP_MONTHLY * 2)   // 중소기업: 상한 200만×2개월
+    ? Math.min(monthly * 2, CAP_MONTHLY * 2)   // 중소기업: 상한 210만×2개월
     : monthly * 2;                               // 대기업: 사업주 전액, 상한 없음
-  const last30 = Math.min(monthly, CAP_MONTHLY); // 후반 30일: 항상 상한 200만원
+  const last30 = Math.min(monthly, CAP_MONTHLY); // 후반 30일: 항상 상한 210만원
   const total = first60 + last30;
   const employerPays = companyType === "large" ? first60 : 0;
   const insurancePays = companyType === "large" ? last30 : total;
@@ -5202,8 +5203,8 @@ function MaternityPayForm() {
       </Labeled>
       <ResultPanel title='출산전후휴가 급여 (90일 추정)' highlight={won(total) + '원'}>
         <ResultRows rows={[
-          { label: '전반 60일', value: won(first60) + '원' + (companyType === "sme" ? ' (고용보험, 월 200만원 상한)' : ' (사업주 전액)') },
-          { label: '후반 30일', value: won(last30) + '원 (고용보험, 월 200만원 상한)' },
+          { label: '전반 60일', value: won(first60) + '원' + (companyType === "sme" ? ' (고용보험, 월 210만원 상한)' : ' (사업주 전액)') },
+          { label: '후반 30일', value: won(last30) + '원 (고용보험, 월 210만원 상한)' },
           { label: '합계', value: won(total) + '원' },
           ...(companyType === "large" ? [
             { label: '  사업주 지급분', value: won(employerPays) + '원' },
@@ -5226,24 +5227,26 @@ function EitcPayForm() {
     { key: 'sole', label: '홑벌이' },
     { key: 'dual', label: '맞벌이' },
   ];
+  // 2025년 기준 (귀속연도 2024년) — 국세청 고시
+  // 단독: 최대 165만, 소득 2,200만 미만 / 홑벌이: 최대 285만, 3,200만 미만 / 맞벌이: 최대 330만, 3,800만 미만
   const eitc = useMemo(() => {
     const i = income;
     if (type === 'single') {
-      if (i < 9_000_000) return i * (4_000_000 / 9_000_000);
-      if (i <= 21_000_000) return 4_000_000;
-      if (i < 33_000_000) return 4_000_000 * (33_000_000 - i) / 12_000_000;
+      if (i < 4_000_000) return i * (1_650_000 / 4_000_000);
+      if (i <= 9_000_000) return 1_650_000;
+      if (i < 22_000_000) return 1_650_000 * (22_000_000 - i) / 13_000_000;
       return 0;
     }
     if (type === 'sole') {
-      if (i < 9_000_000) return i * (8_500_000 / 9_000_000);
-      if (i <= 22_000_000) return 8_500_000;
-      if (i < 41_000_000) return 8_500_000 * (41_000_000 - i) / 19_000_000;
+      if (i < 7_000_000) return i * (2_850_000 / 7_000_000);
+      if (i <= 14_000_000) return 2_850_000;
+      if (i < 32_000_000) return 2_850_000 * (32_000_000 - i) / 18_000_000;
       return 0;
     }
-    // 맞벌이: 2025년 기준 최대 3,600,000원
-    if (i < 10_000_000) return i * (3_600_000 / 10_000_000);
-    if (i <= 22_000_000) return 3_600_000;
-    if (i < 38_000_000) return 3_600_000 * (38_000_000 - i) / 16_000_000;
+    // 맞벌이: 최대 330만원
+    if (i < 8_000_000) return i * (3_300_000 / 8_000_000);
+    if (i <= 17_000_000) return 3_300_000;
+    if (i < 38_000_000) return 3_300_000 * (38_000_000 - i) / 21_000_000;
     return 0;
   }, [type, income]);
   return (
@@ -5258,8 +5261,9 @@ function EitcPayForm() {
       <Labeled label='총급여 (연간)'>
         <NumInput className={INPUT_CLASS} value={income} onChange={e => setIncome(num(e.target.value))} />
       </Labeled>
-      <ResultPanel title='근로장려금 (추정)'>
+      <ResultPanel title='근로장려금 (추정)' subtitle='2025년 기준(귀속 2024년) · 단독 최대 165만 / 홑벌이 285만 / 맞벌이 330만원'>
         <ResultRows rows={[{ label: '근로장려금', value: won(Math.round(eitc)) + '원' }]} />
+        <p className='mt-3 text-xs text-neutral-400'>실제 지급액은 재산·자산 요건, 전년도 소득 등에 따라 다릅니다. 국세청 홈택스에서 정확한 금액을 확인하세요.</p>
       </ResultPanel>
     </Box>
   );

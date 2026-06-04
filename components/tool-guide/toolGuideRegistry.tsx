@@ -607,7 +607,7 @@ function MaternityLeaveGuide() {
       <GuideFormulaBox>급여 = 통상임금(월) × 해당 개월수 (상한액 적용)</GuideFormulaBox>
       <GuideBulletList
         items={[
-          "상한액: 월 200만원 (2024년 기준, 변경 가능)",
+          "상한액: 월 210만원 (2024년 7월 인상 적용)",
           "우선지원대상기업: 전 90일 고용보험 지급",
           "대규모 기업: 최초 45일은 사업주 부담, 후 45일 고용보험 지급",
         ]}
