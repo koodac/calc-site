@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { ToolItem } from "@/lib/tools";
-import { pickRandomToolsClient } from "@/lib/tools";
+import { pickRandomToolsClient, getToolBySlug } from "@/lib/tools";
+import { getRelatedToolSlugs } from "@/lib/relatedTools";
 
 type Props = {
   current: ToolItem;
@@ -15,7 +16,16 @@ export function RelatedToolsSection({ current }: Props) {
   useEffect(() => {
     let cancelled = false;
     queueMicrotask(() => {
-      if (!cancelled) setRelated(pickRandomToolsClient(current.slug, 4));
+      if (cancelled) return;
+      const curatedSlugs = getRelatedToolSlugs(current.slug);
+      if (curatedSlugs) {
+        const tools = curatedSlugs
+          .map((slug) => getToolBySlug(slug))
+          .filter((t): t is ToolItem => t !== undefined);
+        setRelated(tools.length > 0 ? tools : pickRandomToolsClient(current.slug, 4));
+      } else {
+        setRelated(pickRandomToolsClient(current.slug, 4));
+      }
     });
     return () => {
       cancelled = true;
@@ -43,7 +53,7 @@ export function RelatedToolsSection({ current }: Props) {
         <h2 id="related-tools-title" className="text-lg font-semibold text-neutral-900">
           다른 계산기
         </h2>
-        <p className="text-xs text-neutral-500">새로고침마다 달라질 수 있어요</p>
+        <p className="text-xs text-neutral-500">함께 쓰면 유용한 계산기</p>
         <Link
           href="/"
           className="focus-ring ml-auto rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
