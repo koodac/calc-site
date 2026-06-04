@@ -81,6 +81,15 @@ export default async function ToolPage({ params }: PageProps) {
         }
       : null;
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "홈", item: BASE_URL },
+      { "@type": "ListItem", position: 2, name: tool.title, item: `${BASE_URL}/tools/${slug}` },
+    ],
+  };
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -106,6 +115,10 @@ export default async function ToolPage({ params }: PageProps) {
 
   return (
     <div className="flex min-h-full flex-col bg-neutral-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

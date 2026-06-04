@@ -14,7 +14,7 @@ const HIGH_PRIORITY_SLUGS = new Set([
 export default function sitemap(): MetadataRoute.Sitemap {
   const toolPages: MetadataRoute.Sitemap = TOOLS.map((tool) => ({
     url: `${BASE_URL}/tools/${tool.slug}`,
-    lastModified: new Date("2026-05-20"),
+    lastModified: new Date("2026-06-04"),
     changeFrequency: "monthly" as const,
     priority: HIGH_PRIORITY_SLUGS.has(tool.slug) ? 0.9 : 0.7,
   }));
@@ -22,7 +22,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
       url: BASE_URL,
-      lastModified: new Date("2026-05-20"),
+      lastModified: new Date("2026-06-04"),
       changeFrequency: "weekly" as const,
       priority: 1.0,
     },
