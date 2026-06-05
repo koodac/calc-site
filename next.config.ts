@@ -77,6 +77,14 @@ const nextConfig: NextConfig = {
           { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" },
         ],
       },
+      // ads.txt — 반드시 text/plain 으로 서빙 (nosniff 헤더와 충돌 방지)
+      {
+        source: "/ads.txt",
+        headers: [
+          { key: "Content-Type", value: "text/plain; charset=utf-8" },
+          { key: "Cache-Control", value: "public, max-age=86400" },
+        ],
+      },
     ];
   },
 
