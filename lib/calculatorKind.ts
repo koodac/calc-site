@@ -155,7 +155,30 @@ export type CalculatorKind =
   | "fifaFee"
   | "rouletteSpinner"
   | "withholdingTax"
-  | "carTax";
+  | "carTax"
+  // 신규 추가 (2026.06)
+  | "overtimePay"
+  | "severanceTax"
+  | "parentalHoursReduction"
+  | "salaryReverse"
+  | "localHealthInsurance"
+  | "capitalGainsTax"
+  | "giftTax"
+  | "inheritanceTax"
+  | "globalIncomeTax"
+  | "isaTaxFree"
+  | "acquisitionTax"
+  | "propertyTax"
+  | "jeonseLoanInterest"
+  | "rentTaxCredit"
+  | "nationalPensionEstimate"
+  | "vehicleDepreciation"
+  | "metCalories"
+  | "homaIr"
+  | "csatGrade"
+  | "trafficFine"
+  | "cronExpression"
+  | "jwtDecoder";
 
 export function resolveCalculatorKind(tool: ToolItem): CalculatorKind {
   const { slug, title: T } = tool;
@@ -182,8 +205,13 @@ export function resolveCalculatorKind(tool: ToolItem): CalculatorKind {
   if (T.includes("출근율")) return "attendanceRate";
   if (T.includes("알바비")) return "partTimeWeeklyPay";
   if (T.includes("월평균 합산")) return "listAverage";
+  if (T.includes("퇴직금 IRP") || T.includes("퇴직소득세")) return "severanceTax";
   if (T.includes("퇴직금")) return "severancePay";
   if (T.includes("연가보상")) return "dailyRateMoney";
+  if (T.includes("야간") && T.includes("연장") && T.includes("수당")) return "overtimePay";
+  if (T.includes("육아기 근로시간 단축")) return "parentalHoursReduction";
+  if (T.includes("연봉 역산")) return "salaryReverse";
+  if (T.includes("지역가입자")) return "localHealthInsurance";
 
   if (T.includes("BMI")) return "bmi";
   if (T.includes("BMR") || T.includes("기초대사량")) return "bmr";
@@ -202,6 +230,8 @@ export function resolveCalculatorKind(tool: ToolItem): CalculatorKind {
   if (T.includes("BSA")) return "bsa";
   if (T.includes("배란일")) return "ovulation";
   if (T.includes("eGFR")) return "egfr";
+  if (T.includes("MET") && T.includes("칼로리")) return "metCalories";
+  if (T.includes("HOMA-IR") || T.includes("인슐린 저항성")) return "homaIr";
   if (T.includes("콜레스테롤")) return "friedewaldLdl";
   if (T.includes("혈중알코올") || T.includes("BAC")) return "bacWidmark";
 
@@ -216,6 +246,7 @@ export function resolveCalculatorKind(tool: ToolItem): CalculatorKind {
   if (T.includes("피보나치")) return "fibonacci";
   if (T.includes("팩토리얼")) return "factorial";
 
+  if (T.includes("수능 등급")) return "csatGrade";
   if (T.includes("퍼센트 계산기") || T.includes("증감율") || T.includes("오차율")) return "percentChange";
   if (T.includes("부가세")) return "vat";
   if (T.includes("할인 계산기")) return "discount";
@@ -287,6 +318,20 @@ export function resolveCalculatorKind(tool: ToolItem): CalculatorKind {
   if (T.includes("원리금균등 vs")) return "mortgageCompare";
   if (T.includes("중도상환 시뮬")) return "prepaymentCalc";
   if (T.includes("전월세 전환율")) return "jeonwolse";
+  if (T.includes("양도소득세")) return "capitalGainsTax";
+  if (T.includes("증여세")) return "giftTax";
+  if (T.includes("상속세")) return "inheritanceTax";
+  if (T.includes("종합소득세")) return "globalIncomeTax";
+  if (T.includes("ISA 비과세")) return "isaTaxFree";
+  if (T.includes("취득세")) return "acquisitionTax";
+  if (T.includes("재산세")) return "propertyTax";
+  if (T.includes("전세대출 이자")) return "jeonseLoanInterest";
+  if (T.includes("월세 세액공제")) return "rentTaxCredit";
+  if (T.includes("국민연금 예상")) return "nationalPensionEstimate";
+  if (T.includes("자동차 감가상각")) return "vehicleDepreciation";
+  if (T.includes("교통범칙금")) return "trafficFine";
+  if (T.includes("크론 표현식")) return "cronExpression";
+  if (T.includes("JWT 디코더") || T.includes("JWT")) return "jwtDecoder";
 
   return "referenceStub";
 }

@@ -371,6 +371,51 @@ export function renderCalculatorBody(kind: CalculatorKind, tool: ToolItem) {
       return <WithholdingTaxForm />;
     case "carTax":
       return <CarTaxForm />;
+    // ── 2026.06 신규 추가 ──
+    case "overtimePay":
+      return <OvertimePayForm />;
+    case "severanceTax":
+      return <SeveranceTaxForm />;
+    case "parentalHoursReduction":
+      return <ParentalHoursReductionForm />;
+    case "salaryReverse":
+      return <SalaryReverseForm />;
+    case "localHealthInsurance":
+      return <LocalHealthInsuranceForm />;
+    case "capitalGainsTax":
+      return <CapitalGainsTaxForm />;
+    case "giftTax":
+      return <GiftTaxForm />;
+    case "inheritanceTax":
+      return <InheritanceTaxForm />;
+    case "globalIncomeTax":
+      return <GlobalIncomeTaxForm />;
+    case "isaTaxFree":
+      return <IsaTaxFreeForm />;
+    case "acquisitionTax":
+      return <AcquisitionTaxForm />;
+    case "propertyTax":
+      return <PropertyTaxForm />;
+    case "jeonseLoanInterest":
+      return <JeonseLoanInterestForm />;
+    case "rentTaxCredit":
+      return <RentTaxCreditForm />;
+    case "nationalPensionEstimate":
+      return <NationalPensionForm />;
+    case "vehicleDepreciation":
+      return <VehicleDepreciationForm />;
+    case "metCalories":
+      return <MetCaloriesForm />;
+    case "homaIr":
+      return <HomaIrForm />;
+    case "csatGrade":
+      return <CsatGradeForm />;
+    case "trafficFine":
+      return <TrafficFineForm />;
+    case "cronExpression":
+      return <CronExpressionForm />;
+    case "jwtDecoder":
+      return <JwtDecoderForm />;
     default:
       return (
         <Box>
@@ -5580,6 +5625,1083 @@ function CarTaxForm() {
           { label: '합계 (실납부액)', value: won(totalTax) + '원' },
         ]} />
       </ResultPanel>
+    </Box>
+  );
+}
+
+// ══════════════════════════════════════════
+// 2026.06 신규 추가 계산기
+// ══════════════════════════════════════════
+
+// N1. 야간·연장·휴일 수당 계산기
+function OvertimePayForm() {
+  const [monthly, setMonthly] = useState(3_000_000);
+  const [overtime, setOvertime] = useState(10);   // 연장근로 시간
+  const [night, setNight] = useState(0);           // 야간근로 시간 (22-06)
+  const [holiday, setHoliday] = useState(0);       // 휴일근로 시간
+  const result = useMemo(() => {
+    // 통상시급 = 월급 / 209시간 (주40h 기준 월 환산)
+    const hourly = monthly / 209;
+    // 연장: 통상임금의 150%
+    const overtimePay = hourly * overtime * 1.5;
+    // 야간: 통상임금의 150% (야간할증 50%)
+    const nightPay = hourly * night * 0.5; // 야간할증분만 (기본급 별도)
+    // 휴일: 8시간 이하 150%, 초과분 200%
+    const hol8 = Math.min(holiday, 8);
+    const holOver = Math.max(holiday - 8, 0);
+    const holidayPay = hourly * (hol8 * 1.5 + holOver * 2.0);
+    const total = overtimePay + nightPay + holidayPay;
+    return { hourly, overtimePay, nightPay, holidayPay, total };
+  }, [monthly, overtime, night, holiday]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='월 통상임금 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={monthly} onChange={e => setMonthly(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='연장근로 시간'>
+          <NumInput className={INPUT_CLASS} min={0} value={overtime} onChange={e => setOvertime(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='야간근로 시간 (22~06시)'>
+          <NumInput className={INPUT_CLASS} min={0} value={night} onChange={e => setNight(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='휴일근로 시간'>
+          <NumInput className={INPUT_CLASS} min={0} value={holiday} onChange={e => setHoliday(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+      </div>
+      <ResultPanel title='가산 수당 합계' highlight={won(Math.round(result.total)) + '원'} subtitle={`통상시급 ${won(Math.round(result.hourly))}원 · 근로기준법 제56조 기준`}>
+        <ResultRows rows={[
+          { label: '통상시급 (월급÷209h)', value: won(Math.round(result.hourly)) + '원' },
+          { label: '연장근로 수당 (+50%)', value: won(Math.round(result.overtimePay)) + '원' },
+          { label: '야간할증 수당 (+50%)', value: won(Math.round(result.nightPay)) + '원' },
+          { label: '휴일근로 수당 (150%/200%)', value: won(Math.round(result.holidayPay)) + '원' },
+          { label: '가산 합계', value: won(Math.round(result.total)) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N2. 퇴직금 IRP 세금 계산기 (퇴직소득세 연분연승법)
+function SeveranceTaxForm() {
+  const [pay, setPay] = useState(30_000_000);    // 퇴직금
+  const [years, setYears] = useState(5);          // 근속연수
+  const result = useMemo(() => {
+    const n = Math.max(1, Math.ceil(years));
+    // 근속연수공제
+    const deduction =
+      n <= 5  ? n * 300_000 :
+      n <= 10 ? 1_500_000 + (n - 5) * 500_000 :
+      n <= 20 ? 4_000_000 + (n - 10) * 800_000 :
+                12_000_000 + (n - 20) * 1_200_000;
+    const afterDeduction = Math.max(0, pay - deduction);
+    // 환산급여 = (퇴직금 - 근속연수공제) × 12 / 근속연수
+    const converted = (afterDeduction * 12) / n;
+    // 환산급여공제
+    const convertedDeduction =
+      converted <= 8_000_000  ? converted :
+      converted <= 70_000_000 ? 8_000_000 + (converted - 8_000_000) * 0.6 :
+      converted <= 100_000_000 ? 45_200_000 + (converted - 70_000_000) * 0.55 :
+      converted <= 300_000_000 ? 61_700_000 + (converted - 100_000_000) * 0.45 :
+                                  151_700_000 + (converted - 300_000_000) * 0.35;
+    // 퇴직소득과세표준 = (환산급여 - 환산급여공제) × 근속연수 / 12
+    const taxBase = Math.max(0, (converted - convertedDeduction) * n / 12);
+    // 산출세액 (기본 소득세 세율)
+    const tax =
+      taxBase <= 14_000_000  ? taxBase * 0.06 :
+      taxBase <= 50_000_000  ? taxBase * 0.15 - 1_260_000 :
+      taxBase <= 88_000_000  ? taxBase * 0.24 - 5_760_000 :
+      taxBase <= 150_000_000 ? taxBase * 0.35 - 15_440_000 :
+      taxBase <= 300_000_000 ? taxBase * 0.38 - 19_940_000 :
+      taxBase <= 500_000_000 ? taxBase * 0.40 - 25_940_000 :
+      taxBase <= 1_000_000_000 ? taxBase * 0.42 - 35_940_000 :
+                                  taxBase * 0.45 - 65_940_000;
+    const incomeTax = Math.max(0, Math.round(tax));
+    const localTax = Math.round(incomeTax * 0.1);
+    const totalTax = incomeTax + localTax;
+    const netPay = pay - totalTax;
+    return { deduction, converted, taxBase, incomeTax, localTax, totalTax, netPay };
+  }, [pay, years]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='퇴직금 총액 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={pay} onChange={e => setPay(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='근속연수 (년)'>
+          <NumInput className={INPUT_CLASS} min={1} value={years} onChange={e => setYears(Math.max(1, num(e.target.value)))} />
+        </Labeled>
+      </div>
+      <ResultPanel title='예상 실수령 퇴직금' highlight={won(result.netPay) + '원'} subtitle='퇴직소득세 연분연승법 · IRP 이전 전 원천징수 기준'>
+        <ResultRows rows={[
+          { label: '근속연수공제', value: won(result.deduction) + '원' },
+          { label: '환산급여', value: won(Math.round(result.converted)) + '원' },
+          { label: '과세표준', value: won(Math.round(result.taxBase)) + '원' },
+          { label: '퇴직소득세', value: won(result.incomeTax) + '원' },
+          { label: '지방소득세 (10%)', value: won(result.localTax) + '원' },
+          { label: '총 세금', value: won(result.totalTax) + '원' },
+          { label: '실수령 퇴직금', value: won(result.netPay) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N3. 육아기 근로시간 단축 급여 계산기
+function ParentalHoursReductionForm() {
+  const [hourly, setHourly] = useState(15_000);  // 통상시급
+  const [reduced, setReduced] = useState(5);      // 단축 시간 (주)
+  const result = useMemo(() => {
+    // 고용보험 지원: 단축 첫 5시간 100%, 나머지 80% 지원
+    // 상한: 200만원/월 (2024년)
+    const first5 = Math.min(reduced, 5);
+    const rest   = Math.max(reduced - 5, 0);
+    const weeklyGov = (hourly * first5 * 1.0 + hourly * rest * 0.8) * 52 / 12;
+    const CAP = 2_000_000;
+    const monthly = Math.min(weeklyGov, CAP);
+    return { first5, rest, weeklyGov, monthly };
+  }, [hourly, reduced]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='통상시급 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={hourly} onChange={e => setHourly(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='주당 단축 시간 (h)'>
+          <NumInput className={INPUT_CLASS} min={1} max={20} value={reduced} onChange={e => setReduced(Math.min(20, Math.max(1, num(e.target.value))))} />
+        </Labeled>
+      </div>
+      <ResultPanel title='월 고용보험 지원금 추정' highlight={won(Math.round(result.monthly)) + '원'} subtitle='육아기 근로시간 단축 급여 · 상한 월 200만원'>
+        <ResultRows rows={[
+          { label: '첫 5시간 지원율', value: '100%' },
+          { label: '초과 단축 지원율', value: '80%' },
+          { label: '산출 월 지원금', value: won(Math.round(result.weeklyGov)) + '원' },
+          { label: '상한 적용 후', value: won(Math.round(result.monthly)) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N4. 연봉 역산 계산기 (목표 실수령 → 세전 연봉)
+function SalaryReverseForm() {
+  const [target, setTarget] = useState(3_000_000); // 목표 월 실수령
+  const result = useMemo(() => {
+    // 이진탐색으로 역산 (세전 연봉 1천만~3억 범위)
+    let lo = 10_000_000, hi = 300_000_000;
+    for (let i = 0; i < 50; i++) {
+      const mid = (lo + hi) / 2;
+      const monthly = mid / 12;
+      const np = Math.floor(Math.min(monthly, 5_900_000) * NATIONAL_PENSION_RATE_EMPLOYEE / 10) * 10;
+      const hi2 = Math.floor(monthly * HEALTH_INSURANCE_RATE_EMPLOYEE / 10) * 10;
+      const lt = Math.round(hi2 * LONG_TERM_CARE_FACTOR_OF_HEALTH / 10) * 10;
+      const ei = Math.floor(monthly * EMPLOYMENT_INSURANCE_RATE_EMPLOYEE / 10) * 10;
+      const tax = estimateSimplifiedIncomeTax({ monthlyTaxableWage: monthly, dependentsIncludingSelf: 1, childrenUnder20: 0 });
+      const localTax = Math.round(tax * 0.1);
+      const net = monthly - np - hi2 - lt - ei - tax - localTax;
+      if (net > target) hi = mid; else lo = mid;
+    }
+    const annualSalary = Math.round((lo + hi) / 2 / 10_000) * 10_000;
+    const monthlySalary = annualSalary / 12;
+    const np = Math.floor(Math.min(monthlySalary, 5_900_000) * NATIONAL_PENSION_RATE_EMPLOYEE / 10) * 10;
+    const hi2 = Math.floor(monthlySalary * HEALTH_INSURANCE_RATE_EMPLOYEE / 10) * 10;
+    const lt = Math.round(hi2 * LONG_TERM_CARE_FACTOR_OF_HEALTH / 10) * 10;
+    const ei = Math.floor(monthlySalary * EMPLOYMENT_INSURANCE_RATE_EMPLOYEE / 10) * 10;
+    const tax = estimateSimplifiedIncomeTax({ monthlyTaxableWage: monthlySalary, dependentsIncludingSelf: 1, childrenUnder20: 0 });
+    const localTax = Math.round(tax * 0.1);
+    const deductions = np + hi2 + lt + ei + tax + localTax;
+    return { annualSalary, monthlySalary, deductions };
+  }, [target]);
+  return (
+    <Box>
+      <Labeled label='목표 월 실수령액 (원)'>
+        <NumInput className={INPUT_CLASS} min={0} value={target} onChange={e => setTarget(Math.max(0, num(e.target.value)))} />
+      </Labeled>
+      <ResultPanel title='역산 세전 연봉' highlight={won(result.annualSalary) + '원'} subtitle='부양가족 1인 기준 · 4대보험+간이세액 계산'>
+        <ResultRows rows={[
+          { label: '세전 연봉', value: won(result.annualSalary) + '원' },
+          { label: '세전 월급', value: won(Math.round(result.monthlySalary)) + '원' },
+          { label: '월 공제 합계', value: won(result.deductions) + '원' },
+          { label: '월 실수령 (추정)', value: won(Math.round(result.monthlySalary - result.deductions)) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N5. 건강보험 지역가입자 보험료 계산기
+function LocalHealthInsuranceForm() {
+  const [incomeYear, setIncomeYear] = useState(30_000_000); // 연간 소득
+  const [propertyVal, setPropertyVal] = useState(100_000_000); // 재산 과표
+  const result = useMemo(() => {
+    // 2024년 기준
+    // 소득: 연 소득 × 7.09% / 12 (지역가입자 전액 부담)
+    const incomeMonthly = incomeYear / 12;
+    const incomePremium = Math.round(incomeMonthly * 0.0709);
+    // 재산: 과표 점수 × 208.4원
+    // 재산등급표(간소화): 과표 1억 기준 점수 약 470점
+    const propertyScore = Math.max(0, Math.round(propertyVal / 100_000_000 * 470));
+    const propertyPremium = Math.round(propertyScore * 208.4);
+    // 최저보험료: 19,780원 (2024)
+    const base = Math.max(19_780, incomePremium + propertyPremium);
+    const ltcPremium = Math.round(base * LONG_TERM_CARE_FACTOR_OF_HEALTH);
+    const total = base + ltcPremium;
+    return { incomePremium, propertyPremium, base, ltcPremium, total };
+  }, [incomeYear, propertyVal]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='연간 소득 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={incomeYear} onChange={e => setIncomeYear(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='재산 과표 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={propertyVal} onChange={e => setPropertyVal(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+      </div>
+      <ResultPanel title='월 건강보험료' highlight={won(result.total) + '원'} subtitle='2024년 기준 · 재산점수 간이계산 · 정확한 금액은 공단 확인 필요'>
+        <ResultRows rows={[
+          { label: '소득 보험료 (7.09%)', value: won(result.incomePremium) + '원' },
+          { label: '재산 보험료', value: won(result.propertyPremium) + '원' },
+          { label: '건강보험료', value: won(result.base) + '원' },
+          { label: '장기요양보험료', value: won(result.ltcPremium) + '원' },
+          { label: '합계', value: won(result.total) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N6. 양도소득세 계산기
+function CapitalGainsTaxForm() {
+  const [transfer, setTransfer] = useState(500_000_000);  // 양도가액
+  const [acquire, setAcquire]   = useState(300_000_000);  // 취득가액
+  const [expense, setExpense]   = useState(5_000_000);    // 필요경비
+  const [holdYears, setHoldYears] = useState(3);          // 보유기간(년)
+  const [is1House, setIs1House] = useState(false);        // 1세대1주택
+  const result = useMemo(() => {
+    const gain = Math.max(0, transfer - acquire - expense);
+    // 장기보유특별공제: 3년이상, 일반 연2% / 1주택 연4% (최대 80%)
+    let ltdc = 0;
+    if (holdYears >= 3) {
+      const rate = is1House ? 0.04 : 0.02;
+      ltdc = Math.min(gain * rate * holdYears, gain * 0.8);
+    }
+    const taxBase = Math.max(0, gain - ltdc);
+    // 1세대1주택 12억 이하 비과세
+    if (is1House && transfer <= 1_200_000_000) {
+      return { gain, ltdc, taxBase: 0, tax: 0, localTax: 0, total: 0, netGain: gain };
+    }
+    // 세율 (장기보유 기준 누진세율)
+    const tax =
+      taxBase <= 14_000_000  ? taxBase * 0.06 :
+      taxBase <= 50_000_000  ? taxBase * 0.15 - 1_260_000 :
+      taxBase <= 88_000_000  ? taxBase * 0.24 - 5_760_000 :
+      taxBase <= 150_000_000 ? taxBase * 0.35 - 15_440_000 :
+      taxBase <= 300_000_000 ? taxBase * 0.38 - 19_940_000 :
+      taxBase <= 500_000_000 ? taxBase * 0.40 - 25_940_000 :
+      taxBase <= 1_000_000_000 ? taxBase * 0.42 - 35_940_000 :
+                                  taxBase * 0.45 - 65_940_000;
+    const t = Math.max(0, Math.round(tax));
+    const lt = Math.round(t * 0.1);
+    return { gain, ltdc, taxBase, tax: t, localTax: lt, total: t + lt, netGain: gain - (t + lt) };
+  }, [transfer, acquire, expense, holdYears, is1House]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='양도가액 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={transfer} onChange={e => setTransfer(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='취득가액 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={acquire} onChange={e => setAcquire(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='필요경비 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={expense} onChange={e => setExpense(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='보유기간 (년)'>
+          <NumInput className={INPUT_CLASS} min={0} value={holdYears} onChange={e => setHoldYears(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+      </div>
+      <label className='flex items-center gap-2 text-sm mt-2'>
+        <input type='checkbox' checked={is1House} onChange={e => setIs1House(e.target.checked)} />
+        1세대 1주택 (12억 이하 비과세)
+      </label>
+      <ResultPanel title='예상 양도소득세' highlight={won(result.total) + '원'} subtitle='장기보유특별공제 적용 · 다주택·단기 중과 미반영'>
+        <ResultRows rows={[
+          { label: '양도차익', value: won(result.gain) + '원' },
+          { label: '장기보유특별공제', value: won(Math.round(result.ltdc)) + '원' },
+          { label: '과세표준', value: won(Math.round(result.taxBase)) + '원' },
+          { label: '양도소득세', value: won(result.tax) + '원' },
+          { label: '지방소득세 (10%)', value: won(result.localTax) + '원' },
+          { label: '세후 양도차익', value: won(Math.round(result.netGain)) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N7. 증여세 계산기
+function GiftTaxForm() {
+  const [gift, setGift] = useState(100_000_000);  // 증여가액
+  const [rel, setRel] = useState<'spouse'|'child'|'minor'|'other'>('child');
+  const result = useMemo(() => {
+    const deductionMap = { spouse: 600_000_000, child: 50_000_000, minor: 20_000_000, other: 10_000_000 };
+    const taxBase = Math.max(0, gift - deductionMap[rel]);
+    const tax =
+      taxBase <= 100_000_000  ? taxBase * 0.10 :
+      taxBase <= 500_000_000  ? taxBase * 0.20 - 10_000_000 :
+      taxBase <= 1_000_000_000 ? taxBase * 0.30 - 60_000_000 :
+      taxBase <= 3_000_000_000 ? taxBase * 0.40 - 160_000_000 :
+                                  taxBase * 0.50 - 460_000_000;
+    const t = Math.max(0, Math.round(tax));
+    return { deduction: deductionMap[rel], taxBase, tax: t };
+  }, [gift, rel]);
+  const relLabel = { spouse: '배우자 (6억)', child: '직계존비속 (5천만)', minor: '미성년 자녀 (2천만)', other: '기타 친족 (1천만)' };
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='증여가액 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={gift} onChange={e => setGift(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='수증자 관계'>
+          <select className={INPUT_CLASS} value={rel} onChange={e => setRel(e.target.value as typeof rel)}>
+            <option value='spouse'>배우자 (공제 6억)</option>
+            <option value='child'>직계존비속 (공제 5천만)</option>
+            <option value='minor'>미성년 자녀 (공제 2천만)</option>
+            <option value='other'>기타 친족 (공제 1천만)</option>
+          </select>
+        </Labeled>
+      </div>
+      <ResultPanel title='예상 증여세' highlight={won(result.tax) + '원'} subtitle={`${relLabel[rel]} 공제 적용 · 10년 합산 기준`}>
+        <ResultRows rows={[
+          { label: '증여가액', value: won(gift) + '원' },
+          { label: '증여재산공제', value: won(result.deduction) + '원' },
+          { label: '과세표준', value: won(result.taxBase) + '원' },
+          { label: '증여세', value: won(result.tax) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N8. 상속세 계산기
+function InheritanceTaxForm() {
+  const [estate, setEstate] = useState(500_000_000); // 상속재산
+  const [hasSpouse, setHasSpouse] = useState(true);
+  const [children, setChildren] = useState(2);
+  const result = useMemo(() => {
+    // 기초공제 2억, 인적공제 자녀 1인당 5천만
+    const basicDeduction = 200_000_000;
+    const personDeduction = children * 50_000_000;
+    const spouseMin = hasSpouse ? 500_000_000 : 0; // 배우자 최소 공제 5억
+    // 일괄공제(5억)와 기초+인적공제 중 큰 것 선택
+    const generalDeduction = Math.max(500_000_000, basicDeduction + personDeduction);
+    const totalDeduction = generalDeduction + spouseMin;
+    const taxBase = Math.max(0, estate - totalDeduction);
+    const tax =
+      taxBase <= 100_000_000  ? taxBase * 0.10 :
+      taxBase <= 500_000_000  ? taxBase * 0.20 - 10_000_000 :
+      taxBase <= 1_000_000_000 ? taxBase * 0.30 - 60_000_000 :
+      taxBase <= 3_000_000_000 ? taxBase * 0.40 - 160_000_000 :
+                                  taxBase * 0.50 - 460_000_000;
+    const t = Math.max(0, Math.round(tax));
+    return { totalDeduction, taxBase, tax: t };
+  }, [estate, hasSpouse, children]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='상속재산 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={estate} onChange={e => setEstate(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='자녀 수'>
+          <NumInput className={INPUT_CLASS} min={0} value={children} onChange={e => setChildren(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+      </div>
+      <label className='flex items-center gap-2 text-sm mt-2'>
+        <input type='checkbox' checked={hasSpouse} onChange={e => setHasSpouse(e.target.checked)} />
+        배우자 있음 (최소 공제 5억)
+      </label>
+      <ResultPanel title='예상 상속세' highlight={won(result.tax) + '원'} subtitle='일괄공제 적용 · 신고·납부 세액공제 미반영'>
+        <ResultRows rows={[
+          { label: '상속재산', value: won(estate) + '원' },
+          { label: '총 공제액', value: won(result.totalDeduction) + '원' },
+          { label: '과세표준', value: won(result.taxBase) + '원' },
+          { label: '상속세', value: won(result.tax) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N9. 종합소득세 계산기
+function GlobalIncomeTaxForm() {
+  const [income, setIncome] = useState(60_000_000); // 종합소득금액
+  const [deductions, setDeductions] = useState(15_000_000); // 소득공제 합계
+  const result = useMemo(() => {
+    const taxBase = Math.max(0, income - deductions);
+    const tax =
+      taxBase <= 14_000_000  ? taxBase * 0.06 :
+      taxBase <= 50_000_000  ? taxBase * 0.15 - 1_260_000 :
+      taxBase <= 88_000_000  ? taxBase * 0.24 - 5_760_000 :
+      taxBase <= 150_000_000 ? taxBase * 0.35 - 15_440_000 :
+      taxBase <= 300_000_000 ? taxBase * 0.38 - 19_940_000 :
+      taxBase <= 500_000_000 ? taxBase * 0.40 - 25_940_000 :
+      taxBase <= 1_000_000_000 ? taxBase * 0.42 - 35_940_000 :
+                                  taxBase * 0.45 - 65_940_000;
+    const t = Math.max(0, Math.round(tax));
+    const lt = Math.round(t * 0.1);
+    const total = t + lt;
+    const effectiveRate = income > 0 ? (total / income * 100).toFixed(1) : '0.0';
+    return { taxBase, tax: t, localTax: lt, total, effectiveRate };
+  }, [income, deductions]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='종합소득금액 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={income} onChange={e => setIncome(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='소득공제 합계 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={deductions} onChange={e => setDeductions(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+      </div>
+      <ResultPanel title='예상 종합소득세' highlight={won(result.total) + '원'} subtitle={`실효세율 ${result.effectiveRate}% · 세액공제 미반영`}>
+        <ResultRows rows={[
+          { label: '과세표준', value: won(result.taxBase) + '원' },
+          { label: '종합소득세', value: won(result.tax) + '원' },
+          { label: '지방소득세 (10%)', value: won(result.localTax) + '원' },
+          { label: '합계', value: won(result.total) + '원' },
+          { label: '실효세율', value: result.effectiveRate + '%' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N10. ISA 비과세 한도 계산기
+function IsaTaxFreeForm() {
+  const [profit, setProfit] = useState(5_000_000);    // 투자 수익
+  const [type, setType] = useState<'general'|'worker'>('general'); // 일반형/서민형
+  const result = useMemo(() => {
+    const limit = type === 'worker' ? 4_000_000 : 2_000_000;
+    const taxFree = Math.min(profit, limit);
+    const taxable = Math.max(0, profit - limit);
+    // 비과세 초과분 9.9% 분리과세
+    const separateTax = Math.round(taxable * 0.099);
+    const savedTax = Math.round(taxFree * 0.154); // 일반 금융소득세율 15.4% 대비
+    return { limit, taxFree, taxable, separateTax, savedTax };
+  }, [profit, type]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='ISA 순이익 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={profit} onChange={e => setProfit(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='가입 유형'>
+          <select className={INPUT_CLASS} value={type} onChange={e => setType(e.target.value as typeof type)}>
+            <option value='general'>일반형 (비과세 한도 200만)</option>
+            <option value='worker'>서민형·농어민 (비과세 한도 400만)</option>
+          </select>
+        </Labeled>
+      </div>
+      <ResultPanel title='세금 절감액 추정' highlight={won(result.savedTax) + '원'} subtitle='비과세 한도 내 15.4% 절세 · 초과분 9.9% 분리과세'>
+        <ResultRows rows={[
+          { label: '비과세 한도', value: won(result.limit) + '원' },
+          { label: '비과세 적용액', value: won(result.taxFree) + '원' },
+          { label: '분리과세 대상 (9.9%)', value: won(result.taxable) + '원' },
+          { label: '분리과세 세액', value: won(result.separateTax) + '원' },
+          { label: '절세액 (15.4% 대비)', value: won(result.savedTax) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N11. 취득세 계산기
+function AcquisitionTaxForm() {
+  const [price, setPrice] = useState(500_000_000);  // 취득가액
+  const [houses, setHouses] = useState(1);           // 보유 주택 수 (취득 후)
+  const [area, setArea] = useState<'regulated'|'other'>('other'); // 조정지역 여부
+  const result = useMemo(() => {
+    // 2024년 취득세율
+    let rate: number;
+    if (houses === 1) {
+      // 1주택: 6억이하 1%, 6-9억 1-3%, 9억초과 3%
+      if (price <= 600_000_000) rate = 0.01;
+      else if (price <= 900_000_000) rate = 0.01 + (price - 600_000_000) / 300_000_000 * 0.02;
+      else rate = 0.03;
+    } else if (houses === 2) {
+      rate = area === 'regulated' ? 0.08 : 0.01; // 조정지역 2주택 8%
+    } else {
+      rate = area === 'regulated' ? 0.12 : 0.08; // 3주택 이상
+    }
+    const acquisitionTax = Math.round(price * rate);
+    // 농특세: 취득세 2% 이상일 때 취득가의 0.2%
+    const agriTax = rate >= 0.02 ? Math.round(price * 0.002) : 0;
+    // 지방교육세: 취득세의 10%
+    const eduTax = Math.round(acquisitionTax * 0.1);
+    const total = acquisitionTax + agriTax + eduTax;
+    return { rate: (rate * 100).toFixed(1), acquisitionTax, agriTax, eduTax, total };
+  }, [price, houses, area]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='취득가액 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={price} onChange={e => setPrice(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='취득 후 주택 수'>
+          <NumInput className={INPUT_CLASS} min={1} max={4} value={houses} onChange={e => setHouses(Math.min(4, Math.max(1, num(e.target.value))))} />
+        </Labeled>
+        <Labeled label='지역 구분'>
+          <select className={INPUT_CLASS} value={area} onChange={e => setArea(e.target.value as typeof area)}>
+            <option value='other'>비조정 지역</option>
+            <option value='regulated'>조정대상지역</option>
+          </select>
+        </Labeled>
+      </div>
+      <ResultPanel title='취득세 합계' highlight={won(result.total) + '원'} subtitle={`세율 ${result.rate}% · 농특세·지방교육세 포함`}>
+        <ResultRows rows={[
+          { label: '취득세율', value: result.rate + '%' },
+          { label: '취득세', value: won(result.acquisitionTax) + '원' },
+          { label: '농어촌특별세', value: won(result.agriTax) + '원' },
+          { label: '지방교육세 (10%)', value: won(result.eduTax) + '원' },
+          { label: '합계', value: won(result.total) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N12. 재산세 계산기
+function PropertyTaxForm() {
+  const [publicPrice, setPublicPrice] = useState(400_000_000); // 공시가격
+  const [houses, setHouses] = useState(1);
+  const result = useMemo(() => {
+    // 재산세: 공시가격 × 공정시장가액비율(60%) × 세율
+    const taxBase = Math.round(publicPrice * 0.6);
+    const propertyTax =
+      taxBase <= 60_000_000   ? Math.round(taxBase * 0.001) :
+      taxBase <= 150_000_000  ? Math.round(taxBase * 0.0015 - 30_000) :
+      taxBase <= 300_000_000  ? Math.round(taxBase * 0.0025 - 180_000) :
+                                Math.round(taxBase * 0.004 - 630_000);
+    // 도시계획세: 공시가격 × 0.14%
+    const urbanTax = Math.round(publicPrice * 0.0014);
+    // 지방교육세: 재산세 × 20%
+    const eduTax = Math.round(propertyTax * 0.2);
+    // 종합부동산세: 1주택 12억, 다주택 9억 초과분 (간이계산)
+    const comboThreshold = houses === 1 ? 1_200_000_000 : 900_000_000;
+    const comboBase = Math.max(0, publicPrice - comboThreshold);
+    const comboRate = houses === 1 ? 0.005 : 0.007;
+    const comboTax = comboBase > 0 ? Math.round(comboBase * 0.6 * comboRate) : 0;
+    const total = propertyTax + urbanTax + eduTax + comboTax;
+    return { taxBase, propertyTax, urbanTax, eduTax, comboTax, total };
+  }, [publicPrice, houses]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='공시가격 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={publicPrice} onChange={e => setPublicPrice(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='주택 수'>
+          <NumInput className={INPUT_CLASS} min={1} max={3} value={houses} onChange={e => setHouses(Math.min(3, Math.max(1, num(e.target.value))))} />
+        </Labeled>
+      </div>
+      <ResultPanel title='연간 보유세 합계' highlight={won(result.total) + '원'} subtitle='재산세+종부세 간이추정 · 공정시장가액비율 60%'>
+        <ResultRows rows={[
+          { label: '과세표준 (공시가×60%)', value: won(result.taxBase) + '원' },
+          { label: '재산세', value: won(result.propertyTax) + '원' },
+          { label: '도시계획세', value: won(result.urbanTax) + '원' },
+          { label: '지방교육세', value: won(result.eduTax) + '원' },
+          { label: '종합부동산세 (간이)', value: won(result.comboTax) + '원' },
+          { label: '합계', value: won(result.total) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N13. 전세대출 이자 계산기
+function JeonseLoanInterestForm() {
+  const [jeonseAmt, setJeonseAmt] = useState(300_000_000); // 전세금
+  const [ltvPct, setLtvPct] = useState(80);                // 대출비율(%)
+  const [ratePct, setRatePct] = useState(3.5);             // 금리(%)
+  const [months, setMonths] = useState(24);                // 기간(개월)
+  const result = useMemo(() => {
+    const loan = Math.round(jeonseAmt * ltvPct / 100);
+    const monthlyRate = ratePct / 100 / 12;
+    const monthlyInterest = Math.round(loan * monthlyRate);
+    const totalInterest = monthlyInterest * months;
+    return { loan, monthlyInterest, totalInterest };
+  }, [jeonseAmt, ltvPct, ratePct, months]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='전세금 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={jeonseAmt} onChange={e => setJeonseAmt(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='대출비율 (%)'>
+          <NumInput className={INPUT_CLASS} min={0} max={100} value={ltvPct} onChange={e => setLtvPct(Math.min(100, Math.max(0, num(e.target.value))))} />
+        </Labeled>
+        <Labeled label='연 금리 (%)'>
+          <NumInput className={INPUT_CLASS} min={0} step={0.1} value={ratePct} onChange={e => setRatePct(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='대출 기간 (개월)'>
+          <NumInput className={INPUT_CLASS} min={1} value={months} onChange={e => setMonths(Math.max(1, num(e.target.value)))} />
+        </Labeled>
+      </div>
+      <ResultPanel title='월 이자' highlight={won(result.monthlyInterest) + '원'} subtitle='이자만 납부 방식 · 원금 만기 일시상환 기준'>
+        <ResultRows rows={[
+          { label: '대출금액', value: won(result.loan) + '원' },
+          { label: '월 이자', value: won(result.monthlyInterest) + '원' },
+          { label: `총 이자 (${months}개월)`, value: won(result.totalInterest) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N14. 월세 세액공제 계산기
+function RentTaxCreditForm() {
+  const [annualSalary, setAnnualSalary] = useState(40_000_000); // 총급여
+  const [monthlyRent, setMonthlyRent] = useState(500_000);      // 월세액
+  const result = useMemo(() => {
+    // 총급여 5500만 이하: 17%, 7000만 이하: 15%, 초과: 공제 없음
+    const annualRent = monthlyRent * 12;
+    const maxRent = Math.min(annualRent, 7_500_000); // 연 750만 한도
+    let creditRate = 0;
+    if (annualSalary <= 55_000_000) creditRate = 0.17;
+    else if (annualSalary <= 70_000_000) creditRate = 0.15;
+    const credit = Math.round(maxRent * creditRate);
+    const eligible = annualSalary <= 70_000_000;
+    return { annualRent, maxRent, creditRate: (creditRate * 100).toFixed(0), credit, eligible };
+  }, [annualSalary, monthlyRent]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='총급여 (원/년)'>
+          <NumInput className={INPUT_CLASS} min={0} value={annualSalary} onChange={e => setAnnualSalary(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='월세액 (원/월)'>
+          <NumInput className={INPUT_CLASS} min={0} value={monthlyRent} onChange={e => setMonthlyRent(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+      </div>
+      <ResultPanel title='연간 세액공제 추정액' highlight={won(result.credit) + '원'} subtitle='무주택 세대주·국민주택 규모·기준시가 3억 이하 조건'>
+        <ResultRows rows={[
+          { label: '공제 가능 여부', value: result.eligible ? '가능' : '해당 없음 (총급여 7000만 초과)' },
+          { label: '공제율', value: result.creditRate + '%' },
+          { label: '연간 월세 (한도 750만)', value: won(result.maxRent) + '원' },
+          { label: '세액공제액', value: won(result.credit) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N15. 국민연금 예상 수령액 계산기
+function NationalPensionForm() {
+  const [myAvg, setMyAvg] = useState(3_000_000);  // 본인 월평균소득(B)
+  const [payYears, setPayYears] = useState(20);   // 납부 기간(년)
+  const result = useMemo(() => {
+    // 2024년 A값(전체 가입자 평균소득): 2,989,764원 ≈ 299만
+    const A = 2_989_764;
+    const B = myAvg;
+    const n = payYears;
+    // 기본연금액 = 1.2 × (A+B) × P(n) / 12
+    // P(n): 20년=1, 이후 연 5% 가산, 20년 미만 비례
+    let basicYearly: number;
+    if (n >= 20) {
+      basicYearly = 1.2 * (A + B) * (1 + 0.05 * (n - 20));
+    } else {
+      basicYearly = 1.2 * (A + B) * (n / 20);
+    }
+    const monthlyPension = Math.round(basicYearly / 12);
+    // 부양가족연금 (기본): 가족 없음 기준 0
+    // 총납부보험료 (9% 기준)
+    const totalPaid = Math.round(myAvg * 0.09 * n * 12);
+    return { monthlyPension, totalPaid };
+  }, [myAvg, payYears]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='월평균 소득 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={myAvg} onChange={e => setMyAvg(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='납부 기간 (년)'>
+          <NumInput className={INPUT_CLASS} min={1} max={45} value={payYears} onChange={e => setPayYears(Math.min(45, Math.max(1, num(e.target.value))))} />
+        </Labeled>
+      </div>
+      <ResultPanel title='예상 월 노령연금' highlight={won(result.monthlyPension) + '원'} subtitle='2024년 A값(299만) 기준 · 실제 수령액과 차이 있을 수 있음'>
+        <ResultRows rows={[
+          { label: '납부 기간', value: payYears + '년' },
+          { label: '예상 월 연금', value: won(result.monthlyPension) + '원' },
+          { label: '총 납부 보험료 추정', value: won(result.totalPaid) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N16. 자동차 감가상각 계산기
+function VehicleDepreciationForm() {
+  const [purchase, setPurchase] = useState(30_000_000); // 취득가
+  const [age, setAge] = useState(3);                    // 경과 년수
+  const [method, setMethod] = useState<'declining'|'straight'>('declining');
+  const result = useMemo(() => {
+    // 자동차 내용연수 5년 기준
+    // 정률법 감가율 0.451 (내용연수 5년)
+    // 정액법 감가율 1/5 = 0.2
+    const residual = 0.1; // 잔존가치율 10%
+    let currentValue: number;
+    if (method === 'declining') {
+      currentValue = purchase * Math.pow(0.549, age); // (1-0.451)^age
+    } else {
+      currentValue = Math.max(purchase * residual, purchase * (1 - 0.2 * age));
+    }
+    currentValue = Math.round(Math.max(purchase * residual, currentValue));
+    const depreciated = purchase - currentValue;
+    const depRate = ((depreciated / purchase) * 100).toFixed(1);
+    return { currentValue, depreciated, depRate };
+  }, [purchase, age, method]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='취득가액 (원)'>
+          <NumInput className={INPUT_CLASS} min={0} value={purchase} onChange={e => setPurchase(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='경과 연수 (년)'>
+          <NumInput className={INPUT_CLASS} min={0} max={15} value={age} onChange={e => setAge(Math.min(15, Math.max(0, num(e.target.value))))} />
+        </Labeled>
+        <Labeled label='감가 방법'>
+          <select className={INPUT_CLASS} value={method} onChange={e => setMethod(e.target.value as typeof method)}>
+            <option value='declining'>정률법 (내용연수 5년, 0.451)</option>
+            <option value='straight'>정액법 (연 20%)</option>
+          </select>
+        </Labeled>
+      </div>
+      <ResultPanel title='현재 추정 가치' highlight={won(result.currentValue) + '원'} subtitle={`감가 ${result.depRate}% · 최소 잔존 10%`}>
+        <ResultRows rows={[
+          { label: '취득가액', value: won(purchase) + '원' },
+          { label: '감가액', value: won(result.depreciated) + '원' },
+          { label: '감가율', value: result.depRate + '%' },
+          { label: '현재 추정가치', value: won(result.currentValue) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N17. MET 운동 칼로리 계산기
+function MetCaloriesForm() {
+  const EXERCISES = [
+    { label: '걷기 (보통속도, 4km/h)', met: 3.5 },
+    { label: '빠른걷기 (6km/h)', met: 5.0 },
+    { label: '조깅 (8km/h)', met: 8.0 },
+    { label: '달리기 (10km/h)', met: 10.0 },
+    { label: '자전거 (보통, 16km/h)', met: 6.0 },
+    { label: '수영 (자유형, 보통)', met: 8.3 },
+    { label: '에어로빅', met: 6.5 },
+    { label: '웨이트트레이닝', met: 5.0 },
+    { label: '요가', met: 3.0 },
+    { label: '축구', met: 10.0 },
+    { label: '배드민턴', met: 5.5 },
+    { label: '계단 오르기', met: 8.0 },
+    { label: '줄넘기', met: 11.0 },
+  ] as const;
+  const [exIdx, setExIdx] = useState(2);
+  const [weight, setWeight] = useState(70);
+  const [minutes, setMinutes] = useState(30);
+  const result = useMemo(() => {
+    const met = EXERCISES[exIdx].met;
+    // 칼로리 = MET × 체중(kg) × 시간(h)
+    const kcal = met * weight * (minutes / 60);
+    return { met, kcal: Math.round(kcal) };
+  }, [exIdx, weight, minutes]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='운동 종류'>
+          <select className={INPUT_CLASS} value={exIdx} onChange={e => setExIdx(Number(e.target.value))}>
+            {EXERCISES.map((ex, i) => <option key={i} value={i}>{ex.label}</option>)}
+          </select>
+        </Labeled>
+        <Labeled label='체중 (kg)'>
+          <NumInput className={INPUT_CLASS} min={30} max={200} value={weight} onChange={e => setWeight(Math.min(200, Math.max(30, num(e.target.value))))} />
+        </Labeled>
+        <Labeled label='운동 시간 (분)'>
+          <NumInput className={INPUT_CLASS} min={1} value={minutes} onChange={e => setMinutes(Math.max(1, num(e.target.value)))} />
+        </Labeled>
+      </div>
+      <ResultPanel title='소모 칼로리' highlight={result.kcal.toLocaleString() + ' kcal'} subtitle={`MET ${result.met} · Ainsworth et al. 기반`}>
+        <ResultRows rows={[
+          { label: 'MET 값', value: String(result.met) },
+          { label: '체중', value: weight + ' kg' },
+          { label: '운동 시간', value: minutes + ' 분' },
+          { label: '소모 칼로리', value: result.kcal.toLocaleString() + ' kcal' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N18. HOMA-IR 인슐린 저항성 계산기
+function HomaIrForm() {
+  const [glucose, setGlucose] = useState(90);   // 공복혈당 mg/dL
+  const [insulin, setInsulin] = useState(8);    // 공복인슐린 μIU/mL
+  const result = useMemo(() => {
+    // HOMA-IR = 공복혈당(mg/dL) × 공복인슐린(μIU/mL) / 405
+    const homaIr = (glucose * insulin) / 405;
+    const label =
+      homaIr < 1.5  ? '정상 (인슐린 감수성 양호)' :
+      homaIr < 2.5  ? '경계 (생활습관 개선 권장)' :
+      homaIr < 4.0  ? '인슐린 저항성 (진료 권장)' :
+                      '고도 인슐린 저항성';
+    return { homaIr: homaIr.toFixed(2), label };
+  }, [glucose, insulin]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='공복 혈당 (mg/dL)'>
+          <NumInput className={INPUT_CLASS} min={50} max={300} value={glucose} onChange={e => setGlucose(Math.max(50, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='공복 인슐린 (μIU/mL)'>
+          <NumInput className={INPUT_CLASS} min={1} step={0.1} value={insulin} onChange={e => setInsulin(Math.max(0.1, num(e.target.value)))} />
+        </Labeled>
+      </div>
+      <ResultPanel title='HOMA-IR 지수' highlight={result.homaIr} subtitle={result.label}>
+        <ResultRows rows={[
+          { label: '공복 혈당', value: glucose + ' mg/dL' },
+          { label: '공복 인슐린', value: insulin + ' μIU/mL' },
+          { label: 'HOMA-IR', value: result.homaIr },
+          { label: '판정', value: result.label },
+          { label: '기준', value: '<1.5 정상 / 1.5-2.5 경계 / >2.5 저항성' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N19. 수능 등급 컷 계산기 (2024학년도 기준)
+function CsatGradeForm() {
+  const GRADE_TABLE = {
+    '국어': [90, 80, 73, 67, 60, 52, 40, 24],
+    '수학(공통+확통)': [92, 84, 74, 64, 54, 44, 30, 13],
+    '수학(공통+미적)': [92, 84, 76, 68, 59, 48, 33, 14],
+    '수학(공통+기하)': [90, 82, 73, 63, 52, 40, 26, 10],
+    '영어(절대평가)': [90, 80, 70, 60, 50, 40, 30, 20],
+  } as const;
+  type Subject = keyof typeof GRADE_TABLE;
+  const [subject, setSubject] = useState<Subject>('국어');
+  const [score, setScore] = useState(80);
+  const grade = useMemo(() => {
+    const cuts = GRADE_TABLE[subject];
+    for (let i = 0; i < cuts.length; i++) {
+      if (score >= cuts[i]) return i + 1;
+    }
+    return 9;
+  }, [subject, score]);
+  const cuts = GRADE_TABLE[subject];
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='과목'>
+          <select className={INPUT_CLASS} value={subject} onChange={e => setSubject(e.target.value as Subject)}>
+            {Object.keys(GRADE_TABLE).map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </Labeled>
+        <Labeled label='원점수'>
+          <NumInput className={INPUT_CLASS} min={0} max={100} value={score} onChange={e => setScore(Math.min(100, Math.max(0, num(e.target.value))))} />
+        </Labeled>
+      </div>
+      <ResultPanel title='예상 등급' highlight={grade + '등급'} subtitle='2024학년도 수능 등급 컷 기준'>
+        <ResultRows rows={[
+          { label: '점수', value: score + '점' },
+          { label: '등급', value: grade + '등급' },
+          { label: '1등급 컷', value: cuts[0] + '점 이상' },
+          { label: '2등급 컷', value: cuts[1] + '점 이상' },
+          { label: '3등급 컷', value: cuts[2] + '점 이상' },
+          { label: '4등급 컷', value: cuts[3] + '점 이상' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N20. 교통범칙금 계산기
+function TrafficFineForm() {
+  const VIOLATIONS = [
+    { label: '신호·지시 위반', car: 60_000, bike: 30_000 },
+    { label: '속도위반 20km/h 이하', car: 30_000, bike: 20_000 },
+    { label: '속도위반 20-40km/h', car: 60_000, bike: 30_000 },
+    { label: '속도위반 40-60km/h', car: 90_000, bike: 50_000 },
+    { label: '속도위반 60km/h 초과', car: 120_000, bike: 60_000 },
+    { label: '중앙선 침범', car: 60_000, bike: 30_000 },
+    { label: '끼어들기·안전거리 미확보', car: 40_000, bike: 20_000 },
+    { label: '안전띠 미착용', car: 30_000, bike: 0 },
+    { label: '주·정차 위반', car: 40_000, bike: 20_000 },
+    { label: '음주운전 (0.03-0.08%)', car: 100_000, bike: 50_000 },
+    { label: '무면허 운전', car: 200_000, bike: 100_000 },
+  ] as const;
+  type Violation = typeof VIOLATIONS[number];
+  const [vIdx, setVIdx] = useState(0);
+  const [vType, setVType] = useState<'car'|'bike'>('car');
+  const v = VIOLATIONS[vIdx];
+  const fine = v[vType];
+  // 과태료는 범칙금 + 1만원 (자진납부 20% 할인)
+  const penalty = fine + 10_000;
+  const earlyPay = Math.round(fine * 0.8);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='위반 항목'>
+          <select className={INPUT_CLASS} value={vIdx} onChange={e => setVIdx(Number(e.target.value))}>
+            {VIOLATIONS.map((v, i) => <option key={i} value={i}>{v.label}</option>)}
+          </select>
+        </Labeled>
+        <Labeled label='차량 종류'>
+          <select className={INPUT_CLASS} value={vType} onChange={e => setVType(e.target.value as typeof vType)}>
+            <option value='car'>승용차·승합차</option>
+            <option value='bike'>이륜차·자전거</option>
+          </select>
+        </Labeled>
+      </div>
+      <ResultPanel title='범칙금' highlight={won(fine) + '원'} subtitle='도로교통법 별표 기준 · 2024년'>
+        <ResultRows rows={[
+          { label: '범칙금 (현장 고지)', value: won(fine) + '원' },
+          { label: '과태료 (무인단속)', value: won(penalty) + '원' },
+          { label: '범칙금 자진납부 할인 (20%)', value: won(earlyPay) + '원' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N21. 크론 표현식 해석기
+function CronExpressionForm() {
+  const [cron, setCron] = useState('0 9 * * 1-5');
+  const result = useMemo(() => {
+    try {
+      const parts = cron.trim().split(/\s+/);
+      if (parts.length !== 5 && parts.length !== 6) throw new Error('5 또는 6 필드여야 합니다');
+      const [min, hour, dom, month, dow] = parts.length === 6 ? parts.slice(1) : parts;
+      const describeField = (val: string, unit: string, names?: string[]) => {
+        if (val === '*') return `모든 ${unit}`;
+        if (val.startsWith('*/')) return `${val.slice(2)}${unit}마다`;
+        if (val.includes('-')) {
+          const [a, b] = val.split('-');
+          const la = names ? names[Number(a)] ?? a : a;
+          const lb = names ? names[Number(b)] ?? b : b;
+          return `${la}~${lb}`;
+        }
+        if (val.includes(',')) {
+          return val.split(',').map(v => names ? names[Number(v)] ?? v : v).join(', ');
+        }
+        return (names ? names[Number(val)] ?? val : val) + ` ${unit}`;
+      };
+      const MONTHS = ['','1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+      const DAYS   = ['일','월','화','수','목','금','토'];
+      const desc = [
+        `분: ${describeField(min, '분')}`,
+        `시: ${describeField(hour, '시')}`,
+        `일: ${describeField(dom, '일')}`,
+        `월: ${describeField(month, '월', MONTHS)}`,
+        `요일: ${describeField(dow, '요일', DAYS)}`,
+      ];
+      // 다음 실행 시각 계산 (간이)
+      const now = new Date();
+      let nextStr = '계산 중...';
+      // 단순 케이스만 지원
+      if (min !== '*' && hour !== '*' && dom === '*' && month === '*') {
+        const m = Number(min.split(',')[0]);
+        const h = Number(hour.split(',')[0]);
+        const next = new Date(now);
+        next.setSeconds(0, 0);
+        next.setMinutes(m);
+        next.setHours(h);
+        if (next <= now) next.setDate(next.getDate() + 1);
+        nextStr = next.toLocaleString('ko-KR');
+      }
+      return { desc, nextStr, error: null };
+    } catch (e) {
+      return { desc: [], nextStr: '', error: (e as Error).message };
+    }
+  }, [cron]);
+  return (
+    <Box>
+      <Labeled label='크론 표현식 (분 시 일 월 요일)'>
+        <input
+          type='text'
+          className={INPUT_CLASS + ' font-mono'}
+          value={cron}
+          onChange={e => setCron(e.target.value)}
+          placeholder='0 9 * * 1-5'
+        />
+      </Labeled>
+      <div className='text-xs text-gray-500 mt-1'>예시: <code>0 9 * * 1-5</code> (평일 오전 9시) · <code>*/15 * * * *</code> (15분마다)</div>
+      {result.error ? (
+        <p className='text-red-500 text-sm mt-3'>{result.error}</p>
+      ) : (
+        <ResultPanel title='해석 결과' highlight='크론 표현식' subtitle={result.nextStr ? '다음 실행: ' + result.nextStr : ''}>
+          <ResultRows rows={result.desc.map(d => { const [k, v] = d.split(': '); return { label: k, value: v }; })} />
+        </ResultPanel>
+      )}
+    </Box>
+  );
+}
+
+// N22. JWT 디코더
+function JwtDecoderForm() {
+  const [token, setToken] = useState('');
+  const result = useMemo(() => {
+    if (!token.trim()) return null;
+    try {
+      const parts = token.trim().split('.');
+      if (parts.length < 2) throw new Error('올바른 JWT 형식이 아닙니다 (. 구분자 필요)');
+      const decode = (b64: string) => {
+        const s = b64.replace(/-/g, '+').replace(/_/g, '/');
+        const padded = s + '='.repeat((4 - s.length % 4) % 4);
+        return JSON.parse(decodeURIComponent(atob(padded).split('').map(c =>
+          '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+      };
+      const header  = decode(parts[0]);
+      const payload = decode(parts[1]);
+      const sig = parts[2] ? parts[2].slice(0, 16) + '...' : '없음';
+      // exp 처리
+      const expStr = payload.exp
+        ? new Date(payload.exp * 1000).toLocaleString('ko-KR') + (payload.exp * 1000 < Date.now() ? ' (만료됨)' : ' (유효)')
+        : undefined;
+      return { header, payload, sig, expStr, error: null };
+    } catch (e) {
+      return { header: null, payload: null, sig: '', expStr: undefined, error: (e as Error).message };
+    }
+  }, [token]);
+  return (
+    <Box>
+      <Labeled label='JWT 토큰 붙여넣기'>
+        <textarea
+          className={TEXTAREA_CLASS + ' font-mono text-xs'}
+          rows={4}
+          value={token}
+          onChange={e => setToken(e.target.value)}
+          placeholder='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        />
+      </Labeled>
+      {result === null ? null : result?.error ? (
+        <p className='text-red-500 text-sm mt-3'>{result.error}</p>
+      ) : (
+        <div className='mt-4 space-y-4'>
+          <div>
+            <p className='text-sm font-semibold text-gray-600 mb-1'>Header</p>
+            <pre className='bg-gray-100 rounded p-3 text-xs overflow-auto'>{JSON.stringify(result.header, null, 2)}</pre>
+          </div>
+          <div>
+            <p className='text-sm font-semibold text-gray-600 mb-1'>Payload</p>
+            <pre className='bg-gray-100 rounded p-3 text-xs overflow-auto'>{JSON.stringify(result.payload, null, 2)}</pre>
+          </div>
+          {result.expStr && <p className='text-sm'>⏰ 만료: {result.expStr}</p>}
+          <div>
+            <p className='text-sm font-semibold text-gray-600 mb-1'>Signature (앞 16자)</p>
+            <code className='text-xs bg-gray-100 px-2 py-1 rounded'>{result.sig}</code>
+          </div>
+        </div>
+      )}
     </Box>
   );
 }
