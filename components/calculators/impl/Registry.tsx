@@ -416,6 +416,12 @@ export function renderCalculatorBody(kind: CalculatorKind, tool: ToolItem) {
       return <CronExpressionForm />;
     case "jwtDecoder":
       return <JwtDecoderForm />;
+    case "primeChecker":
+      return <PrimeCheckerForm />;
+    case "rankPercentile":
+      return <RankPercentileForm />;
+    case "proportionCalc":
+      return <ProportionCalcForm />;
     default:
       return (
         <Box>
@@ -6702,6 +6708,146 @@ function JwtDecoderForm() {
           </div>
         </div>
       )}
+    </Box>
+  );
+}
+
+// N-FIX1. 소수 검사기 (school-006)
+function PrimeCheckerForm() {
+  const [n, setN] = useState(17);
+  const result = useMemo(() => {
+    const num = Math.floor(Math.abs(n));
+    if (num < 2) return { isPrime: false, factors: [], label: '소수가 아님 (2 미만)' };
+    if (num === 2) return { isPrime: true, factors: [2], label: '소수' };
+    if (num % 2 === 0) return { isPrime: false, factors: [2, num / 2], label: '소수가 아님' };
+    const factors: number[] = [];
+    let temp = num;
+    for (let i = 2; i <= Math.sqrt(temp); i++) {
+      while (temp % i === 0) { factors.push(i); temp = temp / i; }
+    }
+    if (temp > 1) factors.push(temp);
+    const isPrime = factors.length === 1 && factors[0] === num || (factors.length === 0 && temp === num);
+    const realIsPrime = num > 1 && (() => {
+      for (let i = 2; i <= Math.sqrt(num); i++) if (num % i === 0) return false;
+      return true;
+    })();
+    return {
+      isPrime: realIsPrime,
+      factors: realIsPrime ? [num] : (() => {
+        const f: number[] = []; let t = num;
+        for (let i = 2; i <= Math.sqrt(t); i++) while (t % i === 0) { f.push(i); t /= i; }
+        if (t > 1) f.push(t); return f;
+      })(),
+      label: realIsPrime ? '✅ 소수' : '❌ 소수가 아님',
+    };
+  }, [n]);
+  return (
+    <Box>
+      <Labeled label='검사할 수'>
+        <NumInput className={INPUT_CLASS} min={2} max={9999999} value={n} onChange={e => setN(Math.max(2, Math.min(9999999, num(e.target.value))))} />
+      </Labeled>
+      <ResultPanel title='소수 판별 결과' highlight={result.label} subtitle={result.isPrime ? '1과 자기 자신으로만 나누어지는 수' : `약수: ${result.factors.join(' × ')}`}>
+        <ResultRows rows={[
+          { label: '입력값', value: String(Math.floor(Math.abs(n))) },
+          { label: '소수 여부', value: result.label },
+          { label: '소인수 분해', value: result.isPrime ? `${n} (소수)` : result.factors.join(' × ') },
+          { label: '약수 개수', value: result.isPrime ? '2개 (1과 자기 자신)' : (result.factors.length + 1) + '개 이상' },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N-FIX2. 상위 퍼센트 계산기 (school-020)
+function RankPercentileForm() {
+  const [rank, setRank] = useState(150);
+  const [total, setTotal] = useState(500);
+  const result = useMemo(() => {
+    if (total <= 0) return { percentile: 0, top: 0 };
+    // 상위 퍼센트 = (등수 / 전체) × 100
+    const top = Math.min(100, (rank / total) * 100);
+    // 백분위 = 100 - 상위%
+    const percentile = 100 - top;
+    return { top: Math.round(top * 10) / 10, percentile: Math.round(percentile * 10) / 10 };
+  }, [rank, total]);
+  return (
+    <Box>
+      <div className='grid gap-6 sm:grid-cols-2'>
+        <Labeled label='내 등수 (등)'>
+          <NumInput className={INPUT_CLASS} min={1} value={rank} onChange={e => setRank(Math.max(1, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label='전체 인원 (명)'>
+          <NumInput className={INPUT_CLASS} min={1} value={total} onChange={e => setTotal(Math.max(1, num(e.target.value)))} />
+        </Labeled>
+      </div>
+      <ResultPanel title='상위 퍼센트' highlight={`상위 ${result.top}%`} subtitle={`백분위 ${result.percentile}점`}>
+        <ResultRows rows={[
+          { label: '내 등수', value: rank + '등' },
+          { label: '전체 인원', value: total + '명' },
+          { label: '상위 퍼센트', value: `상위 ${result.top}%` },
+          { label: '백분위', value: `${result.percentile}점` },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+// N-FIX3. 비례식 계산기 (school-022) — a:b = c:d 빈칸 찾기
+function ProportionCalcForm() {
+  const [a, setA] = useState<string>('2');
+  const [b, setB] = useState<string>('4');
+  const [c, setC] = useState<string>('3');
+  const [d, setD] = useState<string>('');  // 빈칸
+  const [unknown, setUnknown] = useState<'a'|'b'|'c'|'d'>('d');
+  const result = useMemo(() => {
+    const vals = { a: Number(a), b: Number(b), c: Number(c), d: Number(d) };
+    // a:b = c:d → a*d = b*c
+    let ans: number | null = null;
+    if (unknown === 'a' && vals.b && vals.c && vals.d) ans = (vals.b * vals.c) / vals.d;
+    if (unknown === 'b' && vals.a && vals.c && vals.d) ans = (vals.a * vals.d) / vals.c;
+    if (unknown === 'c' && vals.a && vals.b && vals.d) ans = (vals.a * vals.d) / vals.b;
+    if (unknown === 'd' && vals.a && vals.b && vals.c) ans = (vals.b * vals.c) / vals.a;
+    if (ans === null || isNaN(ans) || !isFinite(ans)) return null;
+    return Math.round(ans * 10000) / 10000;
+  }, [a, b, c, d, unknown]);
+  const fields: Array<{key:'a'|'b'|'c'|'d', val: string, set: (v:string)=>void}> = [
+    {key:'a', val:a, set:setA}, {key:'b', val:b, set:setB},
+    {key:'c', val:c, set:setC}, {key:'d', val:d, set:setD},
+  ];
+  return (
+    <Box>
+      <Labeled label='모르는 값 선택'>
+        <select className={INPUT_CLASS} value={unknown} onChange={e => setUnknown(e.target.value as typeof unknown)}>
+          <option value='a'>a (a : b = c : d)</option>
+          <option value='b'>b (a : b = c : d)</option>
+          <option value='c'>c (a : b = c : d)</option>
+          <option value='d'>d (a : b = c : d)</option>
+        </select>
+      </Labeled>
+      <div className='grid gap-4 grid-cols-4 mt-4'>
+        {fields.map(f => (
+          <Labeled key={f.key} label={f.key.toUpperCase()}>
+            <input
+              type='number'
+              className={INPUT_CLASS + (f.key === unknown ? ' opacity-40' : '')}
+              value={f.key === unknown ? '' : f.val}
+              placeholder={f.key === unknown ? '?' : ''}
+              readOnly={f.key === unknown}
+              onChange={e => f.set(e.target.value)}
+            />
+          </Labeled>
+        ))}
+      </div>
+      <div className='mt-3 text-center text-sm text-gray-500'>
+        {a||'?'} : {b||'?'} = {c||'?'} : {d||'?'}
+      </div>
+      <ResultPanel title='비례식 풀이' highlight={result !== null ? `${unknown.toUpperCase()} = ${result}` : '값을 입력하세요'} subtitle='외항의 곱 = 내항의 곱 (a×d = b×c)'>
+        <ResultRows rows={result !== null ? [
+          { label: '비례식', value: `${unknown==='a'?result:a} : ${unknown==='b'?result:b} = ${unknown==='c'?result:c} : ${unknown==='d'?result:d}` },
+          { label: '검산 (외항의 곱)', value: String(Math.round((unknown==='a'?result:Number(a)) * (unknown==='d'?result:Number(d)) * 10000)/10000) },
+          { label: '검산 (내항의 곱)', value: String(Math.round((unknown==='b'?result:Number(b)) * (unknown==='c'?result:Number(c)) * 10000)/10000) },
+        ] : [{ label: '안내', value: '알고 있는 세 값을 입력하세요' }]} />
+      </ResultPanel>
     </Box>
   );
 }

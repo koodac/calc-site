@@ -178,7 +178,10 @@ export type CalculatorKind =
   | "csatGrade"
   | "trafficFine"
   | "cronExpression"
-  | "jwtDecoder";
+  | "jwtDecoder"
+  | "primeChecker"
+  | "rankPercentile"
+  | "proportionCalc";
 
 export function resolveCalculatorKind(tool: ToolItem): CalculatorKind {
   const { slug, title: T } = tool;
@@ -242,6 +245,9 @@ export function resolveCalculatorKind(tool: ToolItem): CalculatorKind {
   if (T.includes("분수") && T.includes("소수")) return "fractionDecimal";
   if (T.includes("평균 계산기")) return "average";
   if (T.includes("나머지 계산기")) return "modulo";
+  if (T.includes("소수 검사기") || T.includes("소수 판별")) return "primeChecker";
+  if (T.includes("상위 퍼센트 계산기")) return "rankPercentile";
+  if (T.includes("비례식 계산기") || T.includes("비례식")) return "proportionCalc";
   if (T.includes("경우의 수") || T.includes("순열")) return "permutation";
   if (T.includes("피보나치")) return "fibonacci";
   if (T.includes("팩토리얼")) return "factorial";

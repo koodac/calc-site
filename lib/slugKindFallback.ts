@@ -33,7 +33,7 @@ export const SLUG_KIND_FALLBACK: Partial<Record<string, CalculatorKind>> = {
   "school-002": "schoolRank",
   "school-004": "polynomialFactor",
   "school-005": "gpaCalc",
-  "school-006": "modulo",
+  "school-006": "primeChecker",
   "school-007": "gaussianElimination",
   "school-014": "confidenceInterval",
   "school-015": "speechTime",
@@ -41,7 +41,8 @@ export const SLUG_KIND_FALLBACK: Partial<Record<string, CalculatorKind>> = {
   "school-017": "pValueZ",
   "school-018": "weightedAvg",
   "school-019": "correlation",
-  "school-022": "percentChange",
+  "school-020": "rankPercentile",
+  "school-022": "proportionCalc",
   "school-023": "csatGrade",
   // 금융
   "finance-002": "compoundSavings",
