@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { TOOLS } from "@/lib/tools";
+import { getAllGuideSlugs } from "@/lib/guideArticles";
 
 const BASE_URL = "https://www.calcmoa.com";
 
@@ -24,6 +25,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: HIGH_PRIORITY_SLUGS.has(tool.slug) ? 0.9 : 0.7,
   }));
 
+  const guideListPage: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE_URL}/guide`,
+      lastModified: LAST_MODIFIED,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    },
+  ];
+
+  const guidePages: MetadataRoute.Sitemap = getAllGuideSlugs().map((slug) => ({
+    url: `${BASE_URL}/guide/${slug}`,
+    lastModified: LAST_MODIFIED,
+    changeFrequency: "monthly" as const,
+    priority: 0.75,
+  }));
+
   return [
     {
       url: BASE_URL,
@@ -31,6 +48,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly" as const,
       priority: 1.0,
     },
+    ...guideListPage,
+    ...guidePages,
     ...toolPages,
   ];
 }

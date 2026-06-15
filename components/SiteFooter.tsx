@@ -11,7 +11,10 @@ export function SiteFooter() {
         <br className="hidden sm:inline" />
         계약·신고·진단 등 최종 판단에는 관련 기관 공식 자료와 전문가 확인을 권장합니다.
       </p>
-      <p className="mt-3">
+      <p className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+        <Link href="/guide" className="hover:text-neutral-600 hover:underline">
+          금융·세금 가이드
+        </Link>
         <Link href="/privacy" className="hover:text-neutral-600 hover:underline">
           개인정보처리방침
         </Link>
