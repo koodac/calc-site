@@ -18,6 +18,7 @@ import {
   getGuideArticle,
   type GuideSection,
 } from "@/lib/guideArticles";
+import { getToolBySlug } from "@/lib/tools";
 
 const BASE_URL = "https://www.calcmoa.com";
 
@@ -186,20 +187,32 @@ export default async function GuideArticlePage({ params }: PageProps) {
             {article.sections.map((section, idx) => renderSection(section, idx))}
           </div>
 
-          {/* Related tool link */}
-          {article.relatedToolSlug && (
-            <div className="mt-8 rounded-lg border border-blue-100 bg-blue-50 px-4 py-4">
-              <p className="text-sm font-medium text-blue-800">
-                🧮 이 가이드와 함께 사용하면 좋은 계산기
-              </p>
-              <Link
-                href={`/tools/${article.relatedToolSlug}`}
-                className="mt-1 block text-sm text-blue-600 hover:underline"
-              >
-                → 관련 계산기 바로 이용하기
-              </Link>
-            </div>
-          )}
+          {/* Related tool links */}
+          {(() => {
+            const slugs = article.relatedToolSlugs ?? (article.relatedToolSlug ? [article.relatedToolSlug] : []);
+            if (slugs.length === 0) return null;
+            const tools = slugs.map((s) => ({ slug: s, tool: getToolBySlug(s) })).filter((t) => t.tool);
+            if (tools.length === 0) return null;
+            return (
+              <div className="mt-8 rounded-lg border border-blue-100 bg-blue-50 px-4 py-4">
+                <p className="mb-2 text-sm font-medium text-blue-800">
+                  🧮 이 가이드와 함께 사용하면 좋은 계산기
+                </p>
+                <ul className="space-y-1">
+                  {tools.map(({ slug: toolSlug, tool }) => (
+                    <li key={toolSlug}>
+                      <Link
+                        href={`/tools/${toolSlug}`}
+                        className="text-sm text-blue-600 hover:underline"
+                      >
+                        {tool!.icon} {tool!.title} →
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })()}
         </article>
 
         {/* Back to guide list */}

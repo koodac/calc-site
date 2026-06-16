@@ -14,7 +14,9 @@ export interface GuideArticle {
   description: string;
   category: string;
   publishedAt: string;
+  /** @deprecated use relatedToolSlugs */
   relatedToolSlug?: string;
+  relatedToolSlugs?: string[];
   sections: GuideSection[];
 }
 
@@ -26,7 +28,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       "연봉 3천만원부터 1억원까지 실수령액 차이가 왜 생기는지, 근로소득세·4대보험 공제 계산 방식을 단계별로 정확히 설명합니다.",
     category: "급여·세금",
     publishedAt: "2026-06-10",
-    relatedToolSlug: "job-001",
+    relatedToolSlugs: ["job-001", "job-032"],
     sections: [
       {
         type: "p",
@@ -153,7 +155,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       "퇴직금 지급 기준, 평균임금 계산법, 퇴직소득세 환산급여·근속연수공제 방식을 정확히 설명하고 IRP 절세 전략까지 안내합니다.",
     category: "급여·세금",
     publishedAt: "2026-06-10",
-    relatedToolSlug: "job-030",
+    relatedToolSlugs: ["job-030"],
     sections: [
       {
         type: "p",
@@ -263,7 +265,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       "4대보험 각각의 보험료 요율, 적용 기준, 혜택, 상실·취득 신고 방법까지 직장인과 사업주가 꼭 알아야 할 내용을 정리했습니다.",
     category: "급여·세금",
     publishedAt: "2026-06-10",
-    relatedToolSlug: "job-008",
+    relatedToolSlugs: ["job-008", "finance-040"],
     sections: [
       {
         type: "p",
@@ -364,7 +366,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       "부동산 취득부터 보유, 매도까지 단계별로 발생하는 세금의 과세 기준과 계산 방법, 절세 전략을 2026년 세법 기준으로 정리합니다.",
     category: "부동산·세금",
     publishedAt: "2026-06-10",
-    relatedToolSlug: "finance-036",
+    relatedToolSlugs: ["finance-036", "finance-031", "finance-037", "finance-038"],
     sections: [
       {
         type: "p",
@@ -478,7 +480,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       "증여세·상속세의 과세 구조, 증여재산공제 한도, 10년 합산 규정, 신고 절차와 절세 전략을 2026년 세법 기준으로 설명합니다.",
     category: "부동산·세금",
     publishedAt: "2026-06-10",
-    relatedToolSlug: "finance-032",
+    relatedToolSlugs: ["finance-032", "finance-033"],
     sections: [
       {
         type: "p",
@@ -584,7 +586,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       "건강보험료 부과 체계, 직장·지역가입자 차이, 피부양자 자격 요건, 보험료 절감 방법을 2026년 기준으로 상세히 설명합니다.",
     category: "급여·세금",
     publishedAt: "2026-06-10",
-    relatedToolSlug: "job-033",
+    relatedToolSlugs: ["job-033"],
     sections: [
       {
         type: "p",
@@ -670,7 +672,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       "출산전후휴가 급여, 육아휴직 급여(통상임금 80%), 배우자 출산휴가, 육아기 근로시간 단축 사용법을 정확히 안내합니다.",
     category: "급여·세금",
     publishedAt: "2026-06-10",
-    relatedToolSlug: "job-031",
+    relatedToolSlugs: ["job-031"],
     sections: [
       {
         type: "p",
@@ -762,7 +764,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       "종합소득세 신고 대상 여부, 소득 종류별 합산 방법, 경비율·장부 작성, 절세 공제 항목, 홈택스 신고 절차를 단계별로 안내합니다.",
     category: "급여·세금",
     publishedAt: "2026-06-10",
-    relatedToolSlug: "finance-034",
+    relatedToolSlugs: ["finance-034", "finance-039"],
     sections: [
       {
         type: "p",
@@ -862,7 +864,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       "국민연금 수령 요건, 예상 수령액 계산법, 임의계속가입·추후납부(추납)·연기연금으로 수령액 늘리는 방법을 상세히 안내합니다.",
     category: "급여·세금",
     publishedAt: "2026-06-10",
-    relatedToolSlug: "finance-040",
+    relatedToolSlugs: ["finance-040"],
     sections: [
       {
         type: "p",
@@ -956,7 +958,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       "BMI 지수 계산 방법, 한국인 기준 비만 판정, 체지방·근육량 해석, 건강 체중 유지를 위한 칼로리 계산과 식단 전략을 안내합니다.",
     category: "건강",
     publishedAt: "2026-06-10",
-    relatedToolSlug: "health-001",
+    relatedToolSlugs: ["health-001", "health-002", "health-027"],
     sections: [
       {
         type: "p",
@@ -1058,7 +1060,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       "근로기준법 기준 연장·야간·휴일근로수당 계산 방법, 포괄임금제의 함정, 수당 미지급 시 대응 절차를 구체적으로 설명합니다.",
     category: "급여·세금",
     publishedAt: "2026-06-10",
-    relatedToolSlug: "job-029",
+    relatedToolSlugs: ["job-029"],
     sections: [
       {
         type: "p",
@@ -1147,7 +1149,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       "ISA(개인종합자산관리계좌) 종류·가입 조건·비과세 한도·투자 가능 상품, 만기 자금 연금 전환으로 세금 혜택 극대화하는 방법을 안내합니다.",
     category: "재무·투자",
     publishedAt: "2026-06-10",
-    relatedToolSlug: "finance-035",
+    relatedToolSlugs: ["finance-035"],
     sections: [
       {
         type: "p",
@@ -1250,7 +1252,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       "수능 등급 산정 방식, 표준점수·백분위·등급 차이, 영역별 학습 전략, 수시·정시 지원 시 성적 활용 방법을 안내합니다.",
     category: "교육",
     publishedAt: "2026-06-10",
-    relatedToolSlug: "school-023",
+    relatedToolSlugs: ["school-023"],
     sections: [
       {
         type: "p",
