@@ -182,30 +182,25 @@ export default async function GuideArticlePage({ params }: PageProps) {
             </p>
           </header>
 
-          {/* Content */}
-          <div>
-            {article.sections.map((section, idx) => renderSection(section, idx))}
-          </div>
-
-          {/* Related tool links */}
+          {/* Related tool links — 본문 상단에 노출 */}
           {(() => {
             const slugs = article.relatedToolSlugs ?? (article.relatedToolSlug ? [article.relatedToolSlug] : []);
             if (slugs.length === 0) return null;
             const tools = slugs.map((s) => ({ slug: s, tool: getToolBySlug(s) })).filter((t) => t.tool);
             if (tools.length === 0) return null;
             return (
-              <div className="mt-8 rounded-lg border border-blue-100 bg-blue-50 px-4 py-4">
-                <p className="mb-2 text-sm font-medium text-blue-800">
-                  🧮 이 가이드와 함께 사용하면 좋은 계산기
+              <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-blue-700">
+                  🧮 바로 계산해보기
                 </p>
-                <ul className="space-y-1">
+                <ul className="flex flex-wrap gap-x-4 gap-y-1.5">
                   {tools.map(({ slug: toolSlug, tool }) => (
                     <li key={toolSlug}>
                       <Link
                         href={`/tools/${toolSlug}`}
-                        className="text-sm text-blue-600 hover:underline"
+                        className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-white px-2.5 py-1 text-sm font-medium text-blue-700 shadow-sm hover:bg-blue-100 hover:text-blue-900"
                       >
-                        {tool!.icon} {tool!.title} →
+                        {tool!.icon} {tool!.title}
                       </Link>
                     </li>
                   ))}
@@ -213,6 +208,11 @@ export default async function GuideArticlePage({ params }: PageProps) {
               </div>
             );
           })()}
+
+          {/* Content */}
+          <div>
+            {article.sections.map((section, idx) => renderSection(section, idx))}
+          </div>
         </article>
 
         {/* Back to guide list */}
