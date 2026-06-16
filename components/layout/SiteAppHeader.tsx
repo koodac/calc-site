@@ -24,6 +24,13 @@ export function SiteAppHeader() {
           </div>
         </Link>
 
+        <Link
+          href="/guide"
+          className="shrink-0 rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-600 shadow-sm hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+        >
+          📖 가이드
+        </Link>
+
         <div className="hidden min-w-0 sm:block sm:flex-1">
           <SearchTrendingTicker />
         </div>

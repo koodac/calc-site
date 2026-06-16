@@ -9,6 +9,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { CatalogToolGrid } from "@/components/home/CatalogToolGrid";
 import { SiteAppHeader } from "@/components/layout/SiteAppHeader";
 import { HomeTopAd } from "@/components/home/HomeTopAd";
+import Link from "next/link";
 
 type CatalogSectionProps = {
   initialMobileTab?: "home" | "favorites" | "menu";
@@ -57,6 +58,17 @@ export function CatalogSection({ initialMobileTab = "home" }: CatalogSectionProp
         <>
           <SearchBar value={query} onChange={setQuery} />
           <HomeTopAd />
+          {!isSearchMode && (
+            <Link
+              href="/guide"
+              className="mb-4 flex items-center justify-between rounded-lg border border-blue-100 bg-blue-50 px-4 py-2.5 hover:bg-blue-100"
+            >
+              <span className="text-sm font-medium text-blue-800">
+                📖 금융·세금·건강 가이드 — 계산기와 함께 보기
+              </span>
+              <span className="text-xs text-blue-500">보러가기 →</span>
+            </Link>
+          )}
           <CategoryNav categories={NAV_CATEGORIES} active={category} onSelect={setCategory} />
           {!isSearchMode && (
             <p className="mb-4 text-sm font-semibold text-neutral-700">{category} 계산기</p>
