@@ -15,7 +15,7 @@ const HIGH_PRIORITY_SLUGS = new Set([
   "school-023",
 ]);
 
-const LAST_MODIFIED = new Date("2026-06-05");
+const LAST_MODIFIED = new Date();
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const toolPages: MetadataRoute.Sitemap = TOOLS.map((tool) => ({
@@ -47,6 +47,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: LAST_MODIFIED,
       changeFrequency: "weekly" as const,
       priority: 1.0,
+    },
+    {
+      url: `${BASE_URL}/about`,
+      lastModified: LAST_MODIFIED,
+      changeFrequency: "yearly" as const,
+      priority: 0.5,
     },
     ...guideListPage,
     ...guidePages,

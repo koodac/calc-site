@@ -15,6 +15,7 @@ import { getAllSlugs, getToolBySlug } from "@/lib/tools";
 import { getToolKeywords } from "@/lib/toolKeywords";
 import { getToolFaq } from "@/lib/toolFaqData";
 import { getToolMetaDescription } from "@/lib/toolMetaDescriptions";
+import { RelatedGuideSection } from "@/components/layout/RelatedGuideSection";
 
 const BASE_URL = "https://www.calcmoa.com";
 
@@ -149,6 +150,7 @@ export default async function ToolPage({ params }: PageProps) {
 
           <ToolEngagementSection tool={tool} />
           <ToolGuideFooter slug={slug} />
+          <RelatedGuideSection slug={slug} />
           <ToolTagsSection slug={slug} title={tool.title} />
           <RelatedToolsSection current={tool} />
         </article>

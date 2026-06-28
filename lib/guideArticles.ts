@@ -1354,3 +1354,11 @@ export function getAllGuideArticles(): GuideArticle[] {
 export function getAllGuideSlugs(): string[] {
   return GUIDE_ARTICLES.map((a) => a.slug);
 }
+
+/** 계산기 slug → 연관 가이드 아티클 목록 (역방향 조회) */
+export function getGuidesByToolSlug(toolSlug: string): GuideArticle[] {
+  return GUIDE_ARTICLES.filter((article) => {
+    const slugs = article.relatedToolSlugs ?? (article.relatedToolSlug ? [article.relatedToolSlug] : []);
+    return slugs.includes(toolSlug);
+  });
+}

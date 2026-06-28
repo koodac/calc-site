@@ -15,6 +15,9 @@ export function SiteFooter() {
         <Link href="/guide" className="hover:text-neutral-600 hover:underline">
           금융·세금 가이드
         </Link>
+        <Link href="/about" className="hover:text-neutral-600 hover:underline">
+          서비스 소개
+        </Link>
         <Link href="/privacy" className="hover:text-neutral-600 hover:underline">
           개인정보처리방침
         </Link>

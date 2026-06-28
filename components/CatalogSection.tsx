@@ -56,6 +56,11 @@ export function CatalogSection({ initialMobileTab = "home" }: CatalogSectionProp
       <SiteAppHeader />
       {!showFavorites ? (
         <>
+          {!isSearchMode && (
+            <p className="mb-3 text-sm leading-relaxed text-neutral-500">
+              연봉·세금·건강·금융 등 일상에서 자주 쓰는 계산기 200개+를 한 곳에서 무료로 사용할 수 있습니다.
+            </p>
+          )}
           <SearchBar value={query} onChange={setQuery} />
           <HomeTopAd />
           {!isSearchMode && (
