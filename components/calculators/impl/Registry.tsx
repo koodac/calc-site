@@ -3073,7 +3073,7 @@ function AirForceWeightedScoreForm() {
 
 function MarineClassEstimateForm() {
   const [d, setD] = useState("2026-03-01");
-  // 참고: 해병대 1기(1949년 창설), 2024년 기준 약 480기 수준으로 알려져 있음
+  // 참고: 해병대 1기(1949년 창설), 2026년 기준 약 492기 수준으로 알려져 있음
   // 연간 약 6기 편성(격월) 기준으로 추정
   const REF_YEAR = 2026;
   const REF_CYCLE = 480;
@@ -5229,7 +5229,7 @@ function MaternityPayForm() {
   const [monthly, setMonthly] = useState(3_000_000);
   const [companyType, setCompanyType] = useState<"sme" | "large">("sme");
 
-  // 우선지원대상기업(중소기업): 90일 전체 고용보험 지원, 상한 월 210만원 (2024년 7월부터 인상)
+  // 우선지원대상기업(중소기업): 90일 전체 고용보험 지원, 상한 월 210만원 (현행 기준)
   // 대기업: 전반 60일 사업주 전액 지급(상한 없음), 후반 30일 고용보험 상한 210만원
   const CAP_MONTHLY = 2_100_000;
   const first60 = companyType === "sme"
@@ -6306,7 +6306,7 @@ function NationalPensionForm() {
   const [myAvg, setMyAvg] = useState(3_000_000);  // 본인 월평균소득(B)
   const [payYears, setPayYears] = useState(20);   // 납부 기간(년)
   const result = useMemo(() => {
-    // A값(전체 가입자 평균소득, 2024년 공시): 2,989,764원 ≈ 299만 (매년 보건복지부 고시)
+    // A값(전체 가입자 평균소득, 최근 공시 기준): 2,989,764원 ≈ 299만 (매년 보건복지부 고시 — 변경 시 업데이트 필요)
     const A = 2_989_764;
     const B = myAvg;
     const n = payYears;
