@@ -5759,7 +5759,7 @@ function ParentalHoursReductionForm() {
   const [reduced, setReduced] = useState(5);      // 단축 시간 (주)
   const result = useMemo(() => {
     // 고용보험 지원: 단축 첫 5시간 100%, 나머지 80% 지원
-    // 상한: 200만원/월 (2024년)
+    // 상한: 200만원/월 (2026년 기준)
     const first5 = Math.min(reduced, 5);
     const rest   = Math.max(reduced - 5, 0);
     const weeklyGov = (hourly * first5 * 1.0 + hourly * rest * 0.8) * 52 / 12;
@@ -5840,15 +5840,15 @@ function LocalHealthInsuranceForm() {
   const [incomeYear, setIncomeYear] = useState(30_000_000); // 연간 소득
   const [propertyVal, setPropertyVal] = useState(100_000_000); // 재산 과표
   const result = useMemo(() => {
-    // 2024년 기준
-    // 소득: 연 소득 × 7.09% / 12 (지역가입자 전액 부담)
+    // 2026년 기준
+    // 소득: 연 소득 × 7.19% / 12 (지역가입자 전액 부담)
     const incomeMonthly = incomeYear / 12;
-    const incomePremium = Math.round(incomeMonthly * 0.0709);
+    const incomePremium = Math.round(incomeMonthly * 0.0719);
     // 재산: 과표 점수 × 208.4원
     // 재산등급표(간소화): 과표 1억 기준 점수 약 470점
     const propertyScore = Math.max(0, Math.round(propertyVal / 100_000_000 * 470));
     const propertyPremium = Math.round(propertyScore * 208.4);
-    // 최저보험료: 19,780원 (2024)
+    // 최저보험료: 19,780원 (2026년 기준 — 공단 공시에 따라 변동)
     const base = Math.max(19_780, incomePremium + propertyPremium);
     const ltcPremium = Math.round(base * LONG_TERM_CARE_FACTOR_OF_HEALTH);
     const total = base + ltcPremium;
@@ -5864,9 +5864,9 @@ function LocalHealthInsuranceForm() {
           <NumInput className={INPUT_CLASS} min={0} value={propertyVal} onChange={e => setPropertyVal(Math.max(0, num(e.target.value)))} />
         </Labeled>
       </div>
-      <ResultPanel title='월 건강보험료' highlight={won(result.total) + '원'} subtitle='2024년 기준 · 재산점수 간이계산 · 정확한 금액은 공단 확인 필요'>
+      <ResultPanel title='월 건강보험료' highlight={won(result.total) + '원'} subtitle='2026년 기준 · 재산점수 간이계산 · 정확한 금액은 공단 확인 필요'>
         <ResultRows rows={[
-          { label: '소득 보험료 (7.09%)', value: won(result.incomePremium) + '원' },
+          { label: '소득 보험료 (7.19%)', value: won(result.incomePremium) + '원' },
           { label: '재산 보험료', value: won(result.propertyPremium) + '원' },
           { label: '건강보험료', value: won(result.base) + '원' },
           { label: '장기요양보험료', value: won(result.ltcPremium) + '원' },
@@ -6127,7 +6127,7 @@ function AcquisitionTaxForm() {
   const [houses, setHouses] = useState(1);           // 보유 주택 수 (취득 후)
   const [area, setArea] = useState<'regulated'|'other'>('other'); // 조정지역 여부
   const result = useMemo(() => {
-    // 2024년 취득세율
+    // 2026년 취득세율
     let rate: number;
     if (houses === 1) {
       // 1주택: 6억이하 1%, 6-9억 1-3%, 9억초과 3%
@@ -6306,7 +6306,7 @@ function NationalPensionForm() {
   const [myAvg, setMyAvg] = useState(3_000_000);  // 본인 월평균소득(B)
   const [payYears, setPayYears] = useState(20);   // 납부 기간(년)
   const result = useMemo(() => {
-    // 2024년 A값(전체 가입자 평균소득): 2,989,764원 ≈ 299만
+    // A값(전체 가입자 평균소득, 2024년 공시): 2,989,764원 ≈ 299만 (매년 보건복지부 고시)
     const A = 2_989_764;
     const B = myAvg;
     const n = payYears;
@@ -6334,7 +6334,7 @@ function NationalPensionForm() {
           <NumInput className={INPUT_CLASS} min={1} max={45} value={payYears} onChange={e => setPayYears(Math.min(45, Math.max(1, num(e.target.value))))} />
         </Labeled>
       </div>
-      <ResultPanel title='예상 월 노령연금' highlight={won(result.monthlyPension) + '원'} subtitle='2024년 A값(299만) 기준 · 실제 수령액과 차이 있을 수 있음'>
+      <ResultPanel title='예상 월 노령연금' highlight={won(result.monthlyPension) + '원'} subtitle='A값(매년 고시, 약 299만) 기준 · 실제 수령액은 국민연금공단 확인 필요'>
         <ResultRows rows={[
           { label: '납부 기간', value: payYears + '년' },
           { label: '예상 월 연금', value: won(result.monthlyPension) + '원' },
@@ -6568,7 +6568,7 @@ function TrafficFineForm() {
           </select>
         </Labeled>
       </div>
-      <ResultPanel title='범칙금' highlight={won(fine) + '원'} subtitle='도로교통법 별표 기준 · 2024년'>
+      <ResultPanel title='범칙금' highlight={won(fine) + '원'} subtitle='도로교통법 별표 기준 · 2026년'>
         <ResultRows rows={[
           { label: '범칙금 (현장 고지)', value: won(fine) + '원' },
           { label: '과태료 (무인단속)', value: won(penalty) + '원' },
