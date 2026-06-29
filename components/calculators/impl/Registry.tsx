@@ -2450,9 +2450,9 @@ function ElecForm() {
   const result = useMemo(() => {
     // 주택용 저압 (한전 누진요금 기준 — 변경 시 업데이트 필요)
     const TIERS = [
-      { limit: 200, rate: 88.3, base: 910 },
-      { limit: 400, rate: 182.9, base: 1600 },
-      { limit: Infinity, rate: 275.6, base: 7300 },
+      { limit: 200, rate: 120.0, base: 910 },
+      { limit: 400, rate: 214.6, base: 1600 },
+      { limit: Infinity, rate: 307.3, base: 7300 },
     ];
     let tierIdx = kwh <= 200 ? 0 : kwh <= 400 ? 1 : 2;
     const baseFee = TIERS[tierIdx]!.base;
