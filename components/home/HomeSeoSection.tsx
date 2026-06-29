@@ -100,9 +100,13 @@ const GUIDE_LINKS = [
   { title: "2026년 연봉 실수령액 완전 가이드", href: "/guide/salary-guide" },
   { title: "퇴직금 계산 완전 가이드", href: "/guide/severance-guide" },
   { title: "4대보험 가입·계산 완전 가이드", href: "/guide/four-insurance-guide" },
-  { title: "부동산 취득세·양도세 가이드", href: "/guide/real-estate-tax-guide" },
-  { title: "대출 상환 방식 완전 가이드", href: "/guide/loan-repayment-guide" },
-  { title: "BMI·다이어트 완전 가이드", href: "/guide/bmi-diet-guide" },
+  { title: "부동산 취득세 완전 가이드", href: "/guide/real-estate-acquisition-tax-guide" },
+  { title: "대출 금리·이자 완전 가이드", href: "/guide/loan-interest-guide" },
+  { title: "BMI·체중 관리 완전 가이드", href: "/guide/bmi-obesity-guide" },
+  { title: "2026년 최저임금 완전 가이드", href: "/guide/minimum-wage-guide" },
+  { title: "종합소득세 세율·절세 전략 가이드", href: "/guide/income-tax-bracket-guide" },
+  { title: "복리 투자·72법칙 가이드", href: "/guide/compound-interest-guide" },
+  { title: "프리랜서 3.3% 세금 완전 가이드", href: "/guide/freelance-tax-guide" },
 ];
 
 export function HomeSeoSection() {
