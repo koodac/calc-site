@@ -2448,7 +2448,7 @@ function FuelForm() {
 function ElecForm() {
   const [kwh, setKwh] = useState(300);
   const result = useMemo(() => {
-    // 주택용 저압 (2024 한전 기준)
+    // 주택용 저압 (한전 누진요금 기준 — 변경 시 업데이트 필요)
     const TIERS = [
       { limit: 200, rate: 88.3, base: 910 },
       { limit: 400, rate: 182.9, base: 1600 },
@@ -2479,7 +2479,7 @@ function ElecForm() {
       <Labeled label="월 사용량(kWh)">
         <NumInput className={INPUT_CLASS} value={kwh} min={0} onChange={(e) => setKwh(Math.max(0, num(e.target.value)))} />
       </Labeled>
-      <ResultPanel title="전기요금 계산" subtitle="주택용 저압 기준 (2024 한전 누진제) · 실제 고지와 다를 수 있습니다" highlight={`총 청구금액 약 ${won(result.total)}원`}>
+      <ResultPanel title="전기요금 계산" subtitle="주택용 저압 한전 누진제 기준 · 실제 고지와 다를 수 있습니다" highlight={`총 청구금액 약 ${won(result.total)}원`}>
         <ResultRows rows={[
           { label: "기본요금", value: `${won(result.baseFee)}원` },
           { label: "전력량 요금", value: `${won(result.energyFee)}원` },
@@ -5278,7 +5278,7 @@ function EitcPayForm() {
     { key: 'sole', label: '홑벌이' },
     { key: 'dual', label: '맞벌이' },
   ];
-  // 2025년 기준 (귀속연도 2024년) — 국세청 고시
+  // 2026년 기준 (귀속연도 2025년) — 국세청 고시
   // 단독: 최대 165만, 소득 2,200만 미만 / 홑벌이: 최대 285만, 3,200만 미만 / 맞벌이: 최대 330만, 3,800만 미만
   const eitc = useMemo(() => {
     const i = income;
@@ -5312,7 +5312,7 @@ function EitcPayForm() {
       <Labeled label='총급여 (연간)'>
         <NumInput className={INPUT_CLASS} value={income} onChange={e => setIncome(num(e.target.value))} />
       </Labeled>
-      <ResultPanel title='근로장려금 (추정)' subtitle='2025년 기준(귀속 2024년) · 단독 최대 165만 / 홑벌이 285만 / 맞벌이 330만원'>
+      <ResultPanel title='근로장려금 (추정)' subtitle='2026년 기준(귀속 2025년) · 단독 최대 165만 / 홑벌이 285만 / 맞벌이 330만원'>
         <ResultRows rows={[{ label: '근로장려금', value: won(Math.round(eitc)) + '원' }]} />
         <p className='mt-3 text-xs text-neutral-400'>실제 지급액은 재산·자산 요건, 전년도 소득 등에 따라 다릅니다. 국세청 홈택스에서 정확한 금액을 확인하세요.</p>
       </ResultPanel>
@@ -6484,7 +6484,7 @@ function HomaIrForm() {
   );
 }
 
-// N19. 수능 등급 컷 계산기 (2024학년도 기준)
+// N19. 수능 등급 컷 계산기 (참고용 — 학년도별 등급컷 상이)
 function CsatGradeForm() {
   const GRADE_TABLE = {
     '국어': [90, 80, 73, 67, 60, 52, 40, 24],
@@ -6516,7 +6516,7 @@ function CsatGradeForm() {
           <NumInput className={INPUT_CLASS} min={0} max={100} value={score} onChange={e => setScore(Math.min(100, Math.max(0, num(e.target.value))))} />
         </Labeled>
       </div>
-      <ResultPanel title='예상 등급' highlight={grade + '등급'} subtitle='2024학년도 수능 등급 컷 기준'>
+      <ResultPanel title='예상 등급' highlight={grade + '등급'} subtitle='수능 등급컷 참고용 · 학년도별 등급 컷은 상이할 수 있음'>
         <ResultRows rows={[
           { label: '점수', value: score + '점' },
           { label: '등급', value: grade + '등급' },
