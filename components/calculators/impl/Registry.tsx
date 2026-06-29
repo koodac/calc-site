@@ -5798,7 +5798,7 @@ function SalaryReverseForm() {
     for (let i = 0; i < 50; i++) {
       const mid = (lo + hi) / 2;
       const monthly = mid / 12;
-      const np = Math.floor(Math.min(monthly, 5_900_000) * NATIONAL_PENSION_RATE_EMPLOYEE / 10) * 10;
+      const np = Math.floor(Math.min(monthly, getPensionHealthCeiling()) * NATIONAL_PENSION_RATE_EMPLOYEE / 10) * 10;
       const hi2 = Math.floor(monthly * HEALTH_INSURANCE_RATE_EMPLOYEE / 10) * 10;
       const lt = Math.round(hi2 * LONG_TERM_CARE_FACTOR_OF_HEALTH / 10) * 10;
       const ei = Math.floor(monthly * EMPLOYMENT_INSURANCE_RATE_EMPLOYEE / 10) * 10;
@@ -5809,7 +5809,7 @@ function SalaryReverseForm() {
     }
     const annualSalary = Math.round((lo + hi) / 2 / 10_000) * 10_000;
     const monthlySalary = annualSalary / 12;
-    const np = Math.floor(Math.min(monthlySalary, 5_900_000) * NATIONAL_PENSION_RATE_EMPLOYEE / 10) * 10;
+    const np = Math.floor(Math.min(monthlySalary, getPensionHealthCeiling()) * NATIONAL_PENSION_RATE_EMPLOYEE / 10) * 10;
     const hi2 = Math.floor(monthlySalary * HEALTH_INSURANCE_RATE_EMPLOYEE / 10) * 10;
     const lt = Math.round(hi2 * LONG_TERM_CARE_FACTOR_OF_HEALTH / 10) * 10;
     const ei = Math.floor(monthlySalary * EMPLOYMENT_INSURANCE_RATE_EMPLOYEE / 10) * 10;
