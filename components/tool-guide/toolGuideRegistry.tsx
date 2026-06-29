@@ -792,7 +792,7 @@ function MaternityLeaveGuide() {
       <GuideFormulaBox>급여 = 통상임금(월) × 해당 개월수 (상한액 적용)</GuideFormulaBox>
       <GuideBulletList
         items={[
-          "상한액: 월 210만원 (2024년 7월 인상 적용)",
+          "상한액: 월 210만원 (2026년 기준)",
           "우선지원대상기업: 전 90일 고용보험 지급",
           "대규모 기업: 최초 45일은 사업주 부담, 후 45일 고용보험 지급",
         ]}
@@ -2323,7 +2323,7 @@ function IncomeTaxGuide() {
         연말정산 전 예상 환급·추가납부 여부를 가늠하거나, 프리랜서·자영업자의 종합소득세 납부 예측에 활용하세요.
       </GuideP>
 
-      <GuideH2>2024년 소득세율 구간</GuideH2>
+      <GuideH2>2026년 소득세율 구간</GuideH2>
       <GuideTable
         headers={["과세표준 (연간)", "세율", "누진공제", "지방소득세 포함 실효세율 상한"]}
         rows={[
@@ -2589,7 +2589,7 @@ function EitcGuide() {
         최대 수백만 원을 받을 수 있으며, <strong>세금을 낸 적이 없어도 지급</strong>됩니다.
       </GuideP>
 
-      <GuideH2>2024년 수급 요건 및 최대 지급액</GuideH2>
+      <GuideH2>2026년 수급 요건 및 최대 지급액</GuideH2>
       <GuideTable
         headers={["가구 유형", "소득 요건 (총급여 기준)", "최대 지급액", "해당 가구 예시"]}
         rows={[
@@ -7641,7 +7641,7 @@ function AcquisitionTaxGuide() {
         농어촌특별세와 지방교육세가 추가됩니다.
       </GuideP>
 
-      <GuideH3>주택 취득세율 (1세대 기준, 2024년)</GuideH3>
+      <GuideH3>주택 취득세율 (1세대 기준, 2026년)</GuideH3>
       <GuideTable
         headers={["취득가액", "1주택", "2주택", "3주택 이상"]}
         rows={[
@@ -7837,7 +7837,7 @@ function NationalPensionGuide() {
       <GuideH3>노령연금 산출 공식 (기본연금액)</GuideH3>
       <GuideFormulaBox>
         기본연금액 = 1.2 × (A + B) × (1 + 0.05n/12){"\n"}
-        A = 전체 가입자 평균 소득(2024년 약 2,989,764원){"\n"}
+        A = 전체 가입자 평균 소득(매년 고시, 2024년 약 2,989,764원){"\n"}
         B = 가입자 본인 가입 기간 평균 소득{"\n"}
         n = 20년(240개월) 초과 가입 개월 수
       </GuideFormulaBox>
@@ -8099,7 +8099,7 @@ function TrafficFineGuide() {
         차량 소유자에게 부과됩니다.
       </GuideP>
 
-      <GuideH3>속도위반 범칙금·과태료 (승용차 기준, 2024년)</GuideH3>
+      <GuideH3>속도위반 범칙금·과태료 (승용차 기준, 2026년)</GuideH3>
       <GuideTable
         headers={["위반 속도", "범칙금", "과태료"]}
         rows={[

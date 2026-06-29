@@ -3075,7 +3075,7 @@ function MarineClassEstimateForm() {
   const [d, setD] = useState("2026-03-01");
   // 참고: 해병대 1기(1949년 창설), 2024년 기준 약 480기 수준으로 알려져 있음
   // 연간 약 6기 편성(격월) 기준으로 추정
-  const REF_YEAR = 2024;
+  const REF_YEAR = 2026;
   const REF_CYCLE = 480;
   const CYCLES_PER_YEAR = 6; // 약 격월
 
