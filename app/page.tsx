@@ -1,4 +1,5 @@
 import { CatalogSection } from "@/components/CatalogSection";
+import { HomeSeoSection } from "@/components/home/HomeSeoSection";
 import { SiteFooter } from "@/components/SiteFooter";
 
 const BASE_URL = "https://www.calcmoa.com";
@@ -52,6 +53,7 @@ export default async function Home({ searchParams }: HomePageProps) {
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-24 pt-6 sm:px-6 sm:pb-20 sm:pt-8 lg:px-8">
         <CatalogSection initialMobileTab={initialMobileTab} />
       </main>
+      <HomeSeoSection />
       <SiteFooter />
     </div>
   );
