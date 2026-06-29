@@ -3847,10 +3847,11 @@ function UnemploymentForm() {
   const [age, setAge] = useState(35);
   const [workYears, setWorkYears] = useState(3);
 
-  const MIN_DAILY = Math.round(10_320 * 8 * 0.8); // 최저임금 × 8h × 80%
-  const MAX_DAILY = 66_000;
+  const MIN_DAILY = Math.round(10_320 * 8 * 0.8); // 최저임금 × 8h × 80% = 66,048원 (2026년)
+  const MAX_DAILY = 66_000; // 고용노동부 공시 상한 (MIN_DAILY가 초과하면 하한 우선)
   const rawDaily = Math.round(dailyWage * 0.6);
-  const benefitDaily = Math.min(MAX_DAILY, Math.max(MIN_DAILY, rawDaily));
+  // 하한이 상한보다 크면 하한 우선 적용 (2026년 최저임금 인상으로 발생)
+  const benefitDaily = Math.max(MIN_DAILY, Math.min(MAX_DAILY, rawDaily));
   const days = getUnempDays(age, workYears);
   const total = benefitDaily * days;
 
