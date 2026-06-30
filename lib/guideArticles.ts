@@ -687,7 +687,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
           ["분할 방법", "출산 후 최소 45일 이상 확보 필수"],
           ["급여 지급", "첫 60일: 회사 부담 (통상임금 100%)"],
           ["급여 지급", "나머지 30일: 고용보험에서 지급"],
-          ["상한액", "월 200만원 (우선지원대상기업은 90일 전체 고용보험)"],
+          ["상한액", "월 210만원 (우선지원대상기업은 90일 전체 고용보험)"],
         ],
       },
       { type: "h2", text: "2. 배우자 출산휴가" },
@@ -764,7 +764,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       "종합소득세 신고 대상 여부, 소득 종류별 합산 방법, 경비율·장부 작성, 절세 공제 항목, 홈택스 신고 절차를 단계별로 안내합니다.",
     category: "급여·세금",
     publishedAt: "2026-06-10",
-    relatedToolSlugs: ["finance-034", "finance-039"],
+    relatedToolSlugs: ["finance-034"],
     sections: [
       {
         type: "p",
@@ -2093,7 +2093,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       "주택·아파트 취득세 세율표, 생애최초·다주택자 중과세율, 지방교육세·농어촌특별세 계산까지 정리한 2026년 취득세 완전 가이드입니다.",
     category: "부동산·세금",
     publishedAt: "2026-06-29",
-    relatedToolSlugs: ["finance-025"],
+    relatedToolSlugs: ["finance-036", "finance-031"],
     sections: [
       {
         type: "p",
