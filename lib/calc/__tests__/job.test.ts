@@ -230,14 +230,16 @@ describe("calcParentalLeavePay", () => {
 });
 
 describe("calcUnemploymentBenefit", () => {
-  it("평균 일당 10만, 6개월 미만 → 120일", () => {
+  it("평균 일당 10만, 6개월 미만 → 120일, 하한(66048원) 적용", () => {
     const r = calcUnemploymentBenefit(100_000, 5);
     expect(r.durationDays).toBe(120);
-    expect(r.dailyBenefit).toBe(60_000);
+    // 60,000원 < 하한 66,048원 → 하한 우선 (2026년 최저임금 10,320×8×80%)
+    expect(r.dailyBenefit).toBe(66_048);
   });
-  it("고용보험 상한: 일당 11만 → 66000원 상한", () => {
+  it("일당 11만: 66,000원 상한보다 하한(66,048원)이 크므로 하한 적용", () => {
     const r = calcUnemploymentBenefit(110_000, 5);
-    expect(r.dailyBenefit).toBe(66_000);
+    // 66,000원(상한) < 66,048원(하한) → 하한 우선
+    expect(r.dailyBenefit).toBe(66_048);
   });
   it("가입 3년 이상 → 180일", () => {
     const r = calcUnemploymentBenefit(100_000, 36);

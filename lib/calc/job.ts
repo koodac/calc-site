@@ -210,7 +210,12 @@ export function calcUnemploymentBenefit(
   avgDailyWage: number,
   employmentMonths: number,
 ): { dailyBenefit: number; durationDays: number; total: number } {
-  const dailyBenefit = Math.min(Math.round(avgDailyWage * 0.6), 66_000);
+  // 2026년 기준: 하한 = 최저임금(10,320원) × 8h × 80% = 66,048원
+  // 상한 = 66,000원 (고용노동부 고시) — 하한이 상한보다 크면 하한 우선
+  const MIN_DAILY = Math.round(10_320 * 8 * 0.8); // 66,048원
+  const MAX_DAILY = 66_000;
+  const rawDaily = Math.round(avgDailyWage * 0.6);
+  const dailyBenefit = Math.max(MIN_DAILY, Math.min(MAX_DAILY, rawDaily));
   let durationDays = 120;
   if (employmentMonths >= 12 && employmentMonths < 36) durationDays = 150;
   else if (employmentMonths >= 36 && employmentMonths < 60) durationDays = 180;
