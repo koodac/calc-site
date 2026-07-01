@@ -3,6 +3,8 @@
 import { useMemo, useState, useEffect, useRef, type ReactNode } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { estimateSimplifiedIncomeTax } from "@/lib/payroll/incomeTaxSimplified2026";
+import { calcSeverancePay, calcSalaryRaise } from "@/lib/calc/job";
+import { calcBMI, bmiCategory, calcBMR, calcTDEE } from "@/lib/calc/health";
 import type { CalculatorKind } from "@/lib/calculatorKind";
 import type { ToolItem } from "@/lib/tools";
 import { SalaryCalculator } from "@/components/calculators/SalaryCalculator";
@@ -50,6 +52,18 @@ import {
   TdeeForm,
   UnitsPerHourForm,
   UnusedAnnualPayForm,
+  VitaminIntakeForm,
+  MaxMuscleMassForm,
+  SalesCommissionForm,
+  RealEstateBrokerageFeeForm,
+  SmeTaxAgeForm,
+  MaternityScheduleForm,
+  WinRateForm,
+  HeightPredictionForm,
+  ErrorRateForm,
+  FortyNineForm,
+  LeanMassForm,
+  RetirementFundForm,
   WaterIntakeForm,
   WeeklyHolidaySimpleForm,
   WorkMinutesSimpleForm,
@@ -422,6 +436,31 @@ export function renderCalculatorBody(kind: CalculatorKind, tool: ToolItem) {
       return <RankPercentileForm />;
     case "proportionCalc":
       return <ProportionCalcForm />;
+    // 제목-폼 불일치 수정 (2026.06)
+    case "vitaminIntake":
+      return <VitaminIntakeForm />;
+    case "maxMuscleMass":
+      return <MaxMuscleMassForm />;
+    case "salesCommission":
+      return <SalesCommissionForm />;
+    case "realEstateBrokerageFee":
+      return <RealEstateBrokerageFeeForm />;
+    case "smeTaxAge":
+      return <SmeTaxAgeForm />;
+    case "maternitySchedule":
+      return <MaternityScheduleForm />;
+    case "winRate":
+      return <WinRateForm />;
+    case "heightPrediction":
+      return <HeightPredictionForm />;
+    case "errorRate":
+      return <ErrorRateForm />;
+    case "fortyNine":
+      return <FortyNineForm />;
+    case "leanMass":
+      return <LeanMassForm />;
+    case "retirementFund":
+      return <RetirementFundForm />;
     default:
       return (
         <Box>
@@ -499,15 +538,8 @@ function SeverancePayForm() {
   const [leaveDate, setLeaveDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   const breakdown = useMemo(() => {
-    const start = new Date(`${hireDate}T00:00:00`);
-    const end = new Date(`${leaveDate}T00:00:00`);
-    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
-      return { serviceDays: 0, yearsFrac: 0, severance: 0 };
-    }
-    const serviceDays = Math.floor((end.getTime() - start.getTime()) / 86400000) + 1;
-    const yearsFrac = serviceDays / 365;
-    const severance = dailyWage * 30 * yearsFrac;
-    return { serviceDays, yearsFrac, severance };
+    const result = calcSeverancePay(dailyWage, hireDate, leaveDate);
+    return result;
   }, [dailyWage, hireDate, leaveDate]);
 
   function addDaily(n: number) {
@@ -585,8 +617,8 @@ function SeverancePayForm() {
 function BmiForm() {
   const [w, setW] = useState(70);
   const [h, setH] = useState(170);
-  const bmi = h > 0 ? w / (h / 100) ** 2 : 0;
-  const cat = bmi < 18.5 ? "저체중" : bmi < 23 ? "정상" : bmi < 25 ? "과체중" : bmi < 30 ? "비만 1단계" : "비만 2단계";
+  const bmi = calcBMI(w, h);
+  const cat = bmiCategory(bmi);
   const hm = h / 100;
   const stdMin = (18.5 * hm * hm).toFixed(1);
   const stdMax = (22.9 * hm * hm).toFixed(1);
@@ -632,10 +664,8 @@ function BmrForm() {
   ];
 
   const { bmr, tdee, carb, protein, fat } = useMemo(() => {
-    const bmr = male
-      ? 10 * weight + 6.25 * height - 5 * age + 5
-      : 10 * weight + 6.25 * height - 5 * age - 161;
-    const tdee = bmr * act;
+    const bmr = calcBMR(male, age, weight, height);
+    const tdee = calcTDEE(bmr, act);
     return { bmr, tdee, carb: (tdee * 0.5) / 4, protein: (tdee * 0.25) / 4, fat: (tdee * 0.25) / 9 };
   }, [male, age, weight, height, act]);
 
@@ -762,11 +792,7 @@ function PercentForm() {
 function SalaryRaiseForm() {
   const [before, setBefore] = useState(48_000_000);
   const [after, setAfter] = useState(52_000_000);
-  const { pct, diff } = useMemo(() => {
-    const diff = after - before;
-    const pct = before === 0 ? 0 : (diff / before) * 100;
-    return { pct, diff };
-  }, [before, after]);
+  const { raisePct: pct, diffAmt: diff } = useMemo(() => calcSalaryRaise(before, after), [before, after]);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -5694,13 +5720,14 @@ function SeveranceTaxForm() {
   const [pay, setPay] = useState(30_000_000);    // 퇴직금
   const [years, setYears] = useState(5);          // 근속연수
   const result = useMemo(() => {
-    const n = Math.max(1, Math.ceil(years));
+    const n = Math.max(1, Math.floor(years)); // 근속연수 절사(소득세법 기준)
     // 근속연수공제
+    // 근속연수공제 (소득세법 시행령 2023년 개정 현행 기준)
     const deduction =
-      n <= 5  ? n * 300_000 :
-      n <= 10 ? 1_500_000 + (n - 5) * 500_000 :
-      n <= 20 ? 4_000_000 + (n - 10) * 800_000 :
-                12_000_000 + (n - 20) * 1_200_000;
+      n <= 5  ? n * 1_000_000 :
+      n <= 10 ? 5_000_000 + (n - 5) * 2_000_000 :
+      n <= 20 ? 15_000_000 + (n - 10) * 2_500_000 :
+                40_000_000 + (n - 20) * 3_000_000;
     const afterDeduction = Math.max(0, pay - deduction);
     // 환산급여 = (퇴직금 - 근속연수공제) × 12 / 근속연수
     const converted = (afterDeduction * 12) / n;
@@ -5885,12 +5912,13 @@ function CapitalGainsTaxForm() {
   const [expense, setExpense]   = useState(5_000_000);    // 필요경비
   const [holdYears, setHoldYears] = useState(3);          // 보유기간(년)
   const [is1House, setIs1House] = useState(false);        // 1세대1주택
+  const [hasResided, setHasResided] = useState(false);    // 2년 이상 거주(1주택 고율 공제 요건)
   const result = useMemo(() => {
     const gain = Math.max(0, transfer - acquire - expense);
-    // 장기보유특별공제: 3년이상, 일반 연2% / 1주택 연4% (최대 80%)
+    // 장기보유특별공제: 3년이상, 일반 연2% / 1주택+2년거주 연4% (최대 80%)
     let ltdc = 0;
     if (holdYears >= 3) {
-      const rate = is1House ? 0.04 : 0.02;
+      const rate = (is1House && hasResided) ? 0.04 : 0.02;
       ltdc = Math.min(gain * rate * holdYears, gain * 0.8);
     }
     const taxBase = Math.max(0, gain - ltdc);
@@ -5928,10 +5956,18 @@ function CapitalGainsTaxForm() {
           <NumInput className={INPUT_CLASS} min={0} value={holdYears} onChange={e => setHoldYears(Math.max(0, num(e.target.value)))} />
         </Labeled>
       </div>
-      <label className='flex items-center gap-2 text-sm mt-2'>
-        <input type='checkbox' checked={is1House} onChange={e => setIs1House(e.target.checked)} />
-        1세대 1주택 (12억 이하 비과세)
-      </label>
+      <div className="flex flex-col gap-2 mt-2">
+        <label className='flex items-center gap-2 text-sm'>
+          <input type='checkbox' checked={is1House} onChange={e => { setIs1House(e.target.checked); if (!e.target.checked) setHasResided(false); }} />
+          1세대 1주택 (12억 이하 비과세)
+        </label>
+        {is1House && (
+          <label className='flex items-center gap-2 text-sm ml-4'>
+            <input type='checkbox' checked={hasResided} onChange={e => setHasResided(e.target.checked)} />
+            2년 이상 거주 (장기보유특별공제 연 4% 적용 요건)
+          </label>
+        )}
+      </div>
       <ResultPanel title='예상 양도소득세' highlight={won(result.total) + '원'} subtitle='장기보유특별공제 적용 · 다주택·단기 중과 미반영'>
         <ResultRows rows={[
           { label: '양도차익', value: won(result.gain) + '원' },
@@ -6136,7 +6172,14 @@ function AcquisitionTaxForm() {
       else if (price <= 900_000_000) rate = 0.01 + (price - 600_000_000) / 300_000_000 * 0.02;
       else rate = 0.03;
     } else if (houses === 2) {
-      rate = area === 'regulated' ? 0.08 : 0.01; // 조정지역 2주택 8%
+      if (area === 'regulated') {
+        rate = 0.08; // 조정지역 2주택 8%
+      } else {
+        // 비조정지역 2주택: 1주택과 동일한 일반 취득세율(1~3%) 적용
+        if (price <= 600_000_000) rate = 0.01;
+        else if (price <= 900_000_000) rate = 0.01 + (price - 600_000_000) / 300_000_000 * 0.02;
+        else rate = 0.03;
+      }
     } else {
       rate = area === 'regulated' ? 0.12 : 0.08; // 3주택 이상
     }

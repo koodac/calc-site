@@ -33,6 +33,11 @@ export const RELATED_TOOLS: Record<string, string[]> = {
   "job-026": ["job-027", "job-028", "job-018", "job-006"],
   "job-027": ["job-009", "job-018", "job-014", "job-026"],
   "job-028": ["job-019", "job-001", "job-026", "job-027"],
+  "job-029": ["job-014", "job-012", "job-019", "job-009"],
+  "job-030": ["job-002", "job-001", "job-019", "finance-031"],
+  "job-031": ["job-024", "job-023", "job-025", "job-001"],
+  "job-032": ["job-001", "job-019", "job-017", "job-016"],
+  "job-033": ["job-019", "job-001", "job-028", "job-017"],
 
   // ── 건강 ──
   "health-001": ["health-003", "health-002", "health-017", "health-018"],
@@ -61,6 +66,8 @@ export const RELATED_TOOLS: Record<string, string[]> = {
   "health-024": ["daily-007", "health-001", "health-017", "health-002"],
   "health-025": ["health-020", "health-026", "health-021", "health-001"],
   "health-026": ["health-025", "health-001", "health-017", "health-002"],
+  "health-027": ["health-002", "health-017", "health-010", "health-016"],
+  "health-028": ["health-001", "health-017", "health-002", "health-026"],
 
   // ── 학교 ──
   "school-001": ["daily-003", "school-015", "school-010", "school-005"],
@@ -85,6 +92,7 @@ export const RELATED_TOOLS: Record<string, string[]> = {
   "school-020": ["school-002", "school-010", "school-018", "school-005"],
   "school-021": ["school-012", "school-013", "school-009", "school-003"],
   "school-022": ["school-008", "finance-004", "school-010", "school-003"],
+  "school-023": ["school-002", "school-020", "school-018", "school-010"],
 
   // ── 금융 ──
   "finance-001": ["finance-026", "finance-025", "finance-002", "finance-021"],
@@ -117,6 +125,17 @@ export const RELATED_TOOLS: Record<string, string[]> = {
   "finance-028": ["finance-025", "finance-029", "finance-007", "finance-023"],
   "finance-029": ["finance-025", "finance-028", "finance-007", "finance-021"],
   "finance-030": ["finance-007", "finance-014", "finance-025", "finance-027"],
+  "finance-031": ["finance-036", "finance-032", "finance-033", "finance-025"],
+  "finance-032": ["finance-033", "finance-034", "finance-031", "finance-036"],
+  "finance-033": ["finance-032", "finance-034", "finance-031", "finance-036"],
+  "finance-034": ["job-001", "finance-033", "finance-032", "job-019"],
+  "finance-035": ["finance-001", "finance-026", "finance-021", "finance-011"],
+  "finance-036": ["finance-031", "finance-037", "finance-032", "unit-001"],
+  "finance-037": ["finance-036", "finance-031", "unit-001", "finance-025"],
+  "finance-038": ["finance-025", "finance-007", "finance-028", "finance-030"],
+  "finance-039": ["finance-038", "finance-007", "job-001", "finance-034"],
+  "finance-040": ["job-019", "job-001", "finance-026", "finance-034"],
+  "finance-041": ["finance-015", "daily-013", "finance-031", "finance-036"],
 
   // ── 단위 ──
   "unit-001": ["unit-005", "unit-006", "finance-014", "unit-010"],
@@ -154,6 +173,7 @@ export const RELATED_TOOLS: Record<string, string[]> = {
   "daily-011": ["daily-009", "daily-005", "daily-004", "daily-007"],
   "daily-012": ["daily-005", "daily-009", "school-015", "daily-007"],
   "daily-013": ["daily-006", "finance-004", "unit-016", "finance-015"],
+  "daily-014": ["daily-013", "daily-009", "finance-004", "daily-005"],
 
   // ── 스포츠 ──
   "sports-001": ["sports-004", "sports-005", "sports-006", "school-010"],
@@ -187,6 +207,8 @@ export const RELATED_TOOLS: Record<string, string[]> = {
   "dev-009": ["dev-004", "dev-006", "dev-005", "dev-007"],
   "dev-010": ["security-004", "dev-004", "dev-005", "security-002"],
   "dev-011": ["dev-008", "dev-007", "dev-004", "dev-001"],
+  "dev-012": ["dev-013", "dev-009", "dev-006", "dev-001"],
+  "dev-013": ["dev-012", "dev-009", "dev-005", "dev-001"],
 
   // ── 게임 ──
   "game-001": ["game-003", "game-004", "game-006", "game-007"],

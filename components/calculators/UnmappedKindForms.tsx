@@ -11,20 +11,57 @@ import {
   ResultRows,
 } from "@/components/calculators/ToolFormLayout";
 import { Labeled, num, won, NumInput } from "@/components/calculators/calcUi";
+import {
+  MINIMUM_HOURLY_2026,
+  calcWeeklyHolidayPay,
+  calcWorkMinutes,
+  calcMonthlyToHourly,
+  calcUPH,
+  calcUnusedAnnualPay,
+  calcAttendanceRate,
+  calcPartTimePay,
+  calcAchievementRate,
+  calcDailyRate,
+  calcSalaryForecast,
+  calcDateDiff,
+  calcAnnualLeaveDays,
+} from "@/lib/calc/job";
+import {
+  calcBMR,
+  calcTDEE,
+  calcStandardWeight,
+  calcProtein,
+  calcWater,
+  calcStepsCalories,
+  calcHeatIndex,
+  calcOneRM,
+  calcFFMI,
+  calcBSAMosteller,
+  calcCreatinineClearance,
+  calcEGFR,
+  calcFriedewaldLDL,
+  calcLeanMass,
+  calcHeightPrediction,
+  calcSleepCycleTimes,
+  calcAlcoholGrams,
+  calcBACWidmark,
+} from "@/lib/calc/health";
+import { calcFractionToDecimal } from "@/lib/calc/school";
+import { calcWinRate, calcErrorRate } from "@/lib/calc/sports";
+import { calcFortyNineDay } from "@/lib/calc/military";
 
 function Box({ children }: { children: React.ReactNode }) {
   return <CalculatorShell>{children}</CalculatorShell>;
 }
 
-/** 2026년 적용 시간당 최저임금 10,320원 — 고용노동부 고시 */
-const MINIMUM_HOURLY_REFERENCE = 10_320;
+const MINIMUM_HOURLY_REFERENCE = MINIMUM_HOURLY_2026;
 
 /** 연가보상 등: (월 급여 / 30) × 일수 간이 */
 export function DailyRateMoneyForm() {
   const [monthly, setMonthly] = useState(3_500_000);
   const [days, setDays] = useState(10);
   const daily = monthly / 30;
-  const pay = Math.round(daily * days);
+  const pay = calcDailyRate(monthly, days);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -45,7 +82,7 @@ export function DailyRateMoneyForm() {
 export function AchievementRateForm() {
   const [target, setTarget] = useState(100);
   const [achieved, setAchieved] = useState(80);
-  const rate = target === 0 ? 0 : (achieved / target) * 100;
+  const rate = calcAchievementRate(target, achieved);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -65,7 +102,7 @@ export function SalaryForecastForm() {
   const [current, setCurrent] = useState(48_000_000);
   const [pct, setPct] = useState(3);
   const [years, setYears] = useState(5);
-  const future = useMemo(() => current * Math.pow(1 + pct / 100, years), [current, pct, years]);
+  const future = useMemo(() => calcSalaryForecast(current, pct, years), [current, pct, years]);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -89,28 +126,8 @@ export function SalaryForecastForm() {
 export function TenureDateRangeForm({ variant }: { variant: "tenure" | "leave" }) {
   const [start, setStart] = useState("2018-01-02");
   const [end, setEnd] = useState(() => new Date().toISOString().slice(0, 10));
-  const diff = useMemo(() => {
-    const a = new Date(`${start}T00:00:00`);
-    const b = new Date(`${end}T00:00:00`);
-    if (b < a) return { days: 0, years: 0 };
-    const days = Math.floor((b.getTime() - a.getTime()) / 86400000) + 1;
-    const years = days / 365;
-    return { days, years };
-  }, [start, end]);
-  const roughLeave = (() => {
-    const fullYears = Math.floor(diff.years);
-    if (diff.days <= 0) return 0;
-    if (fullYears < 1) {
-      // 1년 미만: 매월 1일 (최대 11일) — 달력 기준 완성 월 수 계산
-      const a = new Date(`${start}T00:00:00`);
-      const b = new Date(`${end}T00:00:00`);
-      const rawMonths = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
-      const fullMonths = b.getDate() >= a.getDate() ? rawMonths : rawMonths - 1;
-      return Math.min(11, Math.max(0, fullMonths));
-    }
-    // 1년 이상: 15일 기본 + 2년마다 1일 가산 (최대 25일)
-    return Math.min(25, 15 + Math.floor((fullYears - 1) / 2));
-  })();
+  const diff = useMemo(() => calcDateDiff(start, end), [start, end]);
+  const roughLeave = useMemo(() => calcAnnualLeaveDays(start, end), [start, end]);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -141,13 +158,7 @@ export function WorkMinutesSimpleForm() {
   const [sm, setSm] = useState(0);
   const [eh, setEh] = useState(18);
   const [em, setEm] = useState(0);
-  const minutes = useMemo(() => {
-    const start = sh * 60 + sm;
-    let end = eh * 60 + em;
-    // 퇴근이 출근보다 이르면 다음날로 처리 (야간근무)
-    if (end < start) end += 24 * 60;
-    return end - start;
-  }, [sh, sm, eh, em]);
+  const minutes = useMemo(() => calcWorkMinutes(sh, sm, eh, em), [sh, sm, eh, em]);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -172,7 +183,7 @@ export function WorkMinutesSimpleForm() {
 export function MonthlyHourlyForm() {
   const [monthly, setMonthly] = useState(2_500_000);
   const [hours, setHours] = useState(209);
-  const hourly = hours <= 0 ? 0 : monthly / hours;
+  const hourly = calcMonthlyToHourly(monthly, hours);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -191,7 +202,7 @@ export function MonthlyHourlyForm() {
 export function UnitsPerHourForm() {
   const [units, setUnits] = useState(120);
   const [h, setH] = useState(8);
-  const uph = h <= 0 ? 0 : units / h;
+  const uph = calcUPH(units, h);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -227,8 +238,7 @@ export function MinimumWageForm() {
 export function WeeklyHolidaySimpleForm() {
   const [wage, setWage] = useState(12_000);
   const [wh, setWh] = useState(40);
-  // 주 15h 미만은 주휴수당 없음, 40h 초과도 8h 상한 적용
-  const bonus = wh < 15 ? 0 : wage * 8 * (Math.min(wh, 40) / 40);
+  const bonus = calcWeeklyHolidayPay(wage, wh);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -247,7 +257,7 @@ export function WeeklyHolidaySimpleForm() {
 export function UnusedAnnualPayForm() {
   const [daily, setDaily] = useState(120_000);
   const [unused, setUnused] = useState(5);
-  const pay = Math.round(daily * unused);
+  const pay = calcUnusedAnnualPay(daily, unused);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -266,7 +276,7 @@ export function UnusedAnnualPayForm() {
 export function AttendanceRateForm() {
   const [ok, setOk] = useState(20);
   const [total, setTotal] = useState(22);
-  const rate = total <= 0 ? 0 : (ok / total) * 100;
+  const rate = calcAttendanceRate(ok, total);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -286,7 +296,7 @@ export function PartTimeWeeklyPayForm() {
   const [wage, setWage] = useState(10_320);
   const [h, setH] = useState(20);
   const [weeks, setWeeks] = useState(4);
-  const pay = wage * h * weeks;
+  const pay = calcPartTimePay(wage, h, weeks);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -310,7 +320,7 @@ export function PartTimeWeeklyPayForm() {
 export function StandardWeightForm() {
   const [h, setH] = useState(170);
   const [male, setMale] = useState(true);
-  const ideal = male ? (h - 100) * 0.9 : (h - 100) * 0.85;
+  const ideal = calcStandardWeight(h, male);
   return (
     <Box>
       <div className="flex gap-2">
@@ -327,7 +337,7 @@ export function StandardWeightForm() {
 
 export function ProteinIntakeForm() {
   const [w, setW] = useState(70);
-  const g = w * 1.2;
+  const g = calcProtein(w);
   return (
     <Box>
       <Labeled label="체중(kg)">
@@ -340,7 +350,7 @@ export function ProteinIntakeForm() {
 
 export function WaterIntakeForm() {
   const [w, setW] = useState(70);
-  const ml = Math.round(w * 35);
+  const ml = calcWater(w);
   return (
     <Box>
       <Labeled label="체중(kg)">
@@ -353,7 +363,7 @@ export function WaterIntakeForm() {
 
 export function SleepCycleForm() {
   const [bedH, setBedH] = useState(23);
-  const cycles = [1, 2, 3, 4, 5, 6];
+  const cycles = calcSleepCycleTimes(bedH, 0);
   return (
     <Box>
       <Labeled label="잠자리에 드는 시각(시, 0–23)">
@@ -361,16 +371,11 @@ export function SleepCycleForm() {
       </Labeled>
       <ResultPanel title="90분 주기 기상(참고)">
         <ul className="mt-4 list-inside space-y-1 text-sm text-neutral-700">
-          {cycles.map((n) => {
-            const wake = bedH + n * 1.5;
-            const h = Math.floor(wake) % 24;
-            const m = (wake % 1) * 60;
-            return (
-              <li key={n}>
-                {n}주기 후 약 {h}시 {m.toFixed(0)}분 경
-              </li>
-            );
-          })}
+          {cycles.map(({ cycles: n, hour, minute }) => (
+            <li key={n}>
+              {n}주기 후 약 {hour}시 {String(minute).padStart(2, "0")}분 경
+            </li>
+          ))}
         </ul>
       </ResultPanel>
     </Box>
@@ -380,7 +385,7 @@ export function SleepCycleForm() {
 export function StepsCaloriesForm() {
   const [steps, setSteps] = useState(8000);
   const [w, setW] = useState(70);
-  const kcal = steps * 0.0004 * w;
+  const kcal = calcStepsCalories(steps, w);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -401,27 +406,8 @@ export function HeatIndexForm() {
   const [rh, setRh] = useState(70);
 
   const result = useMemo(() => {
-    // 불쾌지수 (Thom, 1959) — 기상청 통용 공식
-    const di = 0.81 * t + 0.01 * rh * (0.99 * t - 14.99) + 46.3;
+    const { discomfortIndex: di, heatIndexC: hi } = calcHeatIndex(t, rh);
     const diLabel = di < 68 ? "쾌적" : di < 75 ? "보통" : di < 80 ? "약간 불쾌" : "매우 불쾌";
-
-    // Heat Index (Rothfusz / NOAA 공식) — 27°C 이상, 습도 40% 이상에서 유효
-    let hi: number | null = null;
-    if (t >= 27 && rh >= 40) {
-      const tf = t * 9 / 5 + 32;
-      const hif =
-        -42.379 +
-        2.04901523 * tf +
-        10.14333127 * rh -
-        0.22475541 * tf * rh -
-        0.00683783 * tf * tf -
-        0.05481717 * rh * rh +
-        0.00122874 * tf * tf * rh +
-        0.00085282 * tf * rh * rh -
-        0.00000199 * tf * tf * rh * rh;
-      hi = (hif - 32) * 5 / 9;
-    }
-
     return { di, diLabel, hi };
   }, [t, rh]);
 
@@ -467,7 +453,7 @@ export function HeatIndexForm() {
 export function OneRmForm() {
   const [w, setW] = useState(80);
   const [r, setR] = useState(5);
-  const one = w * (1 + r / 30);
+  const one = calcOneRM(w, r);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -538,11 +524,8 @@ export function TdeeForm() {
   const [age, setAge] = useState(30);
   const [male, setMale] = useState(true);
   const [act, setAct] = useState(1.55);
-  const bmr = useMemo(() => {
-    if (male) return 10 * w + 6.25 * h - 5 * age + 5;
-    return 10 * w + 6.25 * h - 5 * age - 161;
-  }, [w, h, age, male]);
-  const tdee = bmr * act;
+  const bmr = useMemo(() => calcBMR(male, age, w, h), [male, age, w, h]);
+  const tdee = calcTDEE(bmr, act);
   return (
     <Box>
       <div className="flex gap-2">
@@ -572,9 +555,7 @@ export function FfmiForm() {
   const [h, setH] = useState(175);
   const [w, setW] = useState(75);
   const [bf, setBf] = useState(15);
-  const m = h / 100;
-  const lean = w * (1 - bf / 100);
-  const ffmi = lean / (m * m);
+  const ffmi = calcFFMI(w, h, bf);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -596,7 +577,7 @@ export function FfmiForm() {
 export function BsaForm() {
   const [h, setH] = useState(175);
   const [w, setW] = useState(70);
-  const bsa = Math.sqrt((h * w) / 3600);
+  const bsa = calcBSAMosteller(w, h);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -617,7 +598,7 @@ export function CreatinineClearanceForm() {
   const [w, setW] = useState(70);
   const [cr, setCr] = useState(1);
   const [female, setFemale] = useState(false);
-  const crCl = ((140 - age) * w) / (72 * cr) * (female ? 0.85 : 1);
+  const crCl = calcCreatinineClearance(cr, age, w, !female);
   return (
     <Box>
       <div className="flex gap-2">
@@ -667,12 +648,7 @@ export function EgfrForm() {
   const [cr, setCr] = useState(1);
   const [age, setAge] = useState(45);
   const [female, setFemale] = useState(false);
-  const k = female ? 0.7 : 0.9;
-  const alpha = female ? -0.329 : -0.411;
-  const minRatio = Math.min(cr / k, 1);
-  const maxRatio = Math.max(cr / k, 1);
-  const egfr =
-    141 * Math.min(minRatio, 1) ** alpha * maxRatio ** -1.209 * 0.993 ** age * (female ? 1.018 : 1);
+  const egfr = calcEGFR(cr, age, !female);
   return (
     <Box>
       <div className="flex gap-2">
@@ -696,7 +672,7 @@ export function FriedewaldLdlForm() {
   const [tc, setTc] = useState(200);
   const [hdl, setHdl] = useState(50);
   const [tg, setTg] = useState(150);
-  const ldl = tc - hdl - tg / 5;
+  const ldl = calcFriedewaldLDL(tc, hdl, tg);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -721,10 +697,8 @@ export function BacWidmarkForm() {
   const [w, setW] = useState(70);
   const [drinks, setDrinks] = useState(2);
   const [ml, setMl] = useState(50);
-  // 에탄올 그램 = 잔수 × 음료량(ml) × 도수(16%) × 에탄올 밀도(0.789 g/ml)
-  const ethanol = drinks * ml * 0.16 * 0.789;
-  const r = 0.68;
-  const bac = ethanol / (w * 1000 * r) * 100;
+  const ethanol = calcAlcoholGrams(ml, 16) * drinks;
+  const bac = calcBACWidmark(ethanol, w, true, 0);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -748,7 +722,7 @@ export function BacWidmarkForm() {
 export function FractionDecimalForm() {
   const [nume, setNume] = useState(3);
   const [den, setDen] = useState(8);
-  const dec = den === 0 ? 0 : nume / den;
+  const dec = den === 0 ? 0 : calcFractionToDecimal(nume, den);
   return (
     <Box>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -760,6 +734,559 @@ export function FractionDecimalForm() {
         </Labeled>
       </div>
       <ResultPanel title="소수" highlight={String(dec)} />
+    </Box>
+  );
+}
+
+/** 키 성장 예측 계산기 — 중간 부모 키 공식(Tanner) */
+export function HeightPredictionForm() {
+  const [fatherH, setFatherH] = useState(175);
+  const [motherH, setMotherH] = useState(162);
+
+  const sonH = calcHeightPrediction(fatherH, motherH, true).predicted;
+  const daughterH = calcHeightPrediction(fatherH, motherH, false).predicted;
+
+  return (
+    <Box>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Labeled label="아버지 키(cm)">
+          <NumInput className={INPUT_CLASS} value={fatherH} onChange={(e) => setFatherH(num(e.target.value))} />
+        </Labeled>
+        <Labeled label="어머니 키(cm)">
+          <NumInput className={INPUT_CLASS} value={motherH} onChange={(e) => setMotherH(num(e.target.value))} />
+        </Labeled>
+      </div>
+      <ResultPanel title="예상 키(중간 부모 키 공식, 참고)" subtitle="유전 외 영양·운동·수면 등 환경 요인에 따라 ±10cm 이상 차이 가능">
+        <ResultRows rows={[
+          { label: "아들 예상 키", value: `약 ${sonH.toFixed(1)} cm` },
+          { label: "딸 예상 키", value: `약 ${daughterH.toFixed(1)} cm` },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+/** 오차율 계산기 — |측정값 - 이론값| / 이론값 × 100 */
+export function ErrorRateForm() {
+  const [theoretical, setTheoretical] = useState(100);
+  const [measured, setMeasured] = useState(97);
+
+  const absError = Math.abs(measured - theoretical);
+  const errorRate = calcErrorRate(absError, Math.abs(theoretical));
+  const sign = measured >= theoretical ? "+" : "-";
+
+  return (
+    <Box>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Labeled label="이론값(참값)">
+          <NumInput className={INPUT_CLASS} value={theoretical} onChange={(e) => setTheoretical(num(e.target.value))} />
+        </Labeled>
+        <Labeled label="측정값(실험값)">
+          <NumInput className={INPUT_CLASS} value={measured} onChange={(e) => setMeasured(num(e.target.value))} />
+        </Labeled>
+      </div>
+      <ResultPanel title="오차율" highlight={`${errorRate.toFixed(4)} %`} subtitle="|측정값 − 이론값| ÷ |이론값| × 100">
+        <ResultRows rows={[
+          { label: "절대 오차", value: `${sign}${absError}` },
+          { label: "오차율", value: `${errorRate.toFixed(4)} %` },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+/** 49재 계산기 — 기일로부터 49일째 날짜 */
+export function FortyNineForm() {
+  const [deathDate, setDeathDate] = useState(() => new Date().toISOString().slice(0, 10));
+
+  const result = useMemo(() => {
+    const date49 = calcFortyNineDay(deathDate);
+    const target = new Date(`${date49}T00:00:00`);
+    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+    return { date49, day49: weekdays[target.getDay()] };
+  }, [deathDate]);
+
+  return (
+    <Box>
+      <Labeled label="기일(사망일)">
+        <input type="date" className={INPUT_CLASS} value={deathDate} onChange={(e) => setDeathDate(e.target.value)} />
+      </Labeled>
+      <ResultPanel title="49재 날짜" highlight={`${result.date49} (${result.day49})`} subtitle="기일을 1일로 계산 — 지역·종파에 따라 다를 수 있습니다" />
+    </Box>
+  );
+}
+
+/** 제지방·골격근량 추정 계산기 — 체중·체지방률 기반 */
+export function LeanMassForm() {
+  const [h, setH] = useState(175);
+  const [w, setW] = useState(75);
+  const [bf, setBf] = useState(18);
+
+  const lean = calcLeanMass(w, bf);
+  const fat = w - lean;
+  const ffmi = calcFFMI(w, h, bf);
+  const smm = lean * 0.55;
+
+  return (
+    <Box>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Labeled label="키(cm)">
+          <NumInput className={INPUT_CLASS} value={h} onChange={(e) => setH(num(e.target.value))} />
+        </Labeled>
+        <Labeled label="체중(kg)">
+          <NumInput className={INPUT_CLASS} value={w} onChange={(e) => setW(num(e.target.value))} />
+        </Labeled>
+        <div className="sm:col-span-2">
+          <Labeled label="체지방률(%)">
+            <NumInput step="0.1" className={INPUT_CLASS} value={bf} onChange={(e) => setBf(Math.min(60, Math.max(0, num(e.target.value))))} />
+          </Labeled>
+        </div>
+      </div>
+      <ResultPanel title="체성분 추정" highlight={`제지방 ${lean.toFixed(1)} kg`} subtitle="체지방률 측정 방법에 따라 오차 발생 · 정확한 측정은 인바디 권장">
+        <ResultRows rows={[
+          { label: "제지방량(LBM)", value: `${lean.toFixed(1)} kg` },
+          { label: "체지방량", value: `${fat.toFixed(1)} kg` },
+          { label: "골격근량 추정(LBM × 0.55)", value: `약 ${smm.toFixed(1)} kg` },
+          { label: "FFMI", value: ffmi.toFixed(2) },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+/** 은퇴자금 계산기 — 목표 노후자금·적립 기간·수익률 기반 */
+export function RetirementFundForm() {
+  const [currentAge, setCurrentAge] = useState(35);
+  const [retireAge, setRetireAge] = useState(60);
+  const [currentSaving, setCurrentSaving] = useState(10_000_000);
+  const [monthly, setMonthly] = useState(500_000);
+  const [rate, setRate] = useState(5);
+
+  const result = useMemo(() => {
+    const years = Math.max(0, retireAge - currentAge);
+    const months = years * 12;
+    const r = rate / 100 / 12; // 월 수익률
+
+    // 현재 저축액 미래 가치
+    const fvCurrent = currentSaving * Math.pow(1 + r, months);
+    // 월 적립 미래 가치
+    const fvMonthly = r === 0 ? monthly * months : monthly * ((Math.pow(1 + r, months) - 1) / r);
+    const total = fvCurrent + fvMonthly;
+
+    return { years, total, fvCurrent, fvMonthly };
+  }, [currentAge, retireAge, currentSaving, monthly, rate]);
+
+  return (
+    <Box>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Labeled label="현재 나이">
+          <NumInput className={INPUT_CLASS} value={currentAge} onChange={(e) => setCurrentAge(Math.max(1, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label="은퇴 목표 나이">
+          <NumInput className={INPUT_CLASS} value={retireAge} onChange={(e) => setRetireAge(Math.max(currentAge + 1, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label="현재 저축액(원)">
+          <NumInput className={INPUT_CLASS} value={currentSaving} onChange={(e) => setCurrentSaving(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label="월 저축 예정액(원)">
+          <NumInput className={INPUT_CLASS} value={monthly} onChange={(e) => setMonthly(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <div className="sm:col-span-2">
+          <Labeled label="연 기대 수익률(%)">
+            <NumInput step="0.1" className={INPUT_CLASS} value={rate} onChange={(e) => setRate(Math.max(0, num(e.target.value)))} />
+          </Labeled>
+        </div>
+      </div>
+      <ResultPanel title="은퇴 시 예상 자금(추정)" highlight={`${won(result.total)}원`} subtitle="세금·인플레이션 미반영 · 실제 운용 성과는 다를 수 있음">
+        <ResultRows rows={[
+          { label: "적립 기간", value: `${result.years}년 (${result.years * 12}개월)` },
+          { label: "현재 저축 미래 가치", value: `${won(result.fvCurrent)}원` },
+          { label: "월 적립 미래 가치", value: `${won(result.fvMonthly)}원` },
+          { label: "은퇴 시 예상 합계", value: `${won(result.total)}원` },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+/** 일일 비타민 섭취량 계산기 — 성별·나이별 권장 섭취 참고값 */
+export function VitaminIntakeForm() {
+  const [age, setAge] = useState(30);
+  const [male, setMale] = useState(true);
+
+  // 한국인 영양소 섭취기준(보건복지부) 주요 비타민 권장량 참고값
+  const getValues = (a: number, m: boolean) => {
+    const child = a < 9;
+    const teen = a >= 9 && a < 19;
+    const senior = a >= 65;
+    return [
+      { name: "비타민 A (μgRAE/일)", value: child ? 300 : teen ? (m ? 700 : 600) : m ? (senior ? 700 : 800) : (senior ? 600 : 650) },
+      { name: "비타민 D (μg/일)", value: child ? 5 : a < 65 ? 10 : 15 },
+      { name: "비타민 C (mg/일)", value: child ? 40 : teen ? 90 : 100 },
+      { name: "비타민 B1 티아민 (mg/일)", value: child ? 0.5 : teen ? (m ? 1.1 : 1.0) : m ? 1.2 : 1.1 },
+      { name: "비타민 B2 리보플라빈 (mg/일)", value: child ? 0.6 : teen ? (m ? 1.5 : 1.2) : m ? 1.5 : 1.2 },
+      { name: "비타민 B6 (mg/일)", value: child ? 0.7 : teen ? (m ? 1.5 : 1.4) : m ? 1.5 : 1.4 },
+      { name: "비타민 B12 (μg/일)", value: child ? 1.5 : teen ? 2.4 : 2.4 },
+      { name: "엽산 (μgDFE/일)", value: child ? 200 : teen ? 400 : 400 },
+      { name: "비타민 E (mg α-TE/일)", value: child ? 6 : teen ? (m ? 11 : 10) : m ? 12 : 12 },
+      { name: "비타민 K (μg/일)", value: child ? 45 : teen ? (m ? 80 : 65) : m ? 75 : 65 },
+    ];
+  };
+
+  const rows = getValues(age, male);
+
+  return (
+    <Box>
+      <div className="flex gap-2">
+        <button type="button" className={`rounded-full px-4 py-2 text-sm ${male ? "bg-neutral-900 text-white" : "border"}`} onClick={() => setMale(true)}>남</button>
+        <button type="button" className={`rounded-full px-4 py-2 text-sm ${!male ? "bg-neutral-900 text-white" : "border"}`} onClick={() => setMale(false)}>여</button>
+      </div>
+      <Labeled label="나이" hint="만 9세 미만은 참고 정확도가 낮습니다">
+        <NumInput className={INPUT_CLASS} value={age} onChange={(e) => setAge(Math.max(1, Math.min(99, num(e.target.value))))} />
+      </Labeled>
+      <ResultPanel title="일일 비타민 권장 섭취량(참고)" subtitle="한국인 영양소 섭취기준(보건복지부) 기반 · 만 9세 미만은 단순화 적용 · 질환·임신·수유 시 별도 확인">
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead><tr className="bg-neutral-100">
+              {["비타민", "권장량(참고)"].map((h) => <th key={h} className="border border-neutral-200 px-2 py-1.5 font-medium text-left">{h}</th>)}
+            </tr></thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.name} className="even:bg-neutral-50">
+                  <td className="border border-neutral-200 px-2 py-1.5">{r.name}</td>
+                  <td className="border border-neutral-200 px-2 py-1.5 text-right font-medium">{r.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </ResultPanel>
+    </Box>
+  );
+}
+
+/** 최대 근육 체중 계산기 — Berkhan 공식 기반 자연적 한계 추정 */
+export function MaxMuscleMassForm() {
+  const [h, setH] = useState(175);
+  const [bf, setBf] = useState(10);
+  const [male, setMale] = useState(true);
+
+  // Martin Berkhan 공식: 남성 최대 LBM ≈ 신장(cm) - 100, 여성 ≈ × 0.85 보정
+  const maxLbm = male ? h - 100 : (h - 100) * 0.85;
+  const maxWeight = bf >= 100 ? 0 : Math.round((maxLbm / (1 - bf / 100)) * 10) / 10;
+
+  return (
+    <Box>
+      <div className="flex gap-2">
+        <button type="button" className={`rounded-full px-4 py-2 text-sm ${male ? "bg-neutral-900 text-white" : "border"}`} onClick={() => setMale(true)}>남</button>
+        <button type="button" className={`rounded-full px-4 py-2 text-sm ${!male ? "bg-neutral-900 text-white" : "border"}`} onClick={() => setMale(false)}>여</button>
+      </div>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Labeled label="신장(cm)">
+          <NumInput className={INPUT_CLASS} value={h} onChange={(e) => setH(Math.max(140, Math.min(220, num(e.target.value))))} />
+        </Labeled>
+        <Labeled label="목표 체지방률(%)">
+          <NumInput step="0.5" className={INPUT_CLASS} value={bf} onChange={(e) => setBf(Math.max(3, Math.min(40, num(e.target.value))))} />
+        </Labeled>
+      </div>
+      <ResultPanel title="최대 근육 체중(Berkhan 공식, 추정)" highlight={`${maxWeight} kg`} subtitle="무보조(내추럴) 상한 참고치 · 개인차 매우 큼 · 여성은 보정계수 0.85 적용">
+        <ResultRows rows={[
+          { label: "최대 제지방량(LBM) 추정", value: `${maxLbm.toFixed(1)} kg` },
+          { label: "목표 체지방률", value: `${bf}%` },
+          { label: "해당 체지방률 기준 체중", value: `${maxWeight} kg` },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+/** 판매 수수료 계산기 — 판매가 × 수수료율 = 수수료·실수령액 */
+export function SalesCommissionForm() {
+  const [price, setPrice] = useState(100_000);
+  const [rate, setRate] = useState(10.8);
+  const commission = Math.round(price * rate / 100);
+  const net = price - commission;
+  const PRESETS = [
+    { label: "쿠팡 로켓그로스", rate: 10.8 },
+    { label: "스마트스토어 기본", rate: 5.85 },
+    { label: "G마켓/옥션", rate: 12 },
+    { label: "11번가", rate: 11 },
+  ];
+  return (
+    <Box>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Labeled label="판매가격(원)">
+          <NumInput className={INPUT_CLASS} value={price} onChange={(e) => setPrice(num(e.target.value))} />
+        </Labeled>
+        <Labeled label="수수료율(%)">
+          <NumInput step="0.01" className={INPUT_CLASS} value={rate} onChange={(e) => setRate(Math.max(0, Math.min(100, num(e.target.value))))} />
+        </Labeled>
+      </div>
+      <div>
+        <p className="mb-2 text-xs text-neutral-500">플랫폼별 참고 요율 (실제와 다를 수 있음)</p>
+        <div className="flex flex-wrap gap-2">
+          {PRESETS.map((p) => (
+            <button key={p.label} type="button"
+              className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-100"
+              onClick={() => setRate(p.rate)}>
+              {p.label} {p.rate}%
+            </button>
+          ))}
+        </div>
+      </div>
+      <ResultPanel title="수수료 계산" highlight={`실수령 ${won(net)}원`}>
+        <ResultRows rows={[
+          { label: "판매가격", value: `${won(price)}원` },
+          { label: `수수료 (${rate}%)`, value: `${won(commission)}원` },
+          { label: "실수령액", value: `${won(net)}원` },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+/** 중소기업 취업자 소득세 감면 연령 계산기 — 취업일 기준 만 나이 + 병역 차감 */
+export function SmeTaxAgeForm() {
+  const [birth, setBirth] = useState("1996-01-01");
+  const [hireDate, setHireDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [militaryMonths, setMilitaryMonths] = useState(0);
+
+  const result = useMemo(() => {
+    const b = new Date(`${birth}T00:00:00`);
+    const h = new Date(`${hireDate}T00:00:00`);
+    if (h < b) return null;
+
+    // 취업일 기준 만 나이
+    let age = h.getFullYear() - b.getFullYear();
+    const hasBirthday =
+      h.getMonth() > b.getMonth() ||
+      (h.getMonth() === b.getMonth() && h.getDate() >= b.getDate());
+    if (!hasBirthday) age -= 1;
+
+    // 병역 차감 (최대 6년 = 72개월)
+    const deductMonths = Math.min(militaryMonths, 72);
+    const deductYears = deductMonths / 12;
+    const adjustedAge = age - deductYears;
+
+    // 청년 요건: 만 15세 이상 34세 이하 (차감 후)
+    const isYouth = adjustedAge >= 15 && adjustedAge <= 34;
+
+    return { age, adjustedAge: Math.floor(adjustedAge * 10) / 10, isYouth };
+  }, [birth, hireDate, militaryMonths]);
+
+  return (
+    <Box>
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Labeled label="생년월일">
+          <input type="date" className={INPUT_CLASS} value={birth} onChange={(e) => setBirth(e.target.value)} />
+        </Labeled>
+        <Labeled label="취업일">
+          <input type="date" className={INPUT_CLASS} value={hireDate} onChange={(e) => setHireDate(e.target.value)} />
+        </Labeled>
+        <div className="sm:col-span-2">
+          <Labeled label="병역 복무 기간(개월, 없으면 0)" hint="최대 72개월(6년) 차감">
+            <NumInput className={INPUT_CLASS} value={militaryMonths} onChange={(e) => setMilitaryMonths(Math.max(0, Math.min(72, num(e.target.value))))} />
+          </Labeled>
+        </div>
+      </div>
+      {result ? (
+        <ResultPanel
+          title="감면 연령 계산"
+          highlight={result.isYouth ? "청년 요건 해당(참고)" : "청년 요건 미해당(참고)"}
+          subtitle="장애인·60세 이상·경력단절여성 요건은 별도 — 세무사 확인 권장"
+        >
+          <ResultRows rows={[
+            { label: "취업일 기준 만 나이", value: `만 ${result.age}세` },
+            { label: `병역 차감 후 나이 (${militaryMonths}개월 차감)`, value: `만 ${result.adjustedAge}세` },
+            { label: "청년 해당 여부 (15~34세)", value: result.isYouth ? "해당" : "미해당" },
+          ]} />
+        </ResultPanel>
+      ) : (
+        <ResultPanel title="입력 오류" highlight="취업일이 생년월일보다 이후여야 합니다" />
+      )}
+    </Box>
+  );
+}
+
+/** 출산휴가·육아휴직 날짜 계산기 */
+export function MaternityScheduleForm() {
+  const [dueDate, setDueDate] = useState(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 2);
+    return d.toISOString().slice(0, 10);
+  });
+  const [twins, setTwins] = useState(false);
+
+  const result = useMemo(() => {
+    const due = new Date(`${dueDate}T00:00:00`);
+    const totalDays = twins ? 120 : 90;
+
+    // 출산전 최대 45일(다태아 60일) 사용 가능 → 출산일(due) 기준
+    const preDays = twins ? 60 : 45;
+    const postDays = totalDays - preDays;
+
+    // 출산전후휴가 시작일 = 출산예정일 - preDays
+    const start = new Date(due);
+    start.setDate(start.getDate() - preDays);
+
+    // 종료일 = 시작일 + totalDays - 1
+    const end = new Date(start);
+    end.setDate(end.getDate() + totalDays - 1);
+
+    // 육아휴직: 출산 후 18개월 이내 자녀 1인당 최대 1년 (부모 합산 최대 2년)
+    const parentalStart = new Date(due);
+    parentalStart.setDate(parentalStart.getDate() + 1);
+    const parentalEnd = new Date(due);
+    parentalEnd.setFullYear(parentalEnd.getFullYear() + 1);
+    parentalEnd.setDate(parentalEnd.getDate() - 1);
+
+    const fmt = (d: Date) => d.toISOString().slice(0, 10);
+    return { start: fmt(start), end: fmt(end), totalDays, preDays, postDays, parentalStart: fmt(parentalStart), parentalEnd: fmt(parentalEnd) };
+  }, [dueDate, twins]);
+
+  return (
+    <Box>
+      <div className="flex gap-2">
+        <button type="button" className={`rounded-full px-4 py-2 text-sm ${!twins ? "bg-neutral-900 text-white" : "border"}`} onClick={() => setTwins(false)}>단태아</button>
+        <button type="button" className={`rounded-full px-4 py-2 text-sm ${twins ? "bg-neutral-900 text-white" : "border"}`} onClick={() => setTwins(true)}>다태아(쌍둥이 등)</button>
+      </div>
+      <Labeled label="출산 예정일">
+        <input type="date" className={INPUT_CLASS} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+      </Labeled>
+      <ResultPanel title="출산휴가·육아휴직 일정(추정)" subtitle="실제 시작일은 근로자 신청 기준 · 육아휴직은 자녀 만 18개월까지 사용 가능 · 고용보험 수급 조건 별도 확인">
+        <ResultRows rows={[
+          { label: "출산전후휴가 시작(예정)", value: result.start },
+          { label: "출산전후휴가 종료(예정)", value: result.end },
+          { label: "총 휴가 일수", value: `${result.totalDays}일 (출산 전 최대 ${result.preDays}일 + 후 ${result.postDays}일)` },
+          { label: "육아휴직 가능 시작", value: result.parentalStart },
+          { label: "출산 후 1년 시점(참고)", value: result.parentalEnd },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+/** 승률 계산기 — 전적 입력 · 목표 승률 달성 추가 승수 계산 */
+export function WinRateForm() {
+  const [wins, setWins] = useState(30);
+  const [draws, setDraws] = useState(5);
+  const [losses, setLosses] = useState(15);
+  const [target, setTarget] = useState(60);
+
+  const total = wins + draws + losses;
+  const currentRate = total === 0 ? 0 : (wins / total) * 100;
+  const noGames = total === 0;
+
+  // 목표 승률 달성에 필요한 추가 승수 (무·패 없이 승만 추가 가정)
+  // (wins + x) / (total + x) >= target/100
+  // wins + x >= target/100 * (total + x)
+  // x(1 - target/100) >= target/100 * total - wins
+  const t = target / 100;
+  const needed = t >= 1 ? Infinity : Math.ceil((t * total - wins) / (1 - t));
+  const neededText = noGames ? "경기 없음" : needed <= 0 ? "이미 달성" : needed === Infinity ? "달성 불가(100% 불가)" : `${needed}승 추가`;
+
+  return (
+    <Box>
+      <div className="grid gap-6 sm:grid-cols-3">
+        <Labeled label="승">
+          <NumInput className={INPUT_CLASS} value={wins} onChange={(e) => setWins(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label="무">
+          <NumInput className={INPUT_CLASS} value={draws} onChange={(e) => setDraws(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+        <Labeled label="패">
+          <NumInput className={INPUT_CLASS} value={losses} onChange={(e) => setLosses(Math.max(0, num(e.target.value)))} />
+        </Labeled>
+      </div>
+      <Labeled label="목표 승률(%)">
+        <NumInput step="0.1" className={INPUT_CLASS} value={target} onChange={(e) => setTarget(Math.max(0, Math.min(100, num(e.target.value))))} />
+      </Labeled>
+      <ResultPanel title="승률" highlight={`${currentRate.toFixed(2)}%`}>
+        <ResultRows rows={[
+          { label: "총 경기", value: `${total}경기` },
+          { label: "승·무·패", value: `${wins} / ${draws} / ${losses}` },
+          { label: "현재 승률", value: `${currentRate.toFixed(2)}%` },
+          { label: `목표 ${target}% 달성`, value: neededText },
+        ]} />
+      </ResultPanel>
+    </Box>
+  );
+}
+
+/** 부동산 중개 수수료(복비) 계산기 — 2021년 개정 법정 상한 기준 */
+export function RealEstateBrokerageFeeForm() {
+  const [type, setType] = useState<"sale" | "jeonse" | "monthly">("sale");
+  const [amount, setAmount] = useState(300_000_000);
+  const [deposit, setDeposit] = useState(10_000_000);
+  const [monthly, setMonthly] = useState(500_000);
+
+  const result = useMemo(() => {
+    // 거래 기준 금액 계산
+    let base = amount;
+    if (type === "monthly") {
+      // 환산보증금 = 보증금 + (월세 × 100)
+      base = deposit + monthly * 100;
+    } else if (type === "jeonse") {
+      base = amount;
+    }
+
+    // 상한 요율·한도 결정
+    let maxRate: number;
+    let limit: number | null;
+
+    if (type === "sale") {
+      if (base < 50_000_000) { maxRate = 0.006; limit = 250_000; }
+      else if (base < 200_000_000) { maxRate = 0.005; limit = 800_000; }
+      else if (base < 900_000_000) { maxRate = 0.004; limit = null; }
+      else if (base < 1_200_000_000) { maxRate = 0.005; limit = null; }
+      else if (base < 1_500_000_000) { maxRate = 0.006; limit = null; }
+      else { maxRate = 0.007; limit = null; }
+    } else {
+      // 전세 / 월세(환산)
+      if (base < 50_000_000) { maxRate = 0.005; limit = 200_000; }
+      else if (base < 100_000_000) { maxRate = 0.004; limit = 300_000; }
+      else if (base < 300_000_000) { maxRate = 0.003; limit = null; }
+      else if (base < 600_000_000) { maxRate = 0.004; limit = null; }
+      else { maxRate = 0.005; limit = null; }
+    }
+
+    const raw = Math.round(base * maxRate);
+    const maxFee = limit !== null ? Math.min(raw, limit) : raw;
+
+    return { base, maxRate, maxFee, limit };
+  }, [type, amount, deposit, monthly]);
+
+  return (
+    <Box>
+      <div className="flex gap-2">
+        {([["sale","매매"],["jeonse","전세"],["monthly","월세"]] as [typeof type, string][]).map(([v, l]) => (
+          <button key={v} type="button"
+            className={`rounded-full px-4 py-2 text-sm ${type === v ? "bg-neutral-900 text-white" : "border"}`}
+            onClick={() => setType(v)}>{l}</button>
+        ))}
+      </div>
+      {type === "monthly" ? (
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Labeled label="보증금(원)">
+            <NumInput className={INPUT_CLASS} value={deposit} onChange={(e) => setDeposit(num(e.target.value))} />
+          </Labeled>
+          <Labeled label="월세(원)">
+            <NumInput className={INPUT_CLASS} value={monthly} onChange={(e) => setMonthly(num(e.target.value))} />
+          </Labeled>
+        </div>
+      ) : (
+        <Labeled label={type === "sale" ? "매매가(원)" : "전세금(원)"}>
+          <NumInput className={INPUT_CLASS} value={amount} onChange={(e) => setAmount(num(e.target.value))} />
+        </Labeled>
+      )}
+      <ResultPanel title="중개수수료 상한(법정 기준)" highlight={`최대 ${won(result.maxFee)}원`} subtitle="실제 수수료는 상한 이하에서 협의 가능 · 시·도 조례 확인 필요">
+        <ResultRows rows={[
+          ...(type === "monthly" ? [{ label: "환산 거래금액", value: `${won(result.base)}원` }] : []),
+          { label: "적용 상한요율", value: `${(result.maxRate * 100).toFixed(1)}%` },
+          ...(result.limit !== null ? [{ label: "한도액 적용", value: `${won(result.limit)}원` }] : []),
+          { label: "최대 중개수수료", value: `${won(result.maxFee)}원` },
+        ]} />
+      </ResultPanel>
     </Box>
   );
 }

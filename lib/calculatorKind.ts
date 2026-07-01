@@ -181,7 +181,20 @@ export type CalculatorKind =
   | "jwtDecoder"
   | "primeChecker"
   | "rankPercentile"
-  | "proportionCalc";
+  | "proportionCalc"
+  // 제목-폼 불일치 수정 (2026.06)
+  | "vitaminIntake"
+  | "maxMuscleMass"
+  | "salesCommission"
+  | "realEstateBrokerageFee"
+  | "smeTaxAge"
+  | "maternitySchedule"
+  | "winRate"
+  | "heightPrediction"
+  | "errorRate"
+  | "fortyNine"
+  | "leanMass"
+  | "retirementFund";
 
 export function resolveCalculatorKind(tool: ToolItem): CalculatorKind {
   const { slug, title: T } = tool;
